@@ -65,7 +65,7 @@ const HomePage = () => {
             <section className="banner">
                 <div className="banner-img">
                     <img src="https://www.autoshippers.co.uk/blog/wp-content/uploads/bugatti-centodieci.jpg" alt="banner car" />
-                    <img src="https://www.honda.com.vn/uploads/motorbikes/vehicles/SH125i-150i2020/blackleft.png" alt="banner bike" />
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRz-iyV_83QJrVhs6Tj9ZNGP9k6-0vqScZPg&s" alt="banner bike" />
                 </div>
                 <div className="banner-content">
                     <h2>An Toàn, Nhanh Chóng, Thoải Mái</h2>
