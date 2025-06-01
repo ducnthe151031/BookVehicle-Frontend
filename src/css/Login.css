@@ -1,70 +1,113 @@
-.login-page {
-    width: 100vw;
-    height: 100vh;
-    background: url('https://images.firstpost.com/wp-content/uploads/2023/12/AI-in-cars-ADAS-in-India-Tata-Motors-Mohan-Savarkar-reveals-what-future-holds-for-Indian-car-buyers.jpg') no-repeat center center/cover;
+.login-root {
+    min-height: 100vh;
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
+    align-items: center;
+    background: #222;
+}
+.login-container {
+    display: flex;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px #0002;
+    overflow: hidden;
+    max-width: 950px;
+    width: 90vw;
+}
+.login-form-block {
+    padding: 48px 38px 38px 38px;
+    width: 400px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px 0 0 12px;
+}
+.login-logo-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.login-logo { width: 36px; margin-right: 12px; }
+.login-logo-title { font-size: 1.18rem; font-weight: bold; }
+.login-welcome { margin: 0 0 4px 0; font-size: 1.1rem; color: #555; }
+.login-title { margin-bottom: 20px; font-size: 2rem; font-weight: bold; }
+.login-form label { font-size: 1rem; margin-bottom: 2px; color: #222; }
+.login-form input[type="text"], .login-form input[type="password"] {
+    width: 100%;
+    margin-bottom: 18px;
+    padding: 11px 13px;
+    font-size: 1rem;
+    border-radius: 7px;
+    border: 1px solid #ddd;
+    outline: none;
+    background: #fafafa;
+    transition: border .2s;
+}
+.login-form input:focus { border-color: #222; }
+.login-password-row {
+    display: flex;
     align-items: center;
     position: relative;
 }
-
-.login-overlay {
-    width: 350px;
-    margin-right: 60px;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 30px;
-    border-radius: 10px;
-    color: white;
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: #888;
+    user-select: none;
 }
-
-.login-header {
-    font-size: 22px;
-    text-align: center;
-    margin-bottom: 20px;
-    background: #fff;
-    color: #ff8800;
-    padding: 8px 0;
-    border-radius: 5px;
+.login-options-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: .96rem;
 }
-
-.login-box input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
-    border: none;
-    border-radius: 5px;
-    outline: none;
-    font-size: 14px;
-}
-
 .login-btn {
     width: 100%;
-    padding: 12px;
-    background: #ff8800;
-    color: white;
+    background: #111;
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: bold;
     border: none;
-    border-radius: 5px;
-    font-size: 16px;
+    border-radius: 6px;
+    padding: 12px 0;
+    margin-top: 8px;
     cursor: pointer;
+    transition: background .2s;
 }
-
-.login-btn:hover {
-    background: #e67e00;
-}
-
-.signup-text {
-    margin-top: 15px;
-    text-align: center;
-    font-size: 14px;
-}
-
-.signup-link {
-    color: #ff8800;
-    text-decoration: underline;
-}
-
+.login-btn:hover { background: #222; }
 .login-message {
+    margin: 14px 0 0 0;
     text-align: center;
-    margin-top: 10px;
-    color: lightgreen;
+    color: #ff4545;
+}
+.login-register {
+    text-align: center;
+    margin-top: 22px;
+    color: #333;
+    font-size: .97rem;
+}
+.login-register a { font-weight: bold; color: #111; text-decoration: underline; }
+.login-forgot { color: #222; text-decoration: underline; font-size: .97rem; }
+.login-img-block {
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 32px;
+}
+.login-car-img {
+    width: 340px;
+    max-width: 98vw;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 32px #2223);
+}
+@media (max-width: 900px) {
+    .login-container { flex-direction: column; }
+    .login-img-block { justify-content: center; padding: 0 0 24px 0; }
+    .login-form-block { border-radius: 12px 12px 0 0; width: 100%; }
 }
