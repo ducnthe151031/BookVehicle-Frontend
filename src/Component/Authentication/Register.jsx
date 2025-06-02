@@ -50,14 +50,15 @@ const RegisterForm = () => {
             <div className="login-container">
                 <div className="login-form-block">
                     <div className="login-logo-row">
-                        <img src="https://cdn-icons-png.flaticon.com/128/1178/1178431.png" alt="logo" className="login-logo" />
+                        <img src="https://cdn-icons-png.flaticon.com/128/854/854866.png" alt="logo" className="login-logo" />
                         <span className="login-logo-title">Thuê Xe</span>
                     </div>
                     <h3 className="login-welcome">Chào mừng</h3>
                     <h2 className="login-title">Đăng kí</h2>
                     <form onSubmit={handleSubmit} className="login-form">
-                        <label>Email</label>
+                        <label htmlFor="email">Email</label>
                         <input
+                            id="email"
                             type="email"
                             name="email"
                             placeholder="Nhập email của bạn"
@@ -65,6 +66,7 @@ const RegisterForm = () => {
                             onChange={handleChange}
                             required
                         />
+
                         <label>Tên người dùng</label>
                         <input
                             type="text"
@@ -125,7 +127,7 @@ const RegisterForm = () => {
                 </div>
                 <div className="login-img-block">
                     <img
-                        src="https://www.jeep.com/content/dam/fca-brands/na/jeep/en_us/2022/grand-cherokee/vlp/gallery/2022-Jeep-Grand-Cherokee-Overview-Gallery-02.jpg.image.1440.jpg"
+                        src="https://www.directasia.com/sites/default/files/styles/dc_article__laptop/public/media_images/ncd-for-cars-and-bikes.jpg"
                         alt="Car"
                         className="login-car-img"
                     />

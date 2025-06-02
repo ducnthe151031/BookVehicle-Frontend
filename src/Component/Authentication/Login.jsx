@@ -37,7 +37,7 @@ const LoginForm = () => {
             <div className="login-container">
                 <div className="login-form-block">
                     <div className="login-logo-row">
-                        <img src="https://www.flaticon.com/free-icon/car_89102?term=vehicle&page=1&position=4&origin=search&related_id=89102" alt="logo" className="login-logo" />
+                        <img src="https://cdn-icons-png.flaticon.com/128/854/854866.png" alt="logo" className="login-logo" />
                         <span className="login-logo-title">Thuê Xe</span>
                     </div>
                     <h3 className="login-welcome">Chào mừng</h3>
@@ -91,7 +91,7 @@ const LoginForm = () => {
                 </div>
                 <div className="login-img-block">
                     <img
-                        src="https://www.jeep.com/content/dam/fca-brands/na/jeep/en_us/2022/grand-cherokee/vlp/gallery/2022-Jeep-Grand-Cherokee-Overview-Gallery-02.jpg.image.1440.jpg"
+                        src="https://www.directasia.com/sites/default/files/styles/dc_article__laptop/public/media_images/ncd-for-cars-and-bikes.jpg"
                         alt="Car"
                         className="login-car-img"
                     />

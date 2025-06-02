@@ -20,19 +20,19 @@ const featuredCars = [
     {
         name: "Porsche Cayenne 2020",
         price: "500k/1 ngày",
-        img: "https://img.otosaigon.com/2020/07/20200722-075813-98a7da8c0c3ac21b2c44e9a2c1c999d7.jpg",
+        img: "https://cdn.dealeraccelerate.com/graemehunt/1/734/23541/1920x1440/2020-porsche-cayenne-turbo-s-e-hybrid",
         desc: "4 chỗ | Xăng | Tự động"
     },
     {
         name: "Maserati Levante 2021",
         price: "500k/1 ngày",
-        img: "https://hips.hearstapps.com/hmg-prod/images/2023-maserati-levante-gt-101-1663098584.jpg",
+        img: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Maserati_Levante_S_%2801%29.jpg/1200px-Maserati_Levante_S_%2801%29.jpg",
         desc: "4 chỗ | Xăng | Tự động"
     },
     {
         name: "Bentley Flying Spur",
         price: "700k/1 ngày",
-        img: "https://autopro8.mediacdn.vn/2021/8/12/photo-1-1628749608350991481087.jpg",
+        img: "https://www.topgear.com/sites/default/files/2025/03/1-Bentley-Flying-Spur-review-2025-UK.jpg",
         desc: "4 chỗ | Xăng | Tự động"
     }
 ];
@@ -63,14 +63,16 @@ const HomePage = () => {
         <div className="homepage-wrapper">
             {/* Banner */}
             <section className="banner">
-                <div className="banner-img">
-                    <img src="https://www.autoshippers.co.uk/blog/wp-content/uploads/bugatti-centodieci.jpg" alt="banner car" />
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRz-iyV_83QJrVhs6Tj9ZNGP9k6-0vqScZPg&s" alt="banner bike" />
-                </div>
-                <div className="banner-content">
-                    <h2>An Toàn, Nhanh Chóng, Thoải Mái</h2>
-                    <p>Tự do di chuyển</p>
-                    <button>Thuê ngay</button>
+                <div className="banner-main">
+                    <div className="banner-img">
+                        <img src="https://www.autoshippers.co.uk/blog/wp-content/uploads/bugatti-centodieci.jpg" alt="banner car" />
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRz-iyV_83QJrVhs6Tj9ZNGP9k6-0vqScZPg&s" alt="banner bike" />
+                    </div>
+                    <div className="banner-content">
+                        <h2>An Toàn, Nhanh Chóng, Thoải Mái</h2>
+                        <p>Tự do di chuyển</p>
+                        <button>Thuê ngay</button>
+                    </div>
                 </div>
                 <div className="search-bar">
                     <input type="text" placeholder="Chọn loại xe" />

@@ -33,3 +33,81 @@
 .rentout-form .row { display: flex; gap: 12px; }
 .rentout-form input { flex: 1; padding: 8px 10px; border: 1px solid #aaa; border-radius: 7px; }
 .rentout-form button { margin: 20px auto 0; padding: 10px 36px; border-radius: 20px; background: #2a49b7; color: #fff; border: none; font-weight: bold; }
+.banner {
+    width: 100%;
+    background: #f7f7f7;
+    padding-bottom: 22px;
+    box-sizing: border-box;
+}
+
+.banner-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 38px;
+    padding: 36px 0 12px 0;
+}
+
+.banner-img {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.banner-img img {
+    width: 260px;
+    max-width: 35vw;
+    height: auto;
+    border-radius: 16px;
+    object-fit: cover;
+    box-shadow: 0 8px 32px #0001;
+}
+
+.banner-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.banner-content h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #222;
+    line-height: 1.2;
+}
+
+.banner-content p {
+    font-size: 1.2rem;
+    color: #444;
+    margin-bottom: 22px;
+}
+
+.banner-content button {
+    padding: 12px 32px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    background: #214dcc;
+    color: #fff;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #0002;
+    transition: background .15s;
+}
+.banner-content button:hover {
+    background: #193b99;
+}
+
+/* Responsive cho banner */
+@media (max-width: 900px) {
+    .banner-main {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .banner-img img {
+        width: 95vw;
+        max-width: 320px;
+    }
+}
