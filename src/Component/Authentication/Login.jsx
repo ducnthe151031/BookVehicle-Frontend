@@ -1,100 +1,67 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import {Link, useNavigate} from 'react-router-dom';
+import {useAuth} from "../../context/AuthContext.jsx";
 import '/src/css/Login.css';
 
 const LoginForm = () => {
     const [formData, setFormData] = useState({
         username: '',
         password: '',
-        remember: false
     });
-    const [showPassword, setShowPassword] = useState(false);
-    const [message, setMessage] = useState('');
-    const navigate = useNavigate();
 
+    const [message, setMessage] = useState('');
+    const navigate = useNavigate(); // ✅ Hook điều hướng
+    const { login } = useAuth();
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:8080/v1/auth/login', formData);
+            const res = await login(formData);
             setMessage('Đăng nhập thành công!');
-            setTimeout(() => navigate('/home'), 1000);
-        } catch {
-            setMessage('Đăng nhập thất bại!');
+            setTimeout(() => {
+                navigate('/home');
+            }, 1000);
+        } catch (error) {
+            const apiMessage = error.response?.data?.message || 'Đăng nhập thất bại, có lỗi xảy ra!';
+            setMessage(apiMessage);
         }
     };
 
     return (
-        <div className="login-root">
-            <div className="login-container">
-                <div className="login-form-block">
-                    <div className="login-logo-row">
-                        <img src="https://cdn-icons-png.flaticon.com/128/854/854866.png" alt="logo" className="login-logo" />
-                        <span className="login-logo-title">Thuê Xe</span>
-                    </div>
-                    <h3 className="login-welcome">Chào mừng</h3>
-                    <h2 className="login-title">Đăng nhập</h2>
-                    <form onSubmit={handleSubmit} className="login-form">
-                        <label>Tên người dùng</label>
+        <div className="login-page">
+            <div className="login-overlay">
+                <div className="login-box">
+                    <h2 className="login-header">Đăng nhập</h2>
+                    <form onSubmit={handleSubmit}>
                         <input
                             type="text"
                             name="username"
-                            placeholder="Nhập tên của bạn"
+                            placeholder="Nhập username"
                             value={formData.username}
                             onChange={handleChange}
-                            autoComplete="username"
                             required
                         />
-                        <label>Mật khẩu</label>
-                        <div className="login-password-row">
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                name="password"
-                                placeholder="Nhập mật khẩu của bạn"
-                                value={formData.password}
-                                onChange={handleChange}
-                                autoComplete="current-password"
-                                required
-                            />
-                            <span
-                                className="toggle-password"
-                                onClick={() => setShowPassword((show) => !show)}
-                                title={showPassword ? "Ẩn" : "Hiện mật khẩu"}
-                            >{showPassword ? "🙈" : "👁️"}</span>
-                        </div>
-                        <div className="login-options-row">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    name="remember"
-                                    checked={formData.remember}
-                                    onChange={handleChange}
-                                />
-                                Ghi nhớ
-                            </label>
-                            <Link to="/forgot" className="login-forgot">Quên mật khẩu?</Link>
-                        </div>
-                        <button type="submit" className="login-btn">Đăng nhập</button>
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Nhập password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                        />
+                        <button type="submit" className="login-btn">Login</button>
                     </form>
-                    {message && <div className="login-message">{message}</div>}
-                    <div className="login-register">
-                        Bạn không có tài khoản? <Link to="/register">Đăng kí</Link>
-                    </div>
-                </div>
-                <div className="login-img-block">
-                    <img
-                        src="https://www.directasia.com/sites/default/files/styles/dc_article__laptop/public/media_images/ncd-for-cars-and-bikes.jpg"
-                        alt="Car"
-                        className="login-car-img"
-                    />
+                    {message && <p className="login-message">{message}</p>}
+                    <p className="signup-text">
+                        Không có tài khoản? <Link to="/register" className="signup-link">Đăng ký</Link> đây
+                    </p>
                 </div>
             </div>
         </div>
