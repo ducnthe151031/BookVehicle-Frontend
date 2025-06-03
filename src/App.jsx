@@ -22,6 +22,8 @@ function App() {
             <Route path="/car" element={<ProtectedRoute><CarForm /></ProtectedRoute>} />
             <Route path="/booking" element={<BookingForm />} />
 
+
+
         </Routes>
 
     ) ;
