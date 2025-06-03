@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import {Link, useNavigate} from 'react-router-dom';
+import {useAuth} from "../../context/AuthContext.jsx";
 import '/src/css/Login.css';
 
 const LoginForm = () => {
@@ -10,10 +11,8 @@ const LoginForm = () => {
     });
 
     const [message, setMessage] = useState('');
-
-
     const navigate = useNavigate(); // ✅ Hook điều hướng
-
+    const { login } = useAuth();
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -24,13 +23,14 @@ const LoginForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:8080/v1/auth/login', formData);
+            const res = await login(formData);
             setMessage('Đăng nhập thành công!');
             setTimeout(() => {
                 navigate('/home');
             }, 1000);
         } catch (error) {
-            setMessage('Đăng nhập thất bại!');
+            const apiMessage = error.response?.data?.message || 'Đăng nhập thất bại, có lỗi xảy ra!';
+            setMessage(apiMessage);
         }
     };
 
