@@ -111,3 +111,28 @@
         max-width: 320px;
     }
 }
+
+.logout-btn-wrapper {
+    position: fixed;
+    top: 28px;
+    left: 26px;
+    z-index: 1000;
+}
+
+.logout-btn {
+    padding: 9px 22px;
+    font-size: 1rem;
+    border-radius: 8px;
+    background: #f3f3f3;
+    color: #222;
+    border: 1px solid #ccc;
+    font-weight: 600;
+    box-shadow: 0 2px 8px #0001;
+    cursor: pointer;
+    transition: background 0.16s, color 0.16s;
+}
+.logout-btn:hover {
+    background: #225be7;
+    color: #fff;
+    border-color: #225be7;
+}
