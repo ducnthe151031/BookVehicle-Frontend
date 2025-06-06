@@ -13,12 +13,16 @@ import ProtectedRoute from "./Component/Authentication/shared/ProtectedRoute.jsx
 function App() {
     return (
         <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            {/*câu lệnh vào thẳng trang login */}
+
             <Route path="/login" element={<LoginForm />}/>
             <Route path="/register" element={<RegisterForm />}/>
             <Route path="/home" element={<ProtectedRoute> <HomePage /> </ProtectedRoute>} />
             <Route path="/car" element={<ProtectedRoute><CarForm /></ProtectedRoute>} />
             <Route path="/booking" element={<BookingForm />} />
         </Routes>
+
 
     ) ;
 }
