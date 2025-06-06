@@ -11,9 +11,6 @@ import BookingForm from "./Component/BookingForm.jsx";
 import ProtectedRoute from "./Component/Authentication/shared/ProtectedRoute.jsx";
 
 function App() {
-//ttest
-
-
     return (
         <Routes>
             <Route path="/login" element={<LoginForm />}/>
@@ -21,9 +18,6 @@ function App() {
             <Route path="/home" element={<ProtectedRoute> <HomePage /> </ProtectedRoute>} />
             <Route path="/car" element={<ProtectedRoute><CarForm /></ProtectedRoute>} />
             <Route path="/booking" element={<BookingForm />} />
-
-
-
         </Routes>
 
     ) ;
