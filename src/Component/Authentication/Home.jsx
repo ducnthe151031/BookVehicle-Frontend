@@ -1,6 +1,7 @@
 import React from 'react';
 import '/src/css/HomePage.css';
 import { useAuth } from "../../context/AuthContext.jsx";
+import { useNavigate } from "react-router-dom";
 
 const carBrands = [
     { name: 'Toyota', logo: 'https://cdn-icons-png.flaticon.com/128/731/731975.png' },
@@ -61,6 +62,7 @@ const news = [
 
 const HomePage = () => {
     const { logOut } = useAuth();
+    const navigate = useNavigate();
     return (
         <div className="homepage-wrapper">
             <div className="logout-btn-wrapper">
@@ -80,7 +82,7 @@ const HomePage = () => {
                     <div className="banner-content">
                         <h2>An Toàn, Nhanh Chóng, Thoải Mái</h2>
                         <p>Tự do di chuyển</p>
-                        <button>Thuê ngay</button>
+                        <button onClick={() => navigate('/booking')}>Thuê ngay</button>
                     </div>
                 </div>
                 <div className="search-bar">
