@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link,useNavigate } from 'react-router-dom';
-import '/src/css/Login.css'; // dùng chung CSS với login
+import '/src/css/Login.css';
+import {register} from "../../service/authentication.js";
 
 const RegisterForm = () => {
     const [formData, setFormData] = useState({
         username: '',
         email: '',
         password: '',
-        role: 'ADMIN'
+        role: 'OWNER'
     });
 
     const [message, setMessage] = useState('');
@@ -25,14 +26,14 @@ const RegisterForm = () => {
         e.preventDefault();
         setMessage('');
         try {
-            const res = await axios.post('http://localhost:8080/v1/auth/register', formData);
+            const res = await register(formData);
             setMessage('Đăng ký thành công!');
             setFormData({ username: '', email: '', password: '', role: 'ADMIN' });
             setTimeout(() => {
                 navigate('/login');
             }, 1000);
         } catch (error) {
-            setMessage('Đăng ký thất bại!');
+            setMessage(error.response.data.message);
         }
     };
 
