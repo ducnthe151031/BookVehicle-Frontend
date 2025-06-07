@@ -19,8 +19,9 @@ const carBrands = [
     { name: 'KIA', logo: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/kia.svg' }
 ];
 
-const featuredCars = [
+export const featuredCars = [
     {
+        id:1,
         name: "Porsche Cayenne 2020",
         price: "500k/1 ngày",
         img: "https://cdn.dealeraccelerate.com/graemehunt/1/734/23541/1920x1440/2020-porsche-cayenne-turbo-s-e-hybrid",
@@ -32,6 +33,7 @@ const featuredCars = [
         type: "Ô tô",
     },
     {
+        id:2,
         name: "Maserati Levante 2021",
         price: "500k/1 ngày",
         img: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Maserati_Levante_S_%2801%29.jpg/1200px-Maserati_Levante_S_%2801%29.jpg",
@@ -43,6 +45,7 @@ const featuredCars = [
         type: "Ô tô",
     },
     {
+        id:3,
         name: "Bentley Flying Spur",
         price: "700k/1 ngày",
         img: "https://www.topgear.com/sites/default/files/2025/03/1-Bentley-Flying-Spur-review-2025-UK.jpg",
@@ -54,6 +57,7 @@ const featuredCars = [
         type: "Ô tô",
     },
     {
+        id:4,
         name: "Honda SH 2023",
         price: "250k/1 ngày",
         img: "https://images.pexels.com/photos/2237808/pexels-photo-2237808.jpeg?auto=compress&w=600",
@@ -65,6 +69,7 @@ const featuredCars = [
         type: "Xe máy",
     },
     {
+        id:5,
         name: "Yamaha NVX 2022",
         price: "200k/1 ngày",
         img: "https://images.pexels.com/photos/2044871/pexels-photo-2044871.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
@@ -76,6 +81,7 @@ const featuredCars = [
         type: "Xe máy",
     },
     {
+        id:6,
         name: "VinFast Klara S 2023",
         price: "180k/1 ngày",
         img: "https://images.pexels.com/photos/14404264/pexels-photo-14404264.jpeg?auto=compress&w=600",
@@ -189,6 +195,7 @@ const HomePage = () => {
                     <button>Loại xe</button>
                     <button>Khu vực</button>
                 </div>
+
                 <div className="car-list">
                     {featuredCars.map((car, idx) => (
                         <div className="car-card" key={idx}>
@@ -198,9 +205,11 @@ const HomePage = () => {
                             <div style={{fontSize:'0.93rem', color:'#666', marginBottom:4}}>
                                 <span>⭐ {car.rating} ({car.trips} chuyến) &nbsp; | &nbsp; {car.location}</span>
                             </div>
+                            {/*xem chi tiết 1 xe */}
                             <div className="car-card-footer">
                                 <span style={{fontWeight:'bold'}}>{car.price}</span>
-                                <button>Xem chi tiết</button>
+                                <button onClick={() => navigate(`/vehicledetail/${car.id}`)}
+                                        className="btn-detail">Xem chi tiết</button>
                             </div>
                         </div>
                     ))}

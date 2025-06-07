@@ -432,3 +432,18 @@
         width: 100%;
     }
 }
+.btn-detail {
+    background: #330000;
+    color: #fff;
+    padding: 7px 16px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    margin-left: 12px;
+    transition: background 0.15s;
+}
+.btn-detail:hover {
+    background: #d8232a;
+    color: #fff;
+}

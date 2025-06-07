@@ -9,6 +9,7 @@ import RegisterForm from "./Component/Authentication/Register.jsx";
 import CarForm from "./Component/CarForm.jsx";
 import BookingForm from "./Component/BookingForm.jsx";
 import ProtectedRoute from "./Component/Authentication/shared/ProtectedRoute.jsx";
+import VehicleDetail from "./Component/Authentication/VehicleDetail.jsx";
 
 function App() {
     return (
@@ -21,6 +22,9 @@ function App() {
             <Route path="/home" element={<ProtectedRoute> <HomePage /> </ProtectedRoute>} />
             <Route path="/car" element={<ProtectedRoute><CarForm /></ProtectedRoute>} />
             <Route path="/booking" element={<BookingForm />} />
+
+            {/*//vehicledetail*/}
+            <Route path="/vehicledetail/:id" element={<VehicleDetail />} />
         </Routes>
 
 
