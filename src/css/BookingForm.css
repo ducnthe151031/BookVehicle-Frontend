@@ -85,7 +85,7 @@ label input[type="checkbox"] {
     display: block;
     width: 100%;
     max-width: 200px;
-    margin: 20px auto 0 auto;  /* căn giữa ngang và cách trên */
+    margin: 20px auto 0 auto;  // căn giữa ngang và cách trên
     padding: 14px;
     font-size: 18px;
     font-weight: bold;
