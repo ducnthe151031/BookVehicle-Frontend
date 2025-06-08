@@ -10,6 +10,7 @@ import CarForm from "./Component/CarForm.jsx";
 import BookingForm from "./Component/BookingForm.jsx";
 import ProtectedRoute from "./Component/Authentication/shared/ProtectedRoute.jsx";
 import VehicleDetail from "./Component/Authentication/VehicleDetail.jsx";
+import ListVehicle from "./Component/Authentication/ListVehicle.jsx";
 
 function App() {
     return (
@@ -25,6 +26,7 @@ function App() {
 
             {/*//vehicledetail*/}
             <Route path="/vehicledetail/:id" element={<VehicleDetail />} />
+            <Route path="/listVehicle" element={<ListVehicle />} />
         </Routes>
 
 
