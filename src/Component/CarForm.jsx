@@ -120,7 +120,8 @@ const CarForm = () => {
                             </select>
                         </label>
 
-                        <label>Hộp số:</label>
+
+                        <label>Hộp số:</label> //chuyen sang ratio
                         <div className="radio-group">
                             <label>
                                 <input
