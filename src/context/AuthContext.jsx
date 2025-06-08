@@ -17,9 +17,11 @@ const AuthProvider = ({ children }) => {
         if (token) {
             try {
                 const decodedToken = jwtDecode(token);
+                const role = decodedToken.permission?.at(-1)?.authority || null;
+
                 setCustomer({
                     username: decodedToken.sub,
-                    role: decodedToken.roles
+                    role: role
                 });
             } catch (error) {
                 console.error("Error decoding token:", error);
@@ -52,13 +54,15 @@ const AuthProvider = ({ children }) => {
             const username = decodedToken.sub;
 
             // Extract role(s) from permission array
-            const role =
-                decodedToken.permission?.map(p => p.authority) || [];
+            const role = decodedToken.permission?.at(-1)?.authority || null;
+
+
 
             setCustomer({
                 username: username,
                 role: role
             });
+            console.log(customer)
 
             return {
                 ...res,

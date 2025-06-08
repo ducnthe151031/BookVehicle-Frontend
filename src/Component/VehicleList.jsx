@@ -1,0 +1,393 @@
+import React, { useState, useEffect } from 'react';
+import CarForm from './CarForm.jsx'; // Adjust the import path as needed
+import { getVehicles } from '../service/authentication.js';
+import { Car, Fuel, Users, Tag, Building, Calendar, DollarSign, FileText, X, Plus, Edit, Trash2 } from 'lucide-react';
+import CRMLayout from "./Crm.jsx";
+
+const VehicleList = () => {
+    const [vehicles, setVehicles] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const pageSize = 10;
+    const [filters, setFilters] = useState({
+        brands: '',
+        categories: '',
+        vehicleName: '',
+        startDate: '',
+        endDate: '',
+        status: '',
+    });
+    const [showAddForm, setShowAddForm] = useState(false);
+
+    const fetchVehicles = async (pageNumber, filterParams) => {
+        setLoading(true);
+        setError('');
+        try {
+            const response = await getVehicles(pageNumber, pageSize, filterParams);
+            const data = response.data;
+            if (data.httpStatus === 200) {
+                setVehicles(data.data.content);
+                setTotalPages(data.data.totalPages);
+            } else {
+                setError(data.message || 'Lỗi khi tải danh sách xe');
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Không thể kết nối đến server');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchVehicles(page, filters);
+    }, [page]);
+
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters({
+            ...filters,
+            [name]: value,
+        });
+    };
+
+    const handleFilterSubmit = (e) => {
+        e.preventDefault();
+        setPage(0);
+        fetchVehicles(0, filters);
+    };
+
+    const handleFilterReset = () => {
+        setFilters({
+            brands: '',
+            categories: '',
+            vehicleName: '',
+            startDate: '',
+            endDate: '',
+            status: '',
+        });
+        setPage(0);
+        fetchVehicles(0, {});
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 0 && newPage < totalPages) {
+            setPage(newPage);
+            fetchVehicles(newPage, filters);
+        }
+    };
+
+    const handleEdit = (id) => {
+        alert(`Chỉnh sửa xe với ID: ${id}`);
+        // Placeholder for edit form or API call
+    };
+
+    const handleDelete = (id) => {
+        if (window.confirm(`Bạn có chắc muốn xóa xe với ID: ${id}?`)) {
+            alert(`Xóa xe với ID: ${id} sẽ được triển khai.`);
+            // Placeholder for delete API call
+        }
+    };
+
+    const handleAddFormClose = () => {
+        setShowAddForm(false);
+    };
+
+    const handleAddFormSuccess = () => {
+        setShowAddForm(false);
+        fetchVehicles(page, filters); // Refresh the list after successful submission
+    };
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-6 px-4">
+            <div className="max-w-6xl mx-auto">
+                {/* Header */}
+                <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-full mb-3">
+                        <Car className="w-7 h-7 text-white" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Danh Sách Xe</h1>
+                    <p className="text-gray-600 text-sm">Quản lý thông tin xe </p>
+                </div>
+
+                {/* Filter Form */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-4">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                            <Tag className="w-5 h-5" />
+                            Bộ lọc
+                        </h2>
+                    </div>
+                    <div className="p-4">
+                        <form onSubmit={handleFilterSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    <Building className="w-3 h-3 inline mr-1" />
+                                    Hãng xe
+                                </label>
+                                <input
+                                    type="text"
+                                    name="brands"
+                                    placeholder="VD: Toyota,Honda"
+                                    value={filters.brands}
+                                    onChange={handleFilterChange}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    <Tag className="w-3 h-3 inline mr-1" />
+                                    Loại xe
+                                </label>
+                                <input
+                                    type="text"
+                                    name="categories"
+                                    placeholder="VD: Sedan,SUV"
+                                    value={filters.categories}
+                                    onChange={handleFilterChange}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    <Car className="w-3 h-3 inline mr-1" />
+                                    Tên xe
+                                </label>
+                                <input
+                                    type="text"
+                                    name="vehicleName"
+                                    placeholder="Nhập tên xe"
+                                    value={filters.vehicleName}
+                                    onChange={handleFilterChange}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    <Calendar className="w-3 h-3 inline mr-1" />
+                                    Từ ngày
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    name="startDate"
+                                    value={filters.startDate}
+                                    onChange={handleFilterChange}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    <Calendar className="w-3 h-3 inline mr-1" />
+                                    Đến ngày
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    name="endDate"
+                                    value={filters.endDate}
+                                    onChange={handleFilterChange}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    <Tag className="w-3 h-3 inline mr-1" />
+                                    Trạng thái
+                                </label>
+                                <select
+                                    name="status"
+                                    value={filters.status}
+                                    onChange={handleFilterChange}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white"
+                                >
+                                    <option value="">Tất cả</option>
+                                    <option value="AVAILABLE">Có sẵn</option>
+                                    <option value="UNAVAILABLE">Không có sẵn</option>
+                                </select>
+                            </div>
+                        </form>
+                        <div className="mt-3 flex justify-end gap-2">
+                            <button
+                                type="submit"
+                                onClick={handleFilterSubmit}
+                                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                            >
+                                Áp dụng
+                            </button>
+                            <button
+                                onClick={handleFilterReset}
+                                className="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-semibold rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 flex items-center gap-1"
+                            >
+                                <X className="w-4 h-4" />
+                                Xóa bộ lọc
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Vehicle List */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <Car className="w-5 h-5" />
+                                Danh sách xe
+                            </h2>
+                            <button
+                                onClick={() => setShowAddForm(true)}
+                                className="px-3 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 flex items-center gap-1"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Thêm
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="p-4">
+                        {loading && (
+                            <div className="text-center text-gray-600 text-sm">Đang tải...</div>
+                        )}
+                        {error && (
+                            <div className="mb-3 p-2 rounded-lg text-center font-medium bg-red-50 border border-red-200 text-red-600 text-sm">
+                                {error}
+                            </div>
+                        )}
+                        {!loading && vehicles.length === 0 && !error && (
+                            <div className="text-center text-gray-600 text-sm">Không có xe nào để hiển thị</div>
+                        )}
+                        {vehicles.length > 0 && (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên xe</th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hãng</th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại xe</th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nhiên liệu</th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số ghế</th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Biển số</th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá/ngày</th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    {vehicles.map((vehicle) => (
+                                        <tr key={vehicle.id} className="hover:bg-gray-50">
+                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                <div className="flex items-center gap-1">
+                                                    <Car className="w-3 h-3 text-gray-500" />
+                                                    <span className="text-gray-900">{vehicle.vehicleName}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                <div className="flex items-center gap-1">
+                                                    <Building className="w-3 h-3 text-gray-500" />
+                                                    <span className="text-gray-900">{vehicle.branchId}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                <div className="flex items-center gap-1">
+                                                    <Tag className="w-3 h-3 text-gray-500" />
+                                                    <span className="text-gray-900">{vehicle.categoryId}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                <div className="flex items-center gap-1">
+                                                    <Fuel className="w-3 h-3 text-gray-500" />
+                                                    <span className="text-gray-900">{vehicle.fuelType}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                <div className="flex items-center gap-1">
+                                                    <Users className="w-3 h-3 text-gray-500" />
+                                                    <span className="text-gray-900">{vehicle.seatCount}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                <div className="flex items-center gap-1">
+                                                    <Tag className="w-3 h-3 text-gray-500" />
+                                                    <span className="text-gray-900">{vehicle.liecensePlate}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                <div className="flex items-center gap-1">
+                                                    <DollarSign className="w-3 h-3 text-gray-500" />
+                                                    <span className="text-gray-900">{vehicle.pricePerDay.toLocaleString('vi-VN')} VNĐ</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
+                          <span className={`inline-block py-0.5 px-2 text-xs font-medium rounded-full ${vehicle.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {vehicle.status}
+                          </span>
+                                            </td>
+                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                <div className="flex gap-1">
+                                                    <button
+                                                        onClick={() => handleEdit(vehicle.id)}
+                                                        className="px-2 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-all duration-200"
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(vehicle.id)}
+                                                        className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="mt-3 flex justify-center items-center gap-2">
+                                <button
+                                    onClick={() => handlePageChange(page - 1)}
+                                    disabled={page === 0}
+                                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-700 transition-all duration-200"
+                                >
+                                    Trang trước
+                                </button>
+                                <span className="text-sm text-gray-600">
+                  Trang {page + 1} / {totalPages}
+                </span>
+                                <button
+                                    onClick={() => handlePageChange(page + 1)}
+                                    disabled={page === totalPages - 1}
+                                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-700 transition-all duration-200"
+                                >
+                                    Trang sau
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Add Car Form Modal */}
+                {showAddForm && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-6 overflow-y-auto max-h-[90vh]">
+
+
+                            <CarForm onClose={handleAddFormClose} onSuccess={handleAddFormSuccess} />
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const VehicleListPage = () => (
+    <CRMLayout>
+        <VehicleList />
+    </CRMLayout>
+);
+
+export default VehicleListPage;
