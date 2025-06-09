@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { featuredCars } from "./Home"; // Đường dẫn đúng tới file export featuredCars
+import { featuredCars } from "./Authentication/Home.jsx"; // Đường dẫn đúng tới file export featuredCars
 import "/src/css/ListVehicle.css";
 import Header from './Header.jsx';
 

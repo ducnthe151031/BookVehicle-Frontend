@@ -1,6 +1,6 @@
 import React from "react";
 import "/src/css/VehicleDetail.css";
-import { featuredCars } from "./Home";
+import { featuredCars } from "./Authentication/Home.jsx";
 import { useParams } from "react-router-dom";
 
 const VehicleDetail = () => {
