@@ -2,7 +2,7 @@ import React from 'react';
 import '/src/css/HomePage.css';
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
-
+import Header from '../demo/Header.jsx';
 
 const carBrands = [
     { name: 'Toyota', logo: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/toyota.svg' },
@@ -119,14 +119,9 @@ const HomePage = () => {
     const { logOut } = useAuth();
     const navigate = useNavigate();
     return (
-        <div className="homepage-wrapper">
-            <div className="logout-btn-wrapper">
-                <button
-                    onClick={logOut}
-                    className="logout-btn">
-                    Đăng xuất
-                </button>
-            </div>
+        <>
+            <Header />
+            <div className="homepage-wrapper">
 
             {/* Banner */}
             <section className="banner">
@@ -315,6 +310,7 @@ const HomePage = () => {
                 </form>
             </section>
         </div>
+        </>
     );
 };
 
