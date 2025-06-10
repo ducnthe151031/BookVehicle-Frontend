@@ -113,7 +113,7 @@ const CarForm = ({ onClose, onSuccess }) => {
         setMessage('');
 
         if (!validateForm()) {
-            setMessage('Vui lòng kiểm tra lại thông tin nhập vào');
+            setMessage('Vui lòng kiểm tra lại thông tin đã nhập vào');
             return;
         }
 
