@@ -23,7 +23,7 @@ export const featuredCars = [
     {
         id:1,
         name: "Porsche Cayenne 2020",
-        price: "500k/1 ngày",
+        price: "500k/1 giờ",
         img: "https://cdn.dealeraccelerate.com/graemehunt/1/734/23541/1920x1440/2020-porsche-cayenne-turbo-s-e-hybrid",
         desc: "4 chỗ | Xăng | Tự động",
         location: "Đống Đa, Hà Nội",
@@ -35,7 +35,7 @@ export const featuredCars = [
     {
         id:2,
         name: "Maserati Levante 2021",
-        price: "500k/1 ngày",
+        price: "500k/1 giờ",
         img: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Maserati_Levante_S_%2801%29.jpg/1200px-Maserati_Levante_S_%2801%29.jpg",
         desc: "4 chỗ | Xăng | Tự động",
         location: "Hoàn Kiếm, Hà Nội",
@@ -47,7 +47,7 @@ export const featuredCars = [
     {
         id:3,
         name: "Bentley Flying Spur",
-        price: "700k/1 ngày",
+        price: "700k/1 giờ",
         img: "https://www.topgear.com/sites/default/files/2025/03/1-Bentley-Flying-Spur-review-2025-UK.jpg",
         desc: "4 chỗ | Xăng | Tự động",
         location: "Hoàn Kiếm, Hà Nội",
@@ -59,7 +59,7 @@ export const featuredCars = [
     {
         id:4,
         name: "Honda SH 2023",
-        price: "250k/1 ngày",
+        price: "250k/1 giờ",
         img: "https://images.pexels.com/photos/2237808/pexels-photo-2237808.jpeg?auto=compress&w=600",
         desc: "2 chỗ | Xăng | Xe ga",
         location: "Nam Từ Liêm, Hà Nội",
@@ -71,7 +71,7 @@ export const featuredCars = [
     {
         id:5,
         name: "Yamaha NVX 2022",
-        price: "200k/1 ngày",
+        price: "200k/1 giờ",
         img: "https://images.pexels.com/photos/2044871/pexels-photo-2044871.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
         desc: "2 chỗ | Xăng | Xe ga",
         location: "Ba Đình, Hà Nội",
@@ -83,7 +83,7 @@ export const featuredCars = [
     {
         id:6,
         name: "VinFast Klara S 2023",
-        price: "180k/1 ngày",
+        price: "180k/1 giờ",
         img: "https://images.pexels.com/photos/14404264/pexels-photo-14404264.jpeg?auto=compress&w=600",
         desc: "2 chỗ | Điện | Xe ga",
         location: "Hà Đông, Hà Nội",
