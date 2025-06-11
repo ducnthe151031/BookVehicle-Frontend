@@ -3,51 +3,38 @@
     margin: 48px auto 0 auto;
     padding: 24px 16px 48px 16px;
     background: #fff;
+    padding-top: 64px;
 }
 
 .list-vehicle-page h2 {
     text-align: center;
     font-size: 2.3rem;
     font-weight: 800;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
+    margin-top:0;
     letter-spacing: 1px;
 }
 
 .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 12px;
-    background: #f8fafd;
-    padding: 9px 14px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px #0001;
-    margin-bottom: 18px;
-    justify-content: flex-start;
-    align-items: center;
+    margin: 16px auto 32px;
     max-width: 1000px;
-    margin-left: auto;
-    margin-right: auto;
-    position: sticky;      /* Nếu muốn luôn hiển thị khi cuộn */
-    top: 20px;             /* Khoảng cách với top */
-    z-index: 10;
+    padding: 12px 16px;
+    background: #f8fafd;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
-
+.filters.scrolled {
+    background: rgba(255,255,255,0.95); /* nhạt khi scroll */
+}
 .filters input,
 .filters select {
-    padding: 6px 10px;
-    font-size: 1rem;
-    border-radius: 6px;
-    border: 1px solid #e0e0e0;
-    background: #fff;
-    min-width: 120px;
-    max-width: 180px;
-    transition: border-color 0.14s;
+    flex: 1;
+    min-width: 140px;
 }
 
-.filters input:focus,
-.filters select:focus {
-    border-color: #2156e7;
-}
 
 .vehicle-grid {
     display: grid;
@@ -128,18 +115,6 @@
 }
 
 @media (max-width: 800px) {
-    .filters {
-        flex-direction: column;
-        gap: 7px 0;
-        max-width: 99vw;
-        top: 0;
-        left: 0;
-        right: 0;
-        border-radius: 0;
-    }
-    .filters input, .filters select {
-        min-width: 0;
-        width: 100%;
-        max-width: 98vw;
-    }
+
+
 }

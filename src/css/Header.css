@@ -1,16 +1,15 @@
 .navbar {
-    width: 100vw;
-    max-width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;               /* đảm bảo đúng chiều cao */
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 100;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    background: #fff;
-    border-bottom: 1.5px solid #ececec;
-    padding: 13px 36px 13px 32px;
-    position: sticky;
-    top: 0;
-    z-index: 99;
-    font-family: inherit;
+    padding: 0 32px;
 }
 
 .navbar-left {
@@ -33,7 +32,9 @@
 
 .navbar-menu {
     display: flex;
-    gap: 32px;
+    justify-content: space-around;  /* hoặc space-between */
+    width: 60%;                     /* điều chỉnh theo ý */
+    margin: 0 auto;
 }
 
 .navbar-menu a {
@@ -44,6 +45,7 @@
     padding: 6px 9px;
     border-radius: 8px;
     transition: background 0.13s;
+    margin: 0 16px;
 }
 
 .navbar-menu a:hover {
