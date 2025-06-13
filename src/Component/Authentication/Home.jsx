@@ -3,6 +3,8 @@ import {useAuth} from "../../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 import Header from 'src/Component/Header.jsx';
 
+
+
 const carBrands = [
     { name: 'Toyota', logo: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/toyota.svg' },
     { name: 'Ford', logo: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/ford.svg' },
