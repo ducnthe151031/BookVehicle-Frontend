@@ -22,10 +22,13 @@ const LoginForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await login(formData);
+            const response = await login(formData); // Lấy phản hồi từ login
             setMessage('Đăng nhập thành công!');
+            const userRole = response.decodedToken?.role;
+            console.log('Role from login response:', userRole); // Debug role
+            const redirectPath = userRole === 'ROLE_ADMIN' ? '/vehicle/bookings' : '/home';
             setTimeout(() => {
-                navigate('/vehicle/bookings');
+                navigate(redirectPath);
             }, 1000);
         } catch (error) {
             const apiMessage = error.response?.data?.message || 'Đăng nhập thất bại, có lỗi xảy ra!';
@@ -36,7 +39,7 @@ const LoginForm = () => {
     return (
         <div
             className="min-h-screen bg-cover bg-center flex items-center justify-end"
-            style={{ backgroundImage: "url('https://www.cupraofficial.com.au/content/dam/public/cupra-website/cars/tavascan/automatic-gallery/x-large/atacama-desert-2024-cupra-tavascan-car.jpg')" }} // đổi thành đúng đường dẫn hình
+            style={{ backgroundImage: "url('https://www.cupraofficial.com.au/content/dam/public/cupra-website/cars/tavascan/automatic-gallery/x-large/atacama-desert-2024-cupra-tavascan-car.jpg')" }}
         >
             <div className="bg-black bg-opacity-60 p-8 rounded-xl shadow-xl w-full max-w-sm mr-16 text-white">
                 <h2 className="text-2xl font-bold text-center text-orange-400 mb-6">Đăng nhập</h2>
@@ -68,10 +71,21 @@ const LoginForm = () => {
                 </form>
                 {message && <p className="text-sm text-center mt-3 text-red-400">{message}</p>}
                 <p className="mt-6 text-sm text-center text-gray-200">
+
                     Không có tài khoản?{' '}
+
                     <Link to="/register" className="text-orange-400 font-medium hover:underline">
                         Đăng ký
                     </Link> đây
+
+                    <button
+                        onClick={() => navigate('/forgot-password')}
+                        className="text-orange-400 font-medium hover:underline mr-2"
+                    >
+                        Quên mật khẩu?
+                    </button>
+                    <br/>
+
                 </p>
             </div>
         </div>
