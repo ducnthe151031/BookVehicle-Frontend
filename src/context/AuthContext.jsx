@@ -1,9 +1,4 @@
-import {
-    createContext,
-    useContext,
-    useEffect,
-    useState
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { login as performLogin } from "../../src/service/authentication.js";
 import { jwtDecode } from "jwt-decode";
 
@@ -36,33 +31,31 @@ const AuthProvider = ({ children }) => {
 
     const login = async (usernameAndPassword) => {
         try {
-            console.log("check 1")
+            console.log("check 1");
             const res = await performLogin(usernameAndPassword);
             const token = res.data?.data?.token;
             const refreshToken = res.data?.data?.refreshToken;
 
-            localStorage.setItem('token', token);
-            localStorage.setItem('refreshToken', refreshToken);
             if (!token) {
                 throw new Error("No token received from server");
             }
-            console.log("check 2")
+            console.log("check 2");
 
+            localStorage.setItem("token", token);
+            localStorage.setItem("refreshToken", refreshToken);
             localStorage.setItem("access_token", token);
 
             const decodedToken = jwtDecode(token);
             const username = decodedToken.sub;
-
-            // Extract role(s) from permission array
             const role = decodedToken.permission?.at(-1)?.authority || null;
 
-
+            console.log("Decoded Token:", decodedToken); // Debug toàn bộ token
+            console.log("Extracted Role:", role); // Debug role
 
             setCustomer({
                 username: username,
                 role: role
             });
-            console.log(customer)
 
             return {
                 ...res,
