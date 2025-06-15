@@ -217,3 +217,11 @@ export const forgotPassword = async (email) => {
     const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/v1/auth/forgot-password`,  email );
     return response.data;
 };
+
+export const resetPassword = async (data) => {
+    const { token, newPassword } = data;
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/v1/user/reset-password?token=${token}`, {
+        newPassword // Gửi newPassword trong body
+    }, );
+    return response.data;
+};
