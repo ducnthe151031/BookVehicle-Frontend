@@ -26,7 +26,7 @@ const LoginForm = () => {
             setMessage('Đăng nhập thành công!');
             const userRole = response.decodedToken?.role;
             console.log('Role from login response:', userRole); // Debug role
-            const redirectPath = userRole === 'ROLE_ADMIN' ? '/vehicle/bookings' : '/home';
+            const redirectPath = userRole === 'ROLE_ADMIN' ? '/vehicle/brands' : '/home';
             setTimeout(() => {
                 navigate(redirectPath);
             }, 1000);

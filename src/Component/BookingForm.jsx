@@ -160,7 +160,7 @@ const BookingForm = ({ onClose, onSuccess }) => {
                                     <option value="">-- Vui lòng chọn xe --</option>
                                     {vehicles.map((vehicle) => (
                                         <option key={vehicle.id} value={vehicle.id}>
-                                            {`${vehicle.vehicleName} (${vehicle.branchId}) - ${vehicle.pricePerDay.toLocaleString('vi-VN')} VNĐ/ngày`}
+                                            {`${vehicle.vehicleName} (${vehicle.branchId}) - ${vehicle.pricePerDay ? vehicle.pricePerDay.toLocaleString('vi-VN') : 'N/A'} VNĐ/ngày`}
                                         </option>
                                     ))}
                                 </select>
