@@ -32,7 +32,7 @@ const Header = ({ logOut, handleChangePassword, customer }) => {
                         onClick={handleNavigateHome}
                         className="text-3xl font-extrabold tracking-tight hover:text-blue-200 transition-colors duration-200 focus:outline-none"
                     >
-                        RentalCars
+                        Rental Vehicles
                     </button>
                 </div>
                 <div className="flex items-center space-x-4">
