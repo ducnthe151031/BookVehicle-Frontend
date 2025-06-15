@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from './Header';
+import Header from '../Header.jsx';
 
 const PaymentPage = () => {
     const navigate = useNavigate();
