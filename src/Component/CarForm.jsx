@@ -1,92 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import { Car, MapPin, Calendar, DollarSign, Fuel, Settings, Users, Tag, Building, FileText, Plus, X } from 'lucide-react';
 import CRMLayout from "./Crm.jsx";
-import { createCar, getBrands } from "../service/authentication.js";
+import { createCar, updateVehicle } from "../service/authentication.js";
 
-const CarForm = ({ onClose, onSuccess }) => {
+const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
     const [formData, setFormData] = useState({
+        id: '', // Added for edit mode
         name: '',
-        location: '',
-        minimum_age: '',
-        daily_price: '',
-        type: 'Gasoline',
-        gearbox: 'Automatic',
-        seats: '',
+        brand: '', // Using hardcoded ID
         category: '',
-        brand: '', // Default to empty string for select
+        type: 'Gasoline',
+        seats: '',
+        dailyPrice: '',
+        hourlyPrice: '',
         licensePlate: '',
         description: '',
+        gearbox: 'Automatic',
+        location: '',
+        vehicleTypeId: '',
     });
 
     const [errors, setErrors] = useState({});
     const [message, setMessage] = useState('');
-    const [brands, setBrands] = useState([]); // State to store brand options
 
-    // Fetch brand list from API
+    // Hardcoded brands and categories
+    const brands = [
+        { id: '1', name: 'Toyota' },
+        { id: '2', name: 'Honda' },
+        { id: '3', name: 'Mazda' },
+        { id: '4', name: 'VinFast' },
+        { id: '5', name: 'Yamaha' }, // Added for Xe máy
+    ];
+
+    const categories = [
+        { id: '1', name: 'Sedan' },
+        { id: '2', name: 'SUV' },
+        { id: '3', name: 'Hatchback' },
+        { id: '4', name: 'Motorcycle' }, // Xe máy
+        { id: '5', name: 'Coupe' },
+    ];
+
     useEffect(() => {
-        const fetchBrands = async () => {
-            try {
-                const data = await getBrands();
-                if (data.httpStatus === 200) {
-                    // Remove duplicates based on name using Map
-                    const uniqueBrands = [...new Map(data.data.map(item => [item.name, item])).values()];
-                    setBrands(uniqueBrands);
-                } else {
-                    setMessage('Lỗi khi tải danh sách hãng xe.');
-                }
-            } catch (error) {
-                setMessage('Không thể kết nối đến server để lấy danh sách hãng xe.');
-            }
-        };
-
-        fetchBrands();
-    }, []);
+        // Set initial data if in edit mode
+        if (isEditMode && initialData) {
+            setFormData({
+                id: initialData.id || '',
+                name: initialData.vehicleName || '',
+                brand: initialData.branchId || '', // Assuming branchId is the brand ID
+                category: initialData.categoryId || '',
+                type: initialData.fuelType || 'Gasoline',
+                seats: initialData.seatCount || '',
+                dailyPrice: initialData.pricePerDay || '',
+                hourlyPrice: initialData.pricePerHour || '',
+                licensePlate: initialData.liecensePlate || '',
+                description: initialData.description || '',
+                gearbox: initialData.gearBox || 'Automatic',
+                location: initialData.location || '',
+                vehicleTypeId: initialData.vehicleTypeId || '',
+            });
+        }
+    }, [isEditMode, initialData]);
 
     const validateForm = () => {
         const newErrors = {};
 
-        // Tên xe
-        if (!formData.name.trim()) {
-            newErrors.name = 'Tên xe không được để trống';
-        } else if (formData.name.length < 3) {
-            newErrors.name = 'Tên xe phải có ít nhất 3 ký tự';
-        }
-
-        // Địa điểm
-        if (!formData.location.trim()) {
-            newErrors.location = 'Địa điểm không được để trống';
-        }
-
-        // Độ tuổi xe
-        if (!formData.minimum_age) {
-            newErrors.minimum_age = 'Độ tuổi xe không được để trống';
-        } else if (formData.minimum_age < 0 || formData.minimum_age > 50) {
-            newErrors.minimum_age = 'Độ tuổi xe phải từ 0-50 năm';
-        }
-
-        // Giá thuê
-        if (!formData.daily_price) {
-            newErrors.daily_price = 'Giá thuê không được để trống';
-        } else if (formData.daily_price < 100000) {
-            newErrors.daily_price = 'Giá thuê phải từ 100,000 VNĐ trở lên';
-        }
-
-        // Số chỗ ngồi
-        if (!formData.seats) {
-            newErrors.seats = 'Số chỗ ngồi không được để trống';
-        } else if (formData.seats < 2 || formData.seats > 50) {
-            newErrors.seats = 'Số chỗ ngồi phải từ 2-50 chỗ';
-        }
-
-        // Phân loại xe
-        if (!formData.category) {
-            newErrors.category = 'Vui lòng chọn phân loại xe';
-        }
-
-        // Biển số xe
-        if (formData.licensePlate && !/^[0-9]{2}[A-Z]{1,2}-[0-9]{4,5}$/.test(formData.licensePlate)) {
-            newErrors.licensePlate = 'Biển số xe không đúng định dạng (VD: 30A-12345)';
-        }
+        if (!formData.name.trim()) newErrors.name = 'Tên xe không được để trống';
+        if (!formData.brand.trim()) newErrors.brand = 'Hãng xe không được để trống';
+        if (!formData.category.trim()) newErrors.category = 'Phân loại xe không được để trống';
+        if (!formData.type.trim()) newErrors.type = 'Loại nhiên liệu không được để trống';
+        if (!formData.seats || formData.seats < 2 || formData.seats > 50) newErrors.seats = 'Số ghế phải từ 2-50';
+        if (!formData.dailyPrice || formData.dailyPrice < 100000) newErrors.dailyPrice = 'Giá ngày phải từ 100,000 VNĐ';
+        if (formData.hourlyPrice && formData.hourlyPrice < 10000) newErrors.hourlyPrice = 'Giá giờ phải từ 10,000 VNĐ';
+        if (formData.licensePlate && !/^[0-9]{2}[A-Z]{1,2}-[0-9]{4,5}$/.test(formData.licensePlate)) newErrors.licensePlate = 'Biển số không đúng định dạng (VD: 30A-12345)';
+        if (!formData.location.trim()) newErrors.location = 'Địa điểm không được để trống';
+        if (!formData.vehicleTypeId.trim()) newErrors.vehicleTypeId = 'Loại xe không được để trống';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -98,14 +85,7 @@ const CarForm = ({ onClose, onSuccess }) => {
             ...formData,
             [name]: value,
         });
-
-        // Clear error when user starts typing
-        if (errors[name]) {
-            setErrors({
-                ...errors,
-                [name]: ''
-            });
-        }
+        if (errors[name]) setErrors({ ...errors, [name]: '' });
     };
 
     const handleSubmit = async (e) => {
@@ -113,38 +93,54 @@ const CarForm = ({ onClose, onSuccess }) => {
         setMessage('');
 
         if (!validateForm()) {
-            setMessage('Vui lòng kiểm tra lại thông tin đã nhập vào');
+            setMessage('Vui lòng kiểm tra lại thông tin nhập vào');
             return;
         }
 
         try {
             const payload = {
-                ...formData,
-                minimum_age: Number(formData.minimum_age),
-                daily_price: Number(formData.daily_price),
+                id: formData.id, // Include id for update
+                name: formData.name,
+                brand: formData.brand, // Using brand ID
+                category: formData.category,
+                type: formData.type,
                 seats: Number(formData.seats),
+                dailyPrice: Number(formData.dailyPrice),
+                hourlyPrice: formData.hourlyPrice ? Number(formData.hourlyPrice) : null,
+                licensePlate: formData.licensePlate,
+                description: formData.description,
+                gearbox: formData.gearbox,
+                location: formData.location,
+                vehicleTypeId: formData.vehicleTypeId,
             };
 
-            await createCar(payload);
+            if (isEditMode && initialData) {
+                await updateVehicle(initialData.id, payload);
+                setMessage('Cập nhật xe thành công!');
+            } else {
+                await createCar(payload);
+                setMessage('Tạo xe thành công!');
+            }
 
-            setMessage('Tạo xe thành công!');
             setFormData({
+                id: '',
                 name: '',
-                location: '',
-                minimum_age: '',
-                daily_price: '',
-                type: 'Gasoline',
-                gearbox: 'Automatic',
-                seats: '',
+                brand: '',
                 category: '',
-                brand: '', // Reset to empty string
+                type: 'Gasoline',
+                seats: '',
+                dailyPrice: '',
+                hourlyPrice: '',
                 licensePlate: '',
                 description: '',
+                gearbox: 'Automatic',
+                location: '',
+                vehicleTypeId: '',
             });
             setErrors({});
-            if (onSuccess) onSuccess(); // Trigger success callback to reload and close
+            if (onSuccess) onSuccess();
         } catch (error) {
-            setMessage(error.response?.data?.message || 'Lỗi khi tạo xe.');
+            setMessage(error.response?.data?.message || (isEditMode ? 'Lỗi khi cập nhật xe' : 'Lỗi khi tạo xe'));
         }
     };
 
@@ -155,7 +151,7 @@ const CarForm = ({ onClose, onSuccess }) => {
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6 flex justify-between items-center">
                         <h2 className="text-xl font-semibold text-white flex items-center gap-2">
                             <Plus className="w-5 h-5" />
-                            Thông tin xe
+                            {isEditMode ? 'Chỉnh sửa xe' : 'Thêm xe mới'}
                         </h2>
                         {onClose && (
                             <button
@@ -178,10 +174,8 @@ const CarForm = ({ onClose, onSuccess }) => {
                                 <input
                                     type="text"
                                     name="name"
-                                    placeholder="Nhập tên xe"
                                     value={formData.name}
                                     onChange={handleChange}
-                                    required
                                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
                                         errors.name ? 'border-red-500 bg-red-50' : 'border-gray-300'
                                     }`}
@@ -189,129 +183,28 @@ const CarForm = ({ onClose, onSuccess }) => {
                                 {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                             </div>
 
-                            {/* Địa điểm */}
+                            {/* Hãng xe */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    <MapPin className="w-4 h-4 inline mr-2" />
-                                    Địa điểm
-                                </label>
-                                <input
-                                    type="text"
-                                    name="location"
-                                    placeholder="Địa điểm của xe"
-                                    value={formData.location}
-                                    onChange={handleChange}
-                                    required
-                                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
-                                        errors.location ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                                    }`}
-                                />
-                                {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
-                            </div>
-
-                            {/* Độ tuổi xe */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    <Calendar className="w-4 h-4 inline mr-2" />
-                                    Độ tuổi xe (năm)
-                                </label>
-                                <input
-                                    type="number"
-                                    name="minimum_age"
-                                    placeholder="Độ tuổi của xe"
-                                    value={formData.minimum_age}
-                                    onChange={handleChange}
-                                    required
-                                    min="0"
-                                    max="50"
-                                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
-                                        errors.minimum_age ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                                    }`}
-                                />
-                                {errors.minimum_age && <p className="mt-1 text-sm text-red-600">{errors.minimum_age}</p>}
-                            </div>
-
-                            {/* Giá thuê */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    <DollarSign className="w-4 h-4 inline mr-2" />
-                                    Giá thuê theo ngày (VNĐ)
-                                </label>
-                                <input
-                                    type="number"
-                                    name="daily_price"
-                                    placeholder="Giá thuê theo ngày"
-                                    value={formData.daily_price}
-                                    onChange={handleChange}
-                                    required
-                                    min="100000"
-                                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
-                                        errors.daily_price ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                                    }`}
-                                />
-                                {errors.daily_price && <p className="mt-1 text-sm text-red-600">{errors.daily_price}</p>}
-                            </div>
-
-                            {/* Số chỗ ngồi */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    <Users className="w-4 h-4 inline mr-2" />
-                                    Số chỗ ngồi
-                                </label>
-                                <input
-                                    type="number"
-                                    name="seats"
-                                    placeholder="Số chỗ ngồi"
-                                    value={formData.seats}
-                                    onChange={handleChange}
-                                    required
-                                    min="2"
-                                    max="50"
-                                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
-                                        errors.seats ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                                    }`}
-                                />
-                                {errors.seats && <p className="mt-1 text-sm text-red-600">{errors.seats}</p>}
-                            </div>
-
-                            {/* Loại nhiên liệu */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    <Fuel className="w-4 h-4 inline mr-2" />
-                                    Loại nhiên liệu
+                                    <Building className="w-4 h-4 inline mr-2" />
+                                    Hãng xe
                                 </label>
                                 <select
-                                    name="type"
-                                    value={formData.type}
+                                    name="brand"
+                                    value={formData.brand}
                                     onChange={handleChange}
-                                    required
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white"
+                                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white ${
+                                        errors.brand ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                    }`}
                                 >
-                                    <option value="Diesel">Diesel</option>
-                                    <option value="Gasoline">Xăng</option>
-                                    <option value="Electric">Điện</option>
-                                    <option value="Hybrid">Hybrid</option>
-                                    <option value="PlugInHybrid">Plug-in Hybrid</option>
-                                    <option value="Unknown">Không rõ</option>
+                                    <option value="">Chọn hãng xe</option>
+                                    {brands.map((brand) => (
+                                        <option key={brand.id} value={brand.id}>
+                                            {brand.name}
+                                        </option>
+                                    ))}
                                 </select>
-                            </div>
-
-                            {/* Hộp số */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    <Settings className="w-4 h-4 inline mr-2" />
-                                    Hộp số
-                                </label>
-                                <select
-                                    name="gearbox"
-                                    value={formData.gearbox}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white"
-                                >
-                                    <option value="Manual">Số sàn</option>
-                                    <option value="Automatic">Số tự động</option>
-                                </select>
+                                {errors.brand && <p className="mt-1 text-sm text-red-600">{errors.brand}</p>}
                             </div>
 
                             {/* Phân loại xe */}
@@ -324,57 +217,102 @@ const CarForm = ({ onClose, onSuccess }) => {
                                     name="category"
                                     value={formData.category}
                                     onChange={handleChange}
-                                    required
                                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white ${
                                         errors.category ? 'border-red-500 bg-red-50' : 'border-gray-300'
                                     }`}
                                 >
-                                    <option value="">Chọn phân loại xe</option>
-                                    <option value="Sedan">Sedan</option>
-                                    <option value="SUV">SUV</option>
-                                    <option value="Hatchback">Hatchback</option>
-                                    <option value="Coupe">Coupe</option>
-                                    <option value="Convertible">Convertible</option>
-                                    <option value="Pickup">Pickup</option>
-                                    <option value="Van">Van</option>
-                                    <option value="Crossover">Crossover</option>
-                                    <option value="Wagon">Wagon</option>
-                                    <option value="Minivan">Minivan</option>
+                                    <option value="">Chọn phân loại</option>
+                                    {categories.map((cat) => (
+                                        <option key={cat.id} value={cat.id}>
+                                            {cat.name}
+                                        </option>
+                                    ))}
                                 </select>
                                 {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
                             </div>
 
-                            {/* Hãng xe (Updated to select) */}
+                            {/* Loại nhiên liệu */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    <Building className="w-4 h-4 inline mr-2" />
-                                    Hãng xe
+                                    <Fuel className="w-4 h-4 inline mr-2" />
+                                    Loại nhiên liệu
                                 </label>
                                 <select
-                                    name="brand"
-                                    value={formData.brand}
+                                    name="type"
+                                    value={formData.type}
                                     onChange={handleChange}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white"
                                 >
-                                    <option value="">Chọn hãng xe</option>
-                                    {brands.map((brand) => (
-                                        <option key={brand.id} value={brand.name}>
-                                            {brand.name}
-                                        </option>
-                                    ))}
+                                    <option value="Diesel">Diesel</option>
+                                    <option value="PETROL">Xăng</option>
+                                    <option value="Electric">Điện</option>
                                 </select>
+                                {errors.type && <p className="mt-1 text-sm text-red-600">{errors.type}</p>}
                             </div>
 
-                            {/* Biển số xe */}
+                            {/* Số ghế */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <Users className="w-4 h-4 inline mr-2" />
+                                    Số ghế
+                                </label>
+                                <input
+                                    type="number"
+                                    name="seats"
+                                    value={formData.seats}
+                                    onChange={handleChange}
+                                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
+                                        errors.seats ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                />
+                                {errors.seats && <p className="mt-1 text-sm text-red-600">{errors.seats}</p>}
+                            </div>
+
+                            {/* Giá ngày */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <DollarSign className="w-4 h-4 inline mr-2" />
+                                    Giá ngày (VNĐ)
+                                </label>
+                                <input
+                                    type="number"
+                                    name="dailyPrice"
+                                    value={formData.dailyPrice}
+                                    onChange={handleChange}
+                                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
+                                        errors.dailyPrice ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                />
+                                {errors.dailyPrice && <p className="mt-1 text-sm text-red-600">{errors.dailyPrice}</p>}
+                            </div>
+
+                            {/* Giá giờ */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <DollarSign className="w-4 h-4 inline mr-2" />
+                                    Giá giờ (VNĐ)
+                                </label>
+                                <input
+                                    type="number"
+                                    name="hourlyPrice"
+                                    value={formData.hourlyPrice}
+                                    onChange={handleChange}
+                                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
+                                        errors.hourlyPrice ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                />
+                                {errors.hourlyPrice && <p className="mt-1 text-sm text-red-600">{errors.hourlyPrice}</p>}
+                            </div>
+
+                            {/* Biển số */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     <Tag className="w-4 h-4 inline mr-2" />
-                                    Biển số xe
+                                    Biển số
                                 </label>
                                 <input
                                     type="text"
                                     name="licensePlate"
-                                    placeholder="VD: 30A-12345"
                                     value={formData.licensePlate}
                                     onChange={handleChange}
                                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
@@ -388,16 +326,71 @@ const CarForm = ({ onClose, onSuccess }) => {
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     <FileText className="w-4 h-4 inline mr-2" />
-                                    Mô tả thêm
+                                    Mô tả
                                 </label>
                                 <textarea
                                     name="description"
-                                    placeholder="Mô tả thêm về xe, tình trạng, trang thiết bị..."
                                     value={formData.description}
                                     onChange={handleChange}
                                     rows={4}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 resize-none"
                                 />
+                            </div>
+
+                            {/* Hộp số */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <Settings className="w-4 h-4 inline mr-2" />
+                                    Hộp số
+                                </label>
+                                <select
+                                    name="gearbox"
+                                    value={formData.gearbox}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white"
+                                >
+                                    <option value="AUTOMATIC">Tự động</option>
+                                    <option value="Manual">Số sàn</option>
+                                </select>
+                            </div>
+
+                            {/* Địa điểm */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <MapPin className="w-4 h-4 inline mr-2" />
+                                    Địa điểm
+                                </label>
+                                <input
+                                    type="text"
+                                    name="location"
+                                    value={formData.location}
+                                    onChange={handleChange}
+                                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
+                                        errors.location ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                />
+                                {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
+                            </div>
+
+                            {/* Loại xe ID */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <Tag className="w-4 h-4 inline mr-2" />
+                                    Loại xe
+                                </label>
+                                <select
+                                    name="vehicleTypeId"
+                                    value={formData.vehicleTypeId}
+                                    onChange={handleChange}
+                                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white ${
+                                        errors.vehicleTypeId ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                >
+                                    <option value="">Chọn loại xe</option>
+                                    <option value="1">Xe máy</option>
+                                    <option value="2">Xe ô tô</option>
+                                </select>
+                                {errors.vehicleTypeId && <p className="mt-1 text-sm text-red-600">{errors.vehicleTypeId}</p>}
                             </div>
                         </div>
 
@@ -418,7 +411,7 @@ const CarForm = ({ onClose, onSuccess }) => {
                                 className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
                             >
                                 <Plus className="w-5 h-5" />
-                                Tạo Xe
+                                {isEditMode ? 'Cập nhật' : 'Tạo Xe'}
                             </button>
                         </div>
 
