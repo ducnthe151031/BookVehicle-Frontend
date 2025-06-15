@@ -11,27 +11,52 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate, useLocation } from "react-router-dom";
 import BookingForm from "./BookingForm.jsx";
 
+const Unauthorized = () => (
+
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-xl shadow-lg max-w-md">
+            <X className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Không có quyền truy cập</h2>
+            <p className="text-gray-600 mb-6">Bạn không có quyền để truy cập vào trang này. Vui lòng liên hệ quản trị viên nếu cần hỗ trợ.</p>
+            <button
+                onClick={() => navigate('/home')}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+                Quay lại trang chủ
+            </button>
+        </div>
+    </div>
+);
+
 const CRMLayout = ({ children }) => {
     const [collapsedSidebar, setCollapsedSidebar] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
-    const location = useLocation(); // Use real useLocation from react-router-dom
+    const location = useLocation();
     const { logOut, customer } = useAuth();
     const navigate = useNavigate();
 
     const navigation = [
-        { name: 'Đơn đặt xe', icon: FileText, path: '/vehicle/bookings', roles: ['ROLE_ADMIN'] },
+        // { name: 'Đơn đặt xe', icon: FileText, path: '/vehicle/bookings', roles: ['ROLE_ADMIN'] },
         { name: 'Hãng xe', icon: Building2, path: '/vehicle/brands', roles: ['ROLE_ADMIN'] },
+        { name: 'Loại xe', icon: Building2, path: '/vehicle/categories', roles: ['ROLE_ADMIN'] },
         { name: 'Danh sách xe', icon: Car, path: '/vehicle', roles: ['ROLE_ADMIN'] },
-
+        { name: 'Danh sách thuê xe', icon: Car, path: '/rentals', roles: ['ROLE_ADMIN'] },
     ];
 
     const filteredNavigation = navigation.filter(
         (item) => !item.roles || item.roles.includes(customer?.role)
     );
 
+    // Kiểm tra xem đường dẫn hiện tại có được phép không
+    const isAuthorized = filteredNavigation.some((item) => item.path === location.pathname);
+
     const handleNavClick = (path) => {
         navigate(path);
     };
+
+    if (!isAuthorized && location.pathname !== '/' && !location.pathname.startsWith('/login')) {
+        return <Unauthorized />;
+    }
 
     return (
         <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
