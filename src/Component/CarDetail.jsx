@@ -214,7 +214,7 @@ const CarDetail = () => {
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         <CheckCircle className="w-4 h-4 text-green-600" />
-                                        <span>Số dặm/kilomét không giới hạn</span>
+                                        <span>Số dặm/kilomet không giới hạn</span>
                                     </div>
                                 </div>
                             </div>
