@@ -267,7 +267,7 @@ const BookingForm = ({ onClose, onSuccess }) => {
                             </button>
                         </div>
 
-                        {/* Message */}
+                        {/*  Message */}
                         {message && (
                             <div className={`mt-6 p-4 rounded-xl text-center font-medium ${
                                 message.includes('thành công')
