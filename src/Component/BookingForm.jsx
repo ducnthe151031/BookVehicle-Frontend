@@ -18,7 +18,7 @@ const BookingForm = ({ onClose, onSuccess }) => {
     const [message, setMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch vehicle list
+    //   Fetch vehicle list
     useEffect(() => {
         const fetchVehicles = async () => {
             setIsLoading(true);
