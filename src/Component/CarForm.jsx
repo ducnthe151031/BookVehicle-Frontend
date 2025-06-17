@@ -23,7 +23,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
     const [errors, setErrors] = useState({});
     const [message, setMessage] = useState('');
 
-    // Hardcoded brands and categories
+    //  Hardcoded brands and categories
     const brands = [
         { id: '1', name: 'Toyota' },
         { id: '2', name: 'Honda' },
