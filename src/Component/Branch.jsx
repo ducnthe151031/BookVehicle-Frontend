@@ -8,7 +8,7 @@ const BrandList = () => {
     const [message, setMessage] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Fetch brand list
+    //   Fetch brand list
     const fetchBrands = async () => {
         try {
             const data = await getBrands();
