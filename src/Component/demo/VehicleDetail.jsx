@@ -22,9 +22,9 @@ const VehicleDetail = () => {
                         <span>{car.desc}</span>
                     </div>
                     <div className="vehicle-location">📍 {car.location}</div>
-                    {/* Bạn có thể bổ sung các field như car.licensePlate nếu có */}
+                    {/* Bạn có thể bổ sung các field   như car.licensePlate nếu có */}
                     <p className="vehicle-desc">
-                        {/* Nếu car.desc ngắn, bạn có thể thêm mô tả dài */}
+                        {/* Nếu car.desc ngắn, bạn   có thể thêm mô tả dài */}
                         Đây là một chiếc xe tuyệt vời dành cho các chuyến đi ngắn hoặc dài. Xe được bảo trì tốt và đã phục vụ nhiều khách hàng hài lòng.
                     </p>
                     <ul className="vehicle-utilities">
