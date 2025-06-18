@@ -23,7 +23,7 @@ const RentalList = () => {
                     // Tính toán rentType dựa trên chênh lệch thời gian
                     const startDate = new Date(rental.startDate);
                     const endDate = new Date(rental.endDate);
-                    const timeDiffMs = endDate - startDate; // Chênh lệch thời gian tính bằng mili giây
+                    const timeDiffMs = endDate - startDate; //  Chênh lệch thời gian tính bằng mili giây
                     const hoursDiff = timeDiffMs / (1000 * 60 * 60); // Chuyển sang giờ
 
                     let rentType;
