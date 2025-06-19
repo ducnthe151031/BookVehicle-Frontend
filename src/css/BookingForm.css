@@ -82,21 +82,23 @@ label input[type="checkbox"] {
 
 /* Nút submit */
 .booking-btn {
-    grid-column: span 2;
-    padding: 14px 0;
-    background: #5c8df6;
+    display: block;
+    width: 100%;
+    max-width: 200px;
+    margin: 20px auto 0 auto;
+    padding: 14px;
+    font-size: 18px;
+    font-weight: bold;
+    background: linear-gradient(to right, #5c8df6, #3a63d9);
     color: white;
-    font-weight: 600;
-    font-size: 1.1rem;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: background-color 0.25s ease;
-    user-select: none;
+    transition: background 0.3s ease;
 }
 
 .booking-btn:hover {
-    background-color: #3a63d9;
+    background: linear-gradient(to right, #4a7ae0, #2d52bd);
 }
 
 /* Scroll đẹp */
