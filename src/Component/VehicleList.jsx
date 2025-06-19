@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CarForm from './CarForm.jsx';
-
 import { getVehicles, deleteVehicle, getBrands, getCategories } from '../service/authentication.js'; // Import getBrands, getCategories
 import { Car, Fuel, Users, Tag, Building, Calendar, DollarSign, FileText, X, Plus, Edit, Trash2, Image as ImageIcon, CheckCircle } from 'lucide-react'; // Added ImageIcon, CheckCircle
-
-import { getVehicles, deleteVehicle, updateVehicle } from '../service/authentication.js';
-import { Car, Fuel, Users, Tag, Building, Calendar, DollarSign, FileText, X, Plus, Edit, Trash2 } from 'lucide-react';
-
 import CRMLayout from "./Crm.jsx";
 
 const VehicleList = () => {
@@ -16,11 +11,8 @@ const VehicleList = () => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const pageSize = 10;
-
     const [brands, setBrands] = useState([]); // New state for brands
     const [categories, setCategories] = useState([]); // New state for categories
-
-
 
     const [filters, setFilters] = useState({
         brands: '',
@@ -35,7 +27,6 @@ const VehicleList = () => {
     const [showAddForm, setShowAddForm] = useState(false);
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [editMode, setEditMode] = useState(false);
-
 
     // Helper to get full image URL from filename (assuming backend serves from /v1/user/images/)
     const getFullImageUrl = (filename) => {
@@ -57,8 +48,6 @@ const VehicleList = () => {
     };
 
     // Fetch vehicles
-
-
     const fetchVehicles = async (pageNumber, filterParams) => {
         setLoading(true);
         setError('');
@@ -77,7 +66,6 @@ const VehicleList = () => {
             setLoading(false);
         }
     };
-
 
     // Fetch brands and categories once on mount
     useEffect(() => {
@@ -102,8 +90,6 @@ const VehicleList = () => {
     }, []); // Empty dependency array means run once on mount
 
     // Fetch vehicles whenever page or filters change
-
-
     useEffect(() => {
         fetchVehicles(page, filters);
     }, [page, filters]);
@@ -118,12 +104,7 @@ const VehicleList = () => {
 
     const handleFilterSubmit = (e) => {
         e.preventDefault();
-
         setPage(0); // Reset to first page on new filter submission
-
-        setPage(0);
-        fetchVehicles(0, filters);
-
     };
 
     const handleFilterReset = () => {
@@ -137,23 +118,11 @@ const VehicleList = () => {
             vehicleTypeId: '',
             location: '',
         });
-
         setPage(0); // Reset page on filter clear
     };
 
     const handlePageChange = (newPage) => {
         setPage(newPage); // Page effect hook will re-fetch
-
-        setPage(0);
-        fetchVehicles(0, {});
-    };
-
-    const handlePageChange = (newPage) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            setPage(newPage);
-            fetchVehicles(newPage, filters);
-        }
-
     };
 
     const handleEdit = (vehicle) => {
@@ -166,15 +135,10 @@ const VehicleList = () => {
         if (window.confirm(`Bạn có chắc muốn xóa xe với ID: ${vehicleId}?`)) {
             setLoading(true);
             try {
-
                 // Assuming deleteVehicle is fixed to handle the ID correctly
                 await deleteVehicle(vehicleId);
                 // Refresh the list after deletion
                 fetchVehicles(page, filters); // Re-fetch current page to ensure correct list
-
-                await deleteVehicle(vehicleId);
-                setVehicles(vehicles.filter(vehicle => vehicle.id !== vehicleId));
-
                 setError('');
                 alert('Xóa xe thành công!');
             } catch (err) {
@@ -192,19 +156,11 @@ const VehicleList = () => {
         setEditMode(false);
     };
 
-
     const handleAddFormSuccess = () => { // No need for vehicleData param here
         setShowAddForm(false);
         setSelectedVehicle(null);
         setEditMode(false);
         fetchVehicles(page, filters); // Re-fetch current page to update list
-
-    const handleAddFormSuccess = async (vehicleData) => {
-        setShowAddForm(false);
-        setSelectedVehicle(null);
-        setEditMode(false);
-        fetchVehicles(page, filters);
-
     };
 
     return (
@@ -273,49 +229,6 @@ const VehicleList = () => {
                             </div>
 
 
-
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    <Tag className="w-3 h-3 inline mr-1" />
-                                    Loại xe ID
-                                </label>
-                                <input
-                                    type="text"
-                                    name="vehicleTypeId"
-                                    placeholder="VD: 2"
-                                    value={filters.vehicleTypeId}
-                                    onChange={handleFilterChange}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    <Calendar className="w-3 h-3 inline mr-1" />
-                                    Từ ngày
-                                </label>
-                                <input
-                                    type="datetime-local"
-                                    name="startDate"
-                                    value={filters.startDate}
-                                    onChange={handleFilterChange}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    <Calendar className="w-3 h-3 inline mr-1" />
-                                    Đến ngày
-                                </label>
-                                <input
-                                    type="datetime-local"
-                                    name="endDate"
-                                    value={filters.endDate}
-                                    onChange={handleFilterChange}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
-                                />
-                            </div>
-
                             <div>
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
                                     <Tag className="w-3 h-3 inline mr-1" />
@@ -330,7 +243,6 @@ const VehicleList = () => {
                                     <option value="">Tất cả</option>
                                     <option value="AVAILABLE">Có sẵn</option>
                                     <option value="UNAVAILABLE">Không có sẵn</option>
-
                                     <option value="RENTED">Đã thuê</option>
                                     <option value="MAINTENANCE">Đang bảo trì</option>
                                     <option value="HIDDEN">Đã ẩn</option>
@@ -339,33 +251,6 @@ const VehicleList = () => {
 
                         </form>
                         <div className="mt-3 flex justify-end gap-2">
-
-
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">
-                                    <Building className="w-3 h-3 inline mr-1" />
-                                    Địa điểm
-                                </label>
-                                <input
-                                    type="text"
-                                    name="location"
-                                    placeholder="VD: TP.HCM"
-                                    value={filters.location}
-                                    onChange={handleFilterChange}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
-                                />
-                            </div>
-                        </form>
-                        <div className="mt-3 flex justify-end gap-2">
-                            <button
-                                type="submit"
-                                onClick={handleFilterSubmit}
-                                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
-                            >
-                                Áp dụng
-                            </button>
 
                             <button
                                 onClick={handleFilterReset}
@@ -417,10 +302,7 @@ const VehicleList = () => {
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                     <tr>
-
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ảnh</th> {/* New column for image */}
-
-
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên xe</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hãng</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại xe</th>
@@ -432,19 +314,15 @@ const VehicleList = () => {
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hộp số</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Địa điểm</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại phương tiện</th> {/* Renamed from Loại xe ID */}
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đăng ký xe</th> {/* New column for registration doc */}
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phê duyệt</th> {/* New column for approval status */}
-
-
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                                     </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                     {vehicles.map((vehicle) => (
                                         <tr key={vehicle.id} className="hover:bg-gray-50">
-
                                             {/* Vehicle Image */}
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 {vehicle.imageUrl ? (
@@ -453,8 +331,6 @@ const VehicleList = () => {
                                                     <ImageIcon className="w-10 h-10 text-gray-300" />
                                                 )}
                                             </td>
-
-
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-1">
                                                     <Car className="w-3 h-3 text-gray-500" />
@@ -464,21 +340,13 @@ const VehicleList = () => {
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-1">
                                                     <Building className="w-3 h-3 text-gray-500" />
-
                                                     <span className="text-gray-900">{getBrandName(vehicle.branchId)}</span> {/* Use helper */}
-
-                                                    <span className="text-gray-900">{vehicle.branchId}</span>
-
                                                 </div>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-1">
                                                     <Tag className="w-3 h-3 text-gray-500" />
-
                                                     <span className="text-gray-900">{getCategoryName(vehicle.categoryId)}</span> {/* Use helper */}
-
-                                                    <span className="text-gray-900">{vehicle.categoryId}</span>
-
                                                 </div>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
@@ -529,7 +397,6 @@ const VehicleList = () => {
                                                 </span>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
-
                                                 <div className="flex items-center gap-1">
                                                     <Car className="w-3 h-3 text-gray-500" />
                                                     <span className="text-gray-900">
@@ -557,8 +424,6 @@ const VehicleList = () => {
                                                 )}
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
-
-
                                                 <div className="flex gap-1">
                                                     <button
                                                         onClick={() => handleEdit(vehicle)}
