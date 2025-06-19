@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, DollarSign, User, Car, Check, X } from 'lucide-react';
 import CRMLayout from './Crm.jsx';
+
+import {getRentals, getUserProfile, getCarDetails, approveBooking, rejectBooking} from '../service/authentication.js';
+
 import { getRentals, getUserProfile, getCarDetails, approveBooking } from '../service/authentication.js';
+
 
 const RentalList = () => {
     const [rentals, setRentals] = useState([]);
@@ -9,6 +13,10 @@ const RentalList = () => {
     const [error, setError] = useState('');
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
+
+    const [searchTerm, setSearchTerm] = useState(''); // Thêm state cho tìm kiếm
+
+
 
     const fetchRentals = async (pageNumber) => {
         setLoading(true);
@@ -32,7 +40,11 @@ const RentalList = () => {
                     if (remainingHours === 0) {
                         rentType = 'Thuê theo ngày';
                     } else {
+
+                        rentType = `Thuê theo giờ`; // Tùy chỉnh với số giờ dư
+
                         rentType = `Thuê linh hoạt`; // Tùy chỉnh với số giờ dư
+
                     }
 
                     return {
@@ -42,7 +54,17 @@ const RentalList = () => {
                         rentType: rentType, // Thêm rentType tính toán
                     };
                 }));
+
+                // Lọc danh sách dựa trên searchTerm
+                const filteredRentals = rentalsWithDetails.filter(rental =>
+                    rental.customerUsername.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    rental.vehicleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    rental.status.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                setRentals(filteredRentals);
+
                 setRentals(rentalsWithDetails);
+
                 setTotalPages(data.data.totalPages);
             } else {
                 setError(data.message || 'Lỗi khi tải danh sách thuê xe');
@@ -56,7 +78,11 @@ const RentalList = () => {
 
     useEffect(() => {
         fetchRentals(page);
+
+    }, [page, searchTerm]); // Thêm searchTerm vào dependency để refetch khi thay đổi
+
     }, [page]);
+
 
     const handlePageChange = (newPage) => {
         if (newPage >= 0 && newPage < totalPages) {
@@ -75,6 +101,19 @@ const RentalList = () => {
         }
     };
 
+
+    const handleReject = async (bookingId) => {
+        try {
+            await rejectBooking(bookingId);
+            // Refresh the list after approval
+            fetchRentals(page);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Không thể phê duyệt đơn');
+        }
+    };
+
+
+
     const getStatusDisplay = (status) => {
         const statusMap = {
             PENDING: { text: 'Chờ duyệt', color: 'bg-yellow-100 text-yellow-800' },
@@ -86,6 +125,18 @@ const RentalList = () => {
         return statusMap[status] || { text: status, color: 'bg-gray-100 text-gray-800' };
     };
 
+
+    const formatDate = (dateString, isHourly) => {
+        const date = new Date(dateString);
+        if (isHourly) {
+            return date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
+        } else {
+            return date.toLocaleString('vi-VN', { dateStyle: 'short' });
+        }
+    };
+
+
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-6 px-4">
             <div className="max-w-6xl mx-auto">
@@ -96,6 +147,20 @@ const RentalList = () => {
                     <h1 className="text-2xl font-bold text-gray-900 mb-1">Danh Sách Thuê Xe</h1>
                     <p className="text-gray-600 text-sm">Quản lý các đơn thuê xe</p>
                 </div>
+
+
+                {/* Thêm bộ lọc tìm kiếm */}
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm theo khách hàng, xe, hoặc trạng thái..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    />
+                </div>
+
+
 
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
@@ -127,16 +192,25 @@ const RentalList = () => {
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày bắt đầu</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày kết thúc</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng giá</th>
+
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái duyệt</th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại thuê</th>
+
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phí trễ</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái duyệt</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại thuê</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+
                                     </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                     {rentals.map((rental) => {
                                         const statusDisplay = getStatusDisplay(rental.status);
                                         const showApproveButton = rental.status === 'PENDING';
+
+                                        const isHourly = rental.rentType.includes('giờ');
+
+
                                         return (
                                             <tr key={rental.id} className="hover:bg-gray-50">
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
@@ -154,13 +228,21 @@ const RentalList = () => {
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     <div className="flex items-center gap-1">
                                                         <Calendar className="w-3 h-3 text-gray-500" />
+
+                                                        {formatDate(rental.startDate, isHourly)}
+
                                                         {new Date(rental.startDate).toLocaleString('vi-VN')}
+
                                                     </div>
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     <div className="flex items-center gap-1">
                                                         <Calendar className="w-3 h-3 text-gray-500" />
+
+                                                        {formatDate(rental.endDate, isHourly)}
+
                                                         {new Date(rental.endDate).toLocaleString('vi-VN')}
+
                                                     </div>
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
@@ -169,6 +251,12 @@ const RentalList = () => {
                                                         {rental.totalPrice ? rental.totalPrice.toLocaleString('vi-VN') : 'N/A'} VNĐ
                                                     </div>
                                                 </td>
+
+                                                <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                        <span className={`inline-block py-0.5 px-2 text-xs font-medium rounded-full ${statusDisplay.color}`}>
+                                                            {statusDisplay.text}
+                                                        </span>
+
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     <div className="flex items-center gap-1">
                                                         <DollarSign className="w-3 h-3 text-gray-500" />
@@ -179,18 +267,39 @@ const RentalList = () => {
                                                     <span className={`inline-block py-0.5 px-2 text-xs font-medium rounded-full ${statusDisplay.color}`}>
                                                         {statusDisplay.text}
                                                     </span>
+
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     {rental.rentType}
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                     {showApproveButton && (
+
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleApprove(rental.id)}
+                                                                className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-all duration-200"
+                                                            >
+                                                                Phê duyệt
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleReject(rental.id)}
+                                                                className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-700 transition-all duration-200"
+                                                            >
+                                                                Từ chối
+                                                            </button>
+
+                                                        </>
+
+
+
                                                         <button
                                                             onClick={() => handleApprove(rental.id)}
                                                             className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-all duration-200"
                                                         >
                                                             Phê duyệt
                                                         </button>
+
                                                     )}
                                                 </td>
                                             </tr>

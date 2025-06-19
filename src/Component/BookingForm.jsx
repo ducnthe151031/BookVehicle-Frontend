@@ -18,16 +18,29 @@ const BookingForm = ({ onClose, onSuccess }) => {
     const [message, setMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
+
+    // Fetch vehicle list
+
     //   Fetch vehicle list
+
     useEffect(() => {
         const fetchVehicles = async () => {
             setIsLoading(true);
             try {
+
+                // Fetch only AVAILABLE vehicles for booking
+                const response = await getVehicles(0, 50, { status: 'AVAILABLE' }); // Increased page size, added status filter
+                if (response.data.httpStatus === 200) {
+                    setVehicles(response.data.data.content);
+                } else {
+                    setMessage('Lỗi khi tải danh sách xe: ' + (response.data.message || ''));
+
                 const response = await getVehicles(0, 10);
                 if (response.data.httpStatus === 200) {
                     setVehicles(response.data.data.content);
                 } else {
                     setMessage('Lỗi khi tải danh sách xe.');
+
                 }
             } catch (error) {
                 setMessage('Không thể kết nối đến server để lấy danh sách xe.');
@@ -49,8 +62,13 @@ const BookingForm = ({ onClose, onSuccess }) => {
         }
         if (!formData.endDate) {
             newErrors.endDate = 'Vui lòng chọn ngày kết thúc.';
+
+        } else if (formData.endDate <= formData.startDate) { // End date must be strictly after start date
+            newErrors.endDate = 'Ngày kết thúc phải sau ngày bắt đầu.'; // This error message is correct for strict validation.
+
         } else if (formData.endDate <= formData.startDate) {
             newErrors.endDate = 'Ngày kết thúc phải sau ngày bắt đầu.';
+
         }
 
         setErrors(newErrors);
@@ -73,10 +91,35 @@ const BookingForm = ({ onClose, onSuccess }) => {
     };
 
     const handleDateChange = (name) => (date) => {
+
+        setFormData(prev => {
+            const newFormData = {
+                ...prev,
+                [name]: date,
+            };
+
+            // **FIX: If startDate is changed, ensure endDate is still valid or clear it.**
+            if (name === 'startDate' && date) {
+                // Calculate the true minimum end date (24 hours after start date)
+                const minEndDateForPicker = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+
+                // If the current endDate is invalid (before or same as new minimum), clear it
+                if (newFormData.endDate && newFormData.endDate < minEndDateForPicker) {
+                    newFormData.endDate = null;
+                }
+                // No longer automatically setting endDate to a fixed next day.
+                // Rely on DatePicker's minDate and handleSubmit validation.
+            }
+
+            return newFormData;
+        });
+
+
         setFormData({
             ...formData,
             [name]: date,
         });
+
         if (errors[name]) {
             setErrors({
                 ...errors,
@@ -97,6 +140,50 @@ const BookingForm = ({ onClose, onSuccess }) => {
         }
 
         try {
+
+            // Backend expects LocalDateTime. Converting Date objects to ISO strings.
+            const startDateISO = formData.startDate.toISOString();
+            const endDateISO = formData.endDate.toISOString();
+
+
+            const payload = {
+                vehicleId: formData.vehicleId,
+                startDate: startDateISO,
+                endDate: endDateISO,
+                depositPaid: formData.depositPaid,
+                // These fields are typically filled by the backend or derived from the vehicle/user:
+                // customerId: customer?.id, // Example: customer ID if logged in
+                // status: "PENDING", // Backend should set status for new bookings
+                // createdBy: customer?.username, // Example: username if logged in
+                // brandId: selectedVehicle?.branchId, // From selected vehicle
+                // categoryId: selectedVehicle?.categoryId, // From selected vehicle
+                // rentType: "DAY", // Assuming this form is always for daily rental based on its inputs
+                // totalPrice: calculatedTotalPrice, // Needs to be calculated based on selected vehicle and dates
+            };
+            console.log("Booking Payload:", payload);
+            console.log("start", startDateISO)
+            console.log("end", endDateISO)
+
+            const response = await createBooking(payload);
+
+            if (response.httpStatus === 200) {
+                setMessage('Đặt xe thành công!');
+                // Clear form fields
+                setFormData({
+                    vehicleId: '',
+                    startDate: null,
+                    endDate: null,
+                    depositPaid: false,
+                });
+                setErrors({});
+                if (onSuccess) onSuccess();
+            } else {
+                setMessage(response.message || 'Lỗi khi đặt xe.');
+            }
+        } catch (error) {
+            setMessage(error.response?.data?.message || 'Lỗi khi đặt xe.');
+            console.error("Booking submission error:", error);
+
             const payload = {
                 vehicleId: formData.vehicleId,
                 startDate: formData.startDate.toISOString(),
@@ -117,6 +204,7 @@ const BookingForm = ({ onClose, onSuccess }) => {
             if (onSuccess) onSuccess();
         } catch (error) {
             setMessage(error.response?.data?.message || 'Lỗi khi đặt xe.');
+
         } finally {
             setIsLoading(false);
         }
@@ -160,7 +248,12 @@ const BookingForm = ({ onClose, onSuccess }) => {
                                     <option value="">-- Vui lòng chọn xe --</option>
                                     {vehicles.map((vehicle) => (
                                         <option key={vehicle.id} value={vehicle.id}>
+
+                                            {/* Display vehicle details: Name (Brand) - Price/day */}
+                                            {`${vehicle.vehicleName} (${vehicle.branchId || 'N/A'}) - ${vehicle.pricePerDay ? vehicle.pricePerDay.toLocaleString('vi-VN') : 'N/A'} VNĐ/ngày`}
+
                                             {`${vehicle.vehicleName} (${vehicle.branchId}) - ${vehicle.pricePerDay ? vehicle.pricePerDay.toLocaleString('vi-VN') : 'N/A'} VNĐ/ngày`}
+
                                         </option>
                                     ))}
                                 </select>
@@ -177,11 +270,19 @@ const BookingForm = ({ onClose, onSuccess }) => {
                                     <DatePicker
                                         selected={formData.startDate}
                                         onChange={handleDateChange('startDate')}
+
+                                        minDate={new Date()} // Cannot pick past dates
+                                        dateFormat="yyyy-MM-dd HH:mm"
+                                        showTimeSelect
+                                        timeFormat="HH:mm"
+                                        timeIntervals={60} // Allow selecting minutes at 00, 15, 30, 45 if changed to 15
+
                                         minDate={new Date()}
                                         dateFormat="yyyy-MM-dd HH:mm"
                                         showTimeSelect
                                         timeFormat="HH:mm"
                                         timeIntervals={60}
+
                                         className={`w-full px-5 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 pl-10 ${
                                             errors.startDate ? 'border-red-500 bg-red-50' : 'border-gray-300'
                                         } text-gray-700`}
@@ -202,11 +303,20 @@ const BookingForm = ({ onClose, onSuccess }) => {
                                     <DatePicker
                                         selected={formData.endDate}
                                         onChange={handleDateChange('endDate')}
+
+                                        // FIX: minDate is 24 hours after startDate, ensuring at least one full day.
+                                        minDate={formData.startDate ? new Date(formData.startDate.getTime() + 24 * 60 * 60 * 1000) : new Date()}
+                                        dateFormat="yyyy-MM-dd HH:mm"
+                                        showTimeSelect
+                                        timeFormat="HH:mm"
+                                        timeIntervals={60} // Allow selecting minutes at 00, 15, 30, 45
+
                                         minDate={formData.startDate || new Date()}
                                         dateFormat="yyyy-MM-dd HH:mm"
                                         showTimeSelect
                                         timeFormat="HH:mm"
                                         timeIntervals={60}
+
                                         className={`w-full px-5 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 pl-10 ${
                                             errors.endDate ? 'border-red-500 bg-red-50' : 'border-gray-300'
                                         } text-gray-700`}
@@ -267,7 +377,11 @@ const BookingForm = ({ onClose, onSuccess }) => {
                             </button>
                         </div>
 
+
+                        {/* Message */}
+
                         {/*  Message */}
+
                         {message && (
                             <div className={`mt-6 p-4 rounded-xl text-center font-medium ${
                                 message.includes('thành công')
