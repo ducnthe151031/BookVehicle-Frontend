@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Car, MapPin, Calendar, DollarSign, Fuel, Settings, Users, Tag, Building, FileText, Plus, X, Upload } from 'lucide-react';
+import { Car, MapPin, Calendar,  Fuel, Settings, Users, Tag, Building, FileText, Plus, X, Upload } from 'lucide-react';
 import CRMLayout from "./Crm.jsx";
 import { createCar, updateVehicle } from "../service/authentication.js";
 
@@ -355,7 +355,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    <DollarSign className="w-4 h-4 inline mr-2" />
+
                                     Giá ngày (VNĐ)
                                 </label>
                                 <input
@@ -372,7 +372,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    <DollarSign className="w-4 h-4 inline mr-2" />
+
                                     Giá giờ (VNĐ)
                                 </label>
                                 <input

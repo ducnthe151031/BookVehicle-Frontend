@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Car, Users, Fuel, ArrowLeft, MapPin, Star, CheckCircle, Info, Settings, Upload, Clock, Calendar, DollarSign } from 'lucide-react';
+import { Car, Users, Fuel, ArrowLeft, MapPin, Star, CheckCircle, Info, Settings, Upload, Clock, Calendar } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCarDetails } from '../service/authentication.js';
 import Header from "./Header.jsx";
@@ -122,10 +122,10 @@ const CarDetail = () => {
     }, [carId]);
 
     const handleBookNow = async () => {
-        if (!car || car.status !== 'AVAILABLE') {
-            alert("Xe hiện không có sẵn để đặt.");
-            return;
-        }
+        // if (!car || car.status !== 'AVAILABLE') {
+        //     alert("Xe hiện không có sẵn để đặt.");
+        //     return;
+        // }
 
         if (rentalType === 'day' && (!pickupDate || !returnDate || new Date(pickupDate) > new Date(returnDate))) {
             alert("Vui lòng chọn ngày nhận và ngày trả hợp lệ.");
@@ -347,6 +347,7 @@ const CarDetail = () => {
                                         id="cccdUpload"
                                         className="hidden"
                                         onChange={(e) => handleFileChange(e, setCccdFile)}
+                                        required
                                     />
                                     <button
                                         onClick={() => document.getElementById('cccdUpload').click()}
@@ -365,6 +366,7 @@ const CarDetail = () => {
                                         id="licenseUpload"
                                         className="hidden"
                                         onChange={(e) => handleFileChange(e, setLicenseFile)}
+                                        required
                                     />
                                     <button
                                         onClick={() => document.getElementById('licenseUpload').click()}
