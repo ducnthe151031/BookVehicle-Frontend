@@ -41,7 +41,7 @@ const ChangePassword = () => {
             const response = await changePassword(formData);
             if (response.httpStatus === 200) {
                 setSuccess(true);
-                toast.success('Mật khẩu đã được thay đổi thành công!', {
+                toast.success('Mật khẩu đã được thay đổi thành công !', {
                     position: "top-right",
                     autoClose: 2000,
                     hideProgressBar: false,

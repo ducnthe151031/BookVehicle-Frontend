@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 import { User, Mail, Calendar, Lock, Edit, MapPin, Check, Upload, FileText } from 'lucide-react';
-
-import { User, Mail, Calendar, Lock, Edit, MapPin, Check } from 'lucide-react';
-
 import { getProfile, updateProfile } from '../service/authentication.js';
 import Header from './Header.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const Profile = () => {
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
@@ -17,15 +14,11 @@ const Profile = () => {
     const { customer, logOut } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
 
-
     // State for form data, including Base64 strings for new files or existing filenames
-
-
     const [formData, setFormData] = useState({
         email: '',
         phoneNumber: '',
         address: '',
-
         fullName: '',
         citizenIdCardUrl: '', // Will hold Base64 for new file, or filename for existing
         driverLicenseUrl: '', // Will hold Base64 for new file, or filename for existing
@@ -57,11 +50,6 @@ const Profile = () => {
     };
 
 
-
-        fullName: ''
-    });
-
-
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -70,21 +58,14 @@ const Profile = () => {
                 const data = await getProfile();
                 if (data.httpStatus === 200) {
                     setProfile(data.data);
-
                     // Populate formData with existing profile data
-
-
                     setFormData({
                         email: data.data.email || '',
                         phoneNumber: data.data.phoneNumber || '',
                         address: data.data.address || '',
-
                         fullName: data.data.fullName || '',
                         citizenIdCardUrl: data.data.citizenIdCardUrl || '', // Will be a filename (e.g., "abc.png")
                         driverLicenseUrl: data.data.driverLicenseUrl || '', // Will be a filename (e.g., "xyz.png")
-
-                        fullName: data.data.fullName || ''
-
                     });
                 } else {
                     setError('Không thể tải thông tin hồ sơ.');
@@ -102,17 +83,12 @@ const Profile = () => {
 
     const handleEditToggle = () => {
         setIsEditing(true);
-
         // Ensure formData reflects current profile data when entering edit mode
-
-        // Đảm bảo giữ giá trị hiện tại khi chuyển sang chế độ chỉnh sửa
-
         if (profile) {
             setFormData({
                 email: profile.email || '',
                 phoneNumber: profile.phoneNumber || '',
                 address: profile.address || '',
-
                 fullName: profile.fullName || '',
                 citizenIdCardUrl: profile.citizenIdCardUrl || '', // Load existing filename
                 driverLicenseUrl: profile.driverLicenseUrl || '', // Load existing filename
@@ -123,18 +99,12 @@ const Profile = () => {
         setTempCccdPreviewUrl(null);
         if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
         setTempLicensePreviewUrl(null);
-
-                fullName: profile.fullName || ''
-            });
-        }
-
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
-
 
     // Handler for file input changes (reads file as Base64 and creates preview URL)
     const handleFileInputChange = (e, fieldName) => {
@@ -169,6 +139,7 @@ const Profile = () => {
         }
     };
 
+    // Update the handleSubmit function in Profile.jsx
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -179,7 +150,7 @@ const Profile = () => {
 
             if (response.httpStatus === 200) {
                 setProfile(response.data);
-                setFormData({ // Update formData to reflect the saved state (backend returns filenames)
+                setFormData({
                     email: response.data.email || '',
                     phoneNumber: response.data.phoneNumber || '',
                     address: response.data.address || '',
@@ -188,52 +159,43 @@ const Profile = () => {
                     driverLicenseUrl: response.data.driverLicenseUrl || '',
                 });
                 setIsEditing(false);
-                // Clean up temporary preview URLs after successful submission
                 if (tempCccdPreviewUrl) URL.revokeObjectURL(tempCccdPreviewUrl);
                 setTempCccdPreviewUrl(null);
                 if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
                 setTempLicensePreviewUrl(null);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await updateProfile(formData);
-            if (response.httpStatus === 200) {
-                setProfile(response.data);
-                setIsEditing(false);
-
-                alert('Cập nhật hồ sơ thành công!');
+                // Replace alert with toast notification
+                toast.success('Cập nhật hồ sơ thành công!', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
             } else {
-                setError('Cập nhật hồ sơ thất bại.');
+                toast.error('Cập nhật hồ sơ thất bại.', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
             }
-
-        } catch (submitError) {
-            console.error('Error updating profile:', submitError);
-
         } catch (error) {
-            console.error('Error updating profile:', error);
-
             setError('Có lỗi xảy ra khi cập nhật hồ sơ.');
+            toast.error(error.response?.data?.message, {
+                position: "top-right",
+                autoClose: 3000,
+            });
         } finally {
             setLoading(false);
         }
     };
-
     const handleCancel = () => {
         setIsEditing(false);
-
         // Reset formData to original profile values
-
-        // Reset formData về giá trị ban đầu từ profile
-
         if (profile) {
             setFormData({
                 email: profile.email || '',
                 phoneNumber: profile.phoneNumber || '',
                 address: profile.address || '',
-
                 fullName: profile.fullName || '',
                 citizenIdCardUrl: profile.citizenIdCardUrl || '',
                 driverLicenseUrl: profile.driverLicenseUrl || '',
@@ -244,11 +206,6 @@ const Profile = () => {
         setTempCccdPreviewUrl(null);
         if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
         setTempLicensePreviewUrl(null);
-
-                fullName: profile.fullName || ''
-            });
-        }
-
     };
 
     const handleChangePassword = () => {
@@ -291,11 +248,7 @@ const Profile = () => {
                     {/* Profile Header */}
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center space-x-4">
-
                             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-
-                            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-
                                 {profile.avatarUrl ? (
                                     <img src={profile.avatarUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" />
                                 ) : (
@@ -393,7 +346,6 @@ const Profile = () => {
                                 <p><User className="w-4 h-4 inline mr-2" />Họ và tên: {profile.fullName || 'Chưa cập nhật'}</p>
                             </div>
                         </div>
-
 
                         {/* Document Uploads */}
                         <div>
@@ -510,20 +462,8 @@ const Profile = () => {
                             </div>
                         </div>
 
-
-
                         {/* Account Status */}
-                        <div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Trạng thái tài khoản</h3>
-                            <div className="space-y-2 text-sm text-gray-600">
 
-                                <p>Đã kích hoạt: {profile.flagActive === 'ACTIVE' ? 'Có' : 'Không'}</p>
-
-                                <p>Đã kích hoạt: {profile.enabled ? 'Có' : 'Không'}</p>
-
-
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
