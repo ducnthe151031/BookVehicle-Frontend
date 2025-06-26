@@ -1,17 +1,13 @@
-import React, { useState, useEffect } from 'react';
-
+import React, {useState, useEffect, useCallback} from 'react';
 import axios from 'axios';
-import { Car, Users, Fuel, ArrowLeft, MapPin, Star, CheckCircle, Info, Settings, Upload, Clock, Calendar, DollarSign } from 'lucide-react';
+// Thêm icon User để làm avatar
+import { Car, Users, Fuel, ArrowLeft, MapPin, Star, CheckCircle, Info, Settings, Upload, Clock, Calendar, User } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCarDetails } from '../service/authentication.js';
+import {createReview, getCarDetails, getRating, getReviewsByVehicle} from '../service/authentication.js';
 import Header from "./Header.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { toast } from "react-toastify";
 
-import { Car, Users, Fuel, ArrowLeft, MapPin, Star, CheckCircle, Info, Settings } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getCarDetails } from '../service/authentication.js';
-import Header from "./Header.jsx";
-import {useAuth} from "../context/AuthContext.jsx";
 
 
 const CarDetail = () => {
@@ -21,29 +17,43 @@ const CarDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { customer, logOut } = useAuth();
+    const [reviewsPage, setReviewsPage] = useState(0);
+    const [bookingIdForReview, setBookingIdForReview] = useState(''); // State cho ô nhập bookingId
+    const [hasMoreReviews, setHasMoreReviews] = useState(true); // Để biết còn review để tải thêm không
 
-
+    // ... (các state cũ giữ nguyên)
     const [rentalType, setRentalType] = useState('day');
     const [pickupDate, setPickupDate] = useState('');
     const [returnDate, setReturnDate] = useState('');
     const [pickupTime, setPickupTime] = useState('09:00');
     const [returnTime, setReturnTime] = useState('09:00');
-
     const [cccdFile, setCccdFile] = useState(null);
     const [licenseFile, setLicenseFile] = useState(null);
-
     const [couponCode, setCouponCode] = useState('');
     const [discountCode, setDiscountCode] = useState('');
-    const [selectedDiscountOption, setSelectedDiscountOption] = useState('none');
+    const [applyDiscount, setApplyDiscount] = useState(false);
 
-    const SURCHARGE_FIXED = 50000;
+
+    // --- STATE MỚI CHO PHẦN ĐÁNH GIÁ ---
+    const [reviews, setReviews] = useState([]);
+    const [reviewsLoading, setReviewsLoading] = useState(true);
+    const [newRating, setNewRating] = useState(0);
+    const [hoverRating, setHoverRating] = useState(0);
+    const [newComment, setNewComment] = useState('');
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+    const [ratingInfo, setRatingInfo] = useState(null);
+    const [ratingLoading, setRatingLoading] = useState(true);
+    const SURCHARGE_AMOUNT = 0;
     const OVERTIME_FEE_PER_HOUR = 50000;
+    const COUPON_DISCOUNT = 200000;
 
     const getFullImageUrl = (filename) => {
         if (!filename) return null;
         return `http://localhost:8080/v1/user/images/${filename}`;
     };
 
+    // ... (hàm calculateDurationAndTotal giữ nguyên)
     const calculateDurationAndTotal = () => {
         let duration = 0;
         let totalPrice = 0;
@@ -57,16 +67,21 @@ const CarDetail = () => {
         if (rentalType === 'day') {
             if (!car.pricePerDay) return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
 
-            const start = new Date(pickupDate);
-            const end = new Date(returnDate);
+            const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
+            const endDateTime = new Date(`${returnDate}T${returnTime}`);
 
-            start.setHours(0, 0, 0, 0);
-            end.setHours(0, 0, 0, 0);
-
-            if (start.toString() !== 'Invalid Date' && end.toString() !== 'Invalid Date' && end >= start) {
-                const diffTime = Math.abs(end - start);
-                days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+            if (startDateTime.toString() !== 'Invalid Date' && endDateTime.toString() !== 'Invalid Date' && endDateTime >= startDateTime) {
+                const diffTime = Math.abs(endDateTime - startDateTime);
+                const diffHours = diffTime / (1000 * 60 * 60);
+                if (diffHours <= 24) {
+                    return { days: 0, hours: 0, duration: 0, totalPrice: 0 }; // Thời gian thuê phải > 24 giờ
+                }
+                days = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // Tính số ngày
+                hours = Math.ceil((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); // Tính số giờ lẻ
                 totalPrice = car.pricePerDay * days;
+                if (hours > 0) {
+                    totalPrice += car.pricePerHour * hours; // Tính thêm giá giờ lẻ
+                }
             }
         } else { // 'hour' rental
             if (!car.pricePerHour) return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
@@ -88,28 +103,34 @@ const CarDetail = () => {
             if (hours > 24) {
                 hours = 24;
                 const limitedEndTime = new Date(startDateTime.getTime() + 24 * 60 * 60 * 1000);
-                setReturnTime(limitedEndTime.toTimeString().slice(0, 5)); // Cập nhật returnTime hiển thị
+                setReturnTime(limitedEndTime.toTimeString().slice(0, 5));
             }
 
             totalPrice = car.pricePerHour * hours;
+        }
+
+        // Áp dụng giảm giá nếu được chọn
+        if (applyDiscount && (couponCode || discountCode)) {
+            totalPrice = Math.max(0, totalPrice - COUPON_DISCOUNT);
         }
 
         return { days, hours, duration: rentalType === 'day' ? days : hours, totalPrice };
     };
 
     const { days, hours, totalPrice } = calculateDurationAndTotal();
-    const calculatedSubtotal = totalPrice + SURCHARGE_FIXED;
+    const calculatedSubtotal = totalPrice + SURCHARGE_AMOUNT;
+
+
+
 
     useEffect(() => {
         const currentDate = new Date();
         const defaultPickup = new Date(currentDate);
         const defaultReturn = new Date(currentDate);
-        defaultReturn.setDate(currentDate.getDate() + 1); // Ngày trả mặc định là ngày tiếp theo
+        defaultReturn.setDate(currentDate.getDate() + 2); // Mặc định trả sau 2 ngày để > 24h
         setPickupDate(defaultPickup.toISOString().split('T')[0]);
         setReturnDate(defaultReturn.toISOString().split('T')[0]);
     }, []);
-
-
 
     useEffect(() => {
         const fetchCarDetails = async () => {
@@ -119,6 +140,8 @@ const CarDetail = () => {
                 const response = await getCarDetails(carId);
                 if (response.httpStatus === 200) {
                     setCar(response.data);
+                    // Lấy reviews sau khi có thông tin xe
+                    fetchReviews();
                 } else {
                     setError('Không thể tải thông tin xe.');
                 }
@@ -132,96 +155,195 @@ const CarDetail = () => {
         fetchCarDetails();
     }, [carId]);
 
-
+    // ... (các hàm xử lý cũ giữ nguyên)
     const handleBookNow = async () => {
-        if (!car || car.status !== 'AVAILABLE') {
-            alert("Xe hiện không có sẵn để đặt.");
+        const startDateTime = new Date(`${pickupDate}T${pickupTime}:00`);
+        const endDateTime = rentalType === 'day' ? new Date(`${returnDate}T${returnTime}:00`) : new Date(`${pickupDate}T${returnTime}:00`);
+
+        if (startDateTime.toString() === 'Invalid Date' || endDateTime.toString() === 'Invalid Date') {
+            toast.error('Ngày hoặc giờ không hợp lệ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
             return;
         }
 
-        if (rentalType === 'day' && (!pickupDate || !returnDate || new Date(pickupDate) > new Date(returnDate))) {
-            alert("Vui lòng chọn ngày nhận và ngày trả hợp lệ.");
+        const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
+        if (diffHours <= 0) {
+            toast.error('Thời gian kết thúc phải sau thời gian bắt đầu.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
             return;
         }
 
-        if (rentalType === 'hour') {
-            const startDateTime = new Date(`${pickupDate}T${pickupTime}:00`);
-            const endDateTime = new Date(`${pickupDate}T${returnTime}:00`);
-            if (startDateTime.toString() === 'Invalid Date' || endDateTime.toString() === 'Invalid Date') {
-                alert("Ngày hoặc giờ không hợp lệ.");
-                return;
-            }
-            const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
-            if (diffHours <= 0) {
-                alert("Giờ kết thúc phải sau giờ bắt đầu.");
-                return;
-            }
-            if (diffHours < 3) {
-                alert("Thời gian thuê tối thiểu là 3 giờ.");
-                return;
-            }
-            if (diffHours > 24) {
-                alert("Thời gian thuê theo giờ không được vượt quá 24 giờ.");
-                return;
-            }
-        }
-
-        if (totalPrice <= 0) {
-            alert("Vui lòng chọn thời gian thuê.");
+        if (rentalType === 'day' && diffHours <= 24) {
+            toast.error('Thời gian thuê theo ngày phải lớn hơn 24 giờ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
             return;
         }
 
-        // Tạo chuỗi thời gian không có múi giờ
+        if (diffHours < 3) {
+            toast.error('Thời gian thuê tối thiểu là 3 giờ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        if (rentalType === 'hour' && diffHours > 24) {
+            toast.error('Thời gian thuê theo giờ không được vượt quá 24 giờ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        if (totalPrice === 0) {
+            toast.error('Vui lòng chọn thời gian thuê hợp lệ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
         const startDate = `${pickupDate}T${pickupTime}:00`;
-        const endDate = rentalType === 'day' ? `${returnDate}T${pickupTime}:00` : `${pickupDate}T${returnTime}:00`;
-
-        console.log("Start Date (no timezone):", startDate);
-        console.log("End Date (no timezone):", endDate);
+        const endDate = rentalType === 'day' ? `${returnDate}T${returnTime}:00` : `${pickupDate}T${returnTime}:00`;
 
         const bookingDetails = {
             vehicleId: car.id,
             customerId: customer.id,
             startDate: startDate,
             endDate: endDate,
-            status: "PENDING",
+            status: 'PENDING',
             depositPaid: false,
             createdAt: new Date().toISOString(),
-            createdBy: customer.username || "anonymous",
-            brandId: car.brandId || "",
-            categoryId: car.categoryId || "",
+            createdBy: customer.username || 'anonymous',
+            brandId: car.brandId || '',
+            categoryId: car.categoryId || '',
             rentType: rentalType,
             totalPrice: calculatedSubtotal,
             cccdFileName: cccdFile ? cccdFile.name : null,
             licenseFileName: licenseFile ? licenseFile.name : null,
-            couponCode: selectedDiscountOption === 'coupon' ? couponCode : null,
-            discountCode: selectedDiscountOption === 'discountCode' ? discountCode : null,
+            couponCode: applyDiscount ? couponCode : null,
+            discountCode: applyDiscount ? discountCode : null,
         };
 
         try {
             const response = await axios.post('http://localhost:8080/v1/user/bookings', bookingDetails, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
             });
 
-            console.log("Booking successful:", response.data);
-            alert("Đặt xe thành công!");
-            navigate(-1);
+            const paymentUrl = response.data.data.url;
+            if (paymentUrl) {
+                window.location.href = paymentUrl;
+            } else {
+                toast.error('Không tìm thấy URL thanh toán!', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                navigate(-1);
+            }
         } catch (error) {
             console.error('Error:', error);
-            alert(`Đặt xe thất bại: ${error.response?.data?.message || error.message}`);
-
-    const handleBookNow = () => {
-        if (car && car.status === 'AVAILABLE') {
-            navigate(`/vehicle/bookings/${carId}`);
-
+            toast.error(error.response?.data?.message, {
+                position: 'top-right',
+                autoClose: 3000,
+            });
         }
     };
+
+    useEffect(() => {
+        // Không chạy nếu không có carId
+        if (!carId) return;
+
+        const fetchRatingData = async () => {
+            try {
+                setRatingLoading(true);
+                const response = await getRating(carId);
+
+                // Dữ liệu xe nằm trong response.data
+                if (response.code === 'MSG000000') {
+                    setRatingInfo(response.data);
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải rating:", error);
+                // Có thể không cần báo lỗi, chỉ cần không hiển thị
+                setRatingInfo(null);
+            } finally {
+                setRatingLoading(false);
+            }
+        };
+
+        fetchRatingData();
+
+    }, [carId]);
+
+    const fetchReviews = useCallback(async (reset = false) => {
+        if (!carId) return;
+        setReviewsLoading(true);
+        try {
+            const pageToFetch = reset ? 0 : reviewsPage;
+            const response = await getReviewsByVehicle(carId, pageToFetch, 5); // Lấy 5 review mỗi lần
+
+            if (response.code === "MSG000000" && response.data) {
+                const newReviews = response.data.content;
+                setReviews(prev => reset ? newReviews : [...prev, ...newReviews]);
+                setHasMoreReviews(!response.data.last);
+                setReviewsPage(pageToFetch + 1);
+            } else {
+                setHasMoreReviews(false);
+            }
+        } catch (error) {
+            console.error("Lỗi khi tải đánh giá:", error);
+            toast.error(error.response?.data?.message || "Không thể tải danh sách đánh giá.");
+        } finally {
+            setReviewsLoading(false);
+        }
+    }, [carId, reviewsPage]);
+
+    const handleSubmitReview = async (e) => {
+        e.preventDefault();
+        if (newRating === 0) {
+            toast.error('Vui lòng chọn số sao để đánh giá.');
+            return;
+        }
+
+        setIsSubmittingReview(true);
+        try {
+            const reviewData = {
+                vehicleId: carId,
+                rating: newRating,
+                comment: newComment,
+            };
+            const response = await createReview(reviewData);
+            if (response.code === 'MSG000000') {
+                toast.success('Cảm ơn bạn đã gửi đánh giá!');
+                // Reset form và tải lại trang đầu tiên của review
+                setNewRating(0);
+                setNewComment('');
+                setBookingIdForReview('');
+                setReviewsPage(0); // Reset page để fetchReviews(true) gọi đúng trang
+                fetchReviews(true); // reset = true
+            } else {
+                toast.error(response.message || 'Có lỗi xảy ra khi gửi đánh giá.');
+            }
+        } catch (error) {
+            console.error("Lỗi khi gửi đánh giá:", error);
+            toast.error(error.response?.data?.message || 'Không thể gửi đánh giá.');
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
+
     const handleChangePassword = () => {
         navigate('/change-password');
     };
-
 
     const handleBack = () => {
         navigate(-1);
@@ -233,17 +355,9 @@ const CarDetail = () => {
         }
     };
 
-    const handleBack = () => {
-        navigate('/home');
-    };
-
-    const today = new Date().toISOString().split('T')[0]; // Current date: 2025-06-14
-    const defaultStartDate = new Date(today);
-    defaultStartDate.setDate(defaultStartDate.getDate() + 5); // 5 days from now: 2025-06-19
-    const defaultEndDate = new Date(defaultStartDate);
-    defaultEndDate.setDate(defaultEndDate.getDate() + 3); // 3 days later: 2025-06-22
 
 
+    // Các hàm render loading, error, ... giữ nguyên
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -293,9 +407,9 @@ const CarDetail = () => {
         );
     }
 
+
     return (
         <div className="min-h-screen bg-gray-100">
-
             <Header logOut={logOut} handleChangePassword={handleChangePassword} customer={customer} />
 
             <div className="max-w-7xl mx-auto px-4 py-6">
@@ -309,6 +423,7 @@ const CarDetail = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-6">
+                        {/* ... (Phần thông tin xe) ... */}
                         <div className="bg-white rounded-lg shadow p-6">
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Thông tin xe</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -321,7 +436,7 @@ const CarDetail = () => {
                                     <p className="text-lg font-semibold text-gray-800">Tên xe: {car.vehicleName}</p>
                                     <div className="flex items-center text-sm text-gray-600 mt-1">
                                         <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
-                                        <span>Rating: {car.rating || 'N/A'}</span>
+                                        <span>Đánh giá trung bình: {ratingInfo || 'N/A'}</span>
                                     </div>
                                 </div>
                                 <div className="space-y-3">
@@ -349,6 +464,8 @@ const CarDetail = () => {
                             </div>
                         </div>
 
+
+                        {/* ... (Phần điều khoản) ... */}
                         <div className="bg-white rounded-lg shadow p-6">
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Điều khoản khi thuê xe</h2>
                             <ul className="list-disc list-inside text-gray-600 space-y-2">
@@ -358,9 +475,63 @@ const CarDetail = () => {
                                 <li>Không hút thuốc, nhả kẹo cao su, xả rác trong xe.</li>
                             </ul>
                         </div>
+
+                        {/* --- PHẦN ĐÁNH GIÁ MỚI --- */}
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Đánh giá từ khách hàng</h2>
+                            {customer && (
+                                <form onSubmit={handleSubmitReview} className="mb-8 p-4 border rounded-lg">
+                                    <h3 className="font-semibold text-lg mb-3">Để lại đánh giá của bạn</h3>
+
+                                    <div className="flex items-center mb-4">
+                                        <span className="mr-4 text-gray-700">Đánh giá:</span>
+                                        <div className="flex">
+                                            {[...Array(5)].map((_, index) => {
+                                                const ratingValue = index + 1;
+                                                return <Star key={ratingValue} className={`w-6 h-6 cursor-pointer transition-colors ${ratingValue <= (hoverRating || newRating) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" onClick={() => setNewRating(ratingValue)} onMouseEnter={() => setHoverRating(ratingValue)} onMouseLeave={() => setHoverRating(0)} />;
+                                            })}
+                                        </div>
+                                    </div>
+                                    <textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Hãy chia sẻ cảm nhận của bạn..." className="w-full p-2 border border-gray-300 rounded-md" rows="3" />
+                                    <button type="submit" disabled={isSubmittingReview} className="mt-4 px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 disabled:bg-gray-400">
+                                        {isSubmittingReview ? 'Đang gửi...' : 'Gửi đánh giá'}
+                                    </button>
+                                </form>
+                            )}
+
+                            <div className="space-y-6">
+                                {reviews.map(review => (
+                                    <div key={review.id} className="flex items-start space-x-4 border-b pb-4 last:border-b-0">
+                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0"><User className="w-6 h-6 text-gray-500" /></div>
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between">
+                                                <p className="font-semibold text-gray-800">Người dùng ẩn danh</p>
+                                                <p className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString('vi-VN')}</p>
+                                            </div>
+                                            <div className="flex items-center my-1">
+                                                {[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor"/>)}
+                                            </div>
+                                            <p className="text-gray-600 text-sm">{review.comment}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                                {reviewsLoading && <p className="text-center text-gray-500">Đang tải...</p>}
+                                {!reviewsLoading && reviews.length === 0 && <p className="text-center text-gray-500">Chưa có đánh giá nào cho xe này.</p>}
+                                {hasMoreReviews && !reviewsLoading && (
+                                    <div className="text-center mt-6">
+                                        <button onClick={() => fetchReviews(false)} className="text-red-600 font-semibold hover:underline disabled:text-gray-400" disabled={reviewsLoading}>
+                                            Tải thêm bình luận
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
+
+                    {/* --- CỘT BÊN PHẢI (THANH TOÁN) --- */}
                     <div className="lg:col-span-1 space-y-6">
+                        {/* ... (Phần upload file) ... */}
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="mb-4">
                                 <label htmlFor="cccdUpload" className="block text-sm font-medium text-gray-700 mb-2">CCCD:</label>
@@ -400,6 +571,7 @@ const CarDetail = () => {
                             </div>
                         </div>
 
+                        {/* ... (Phần thời gian thuê) ... */}
                         <div className="bg-white rounded-lg shadow p-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">Thời gian thuê</h2>
                             <div className="space-y-4">
@@ -412,34 +584,118 @@ const CarDetail = () => {
                                         checked={rentalType === 'day'}
                                         onChange={() => {
                                             setRentalType('day');
-                                            if (!returnDate) setReturnDate(new Date(pickupDate).toISOString().split('T')[0]);
+                                            const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
+                                            const endDateTime = new Date(`${returnDate}T${returnTime}`);
+                                            if (endDateTime <= startDateTime || (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
+                                                const nextDay = new Date(startDateTime);
+                                                nextDay.setDate(startDateTime.getDate() + 2);
+                                                setReturnDate(nextDay.toISOString().split('T')[0]);
+                                                setReturnTime(pickupTime);
+                                            }
                                         }}
                                         className="mr-2 text-red-600 focus:ring-red-500"
                                     />
-                                    <label htmlFor="rentByDay" className="font-medium text-gray-700">Theo ngày:</label>
+                                    <label htmlFor="rentByDay" className="font-medium text-gray-700">Theo ngày</label>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label htmlFor="pickupDate" className="block text-xs text-gray-500 mb-1">từ</label>
+                                        <label htmlFor="pickupDate" className="block text-xs text-gray-500 mb-1">Ngày nhận</label>
                                         <input
                                             type="date"
                                             id="pickupDate"
                                             value={pickupDate}
-                                            onChange={(e) => setPickupDate(e.target.value)}
+                                            onChange={(e) => {
+                                                const newDate = e.target.value;
+                                                setPickupDate(newDate);
+                                                const startDateTime = new Date(`${newDate}T${pickupTime}`);
+                                                const endDateTime = new Date(`${returnDate}T${returnTime}`);
+                                                if (endDateTime <= startDateTime || (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
+                                                    const nextDay = new Date(startDateTime);
+                                                    nextDay.setDate(startDateTime.getDate() + 2);
+                                                    setReturnDate(nextDay.toISOString().split('T')[0]);
+                                                    setReturnTime(pickupTime);
+                                                }
+                                            }}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
+                                            disabled={rentalType === 'hour'}
+                                            min={new Date().toISOString().split('T')[0]}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="returnDate" className="block text-xs text-gray-500 mb-1">Ngày trả</label>
+                                        <input
+                                            type="date"
+                                            id="returnDate"
+                                            value={returnDate}
+                                            onChange={(e) => {
+                                                const newReturnDate = e.target.value;
+                                                const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
+                                                const endDateTime = new Date(`${newReturnDate}T${returnTime}`);
+                                                if ((endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
+                                                    toast.error('Thời gian thuê theo ngày phải lớn hơn 24 giờ.', {
+                                                        position: "top-right",
+                                                        autoClose: 3000,
+                                                    });
+                                                    return;
+                                                }
+                                                setReturnDate(newReturnDate);
+                                            }}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
+                                            disabled={rentalType === 'hour'}
+                                            min={new Date(new Date(pickupDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="pickupTimeDay" className="block text-xs text-gray-500 mb-1">Giờ nhận</label>
+                                        <input
+                                            type="time"
+                                            id="pickupTimeDay"
+                                            value={pickupTime}
+                                            onChange={(e) => {
+                                                const newPickupTime = e.target.value;
+                                                setPickupTime(newPickupTime);
+                                                const startDateTime = new Date(`${pickupDate}T${newPickupTime}`);
+                                                const endDateTime = new Date(`${returnDate}T${returnTime}`);
+                                                if (endDateTime <= startDateTime || (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
+                                                    const nextHour = new Date(startDateTime.getTime() + 25 * 60 * 60 * 1000).toTimeString().slice(0, 5);
+                                                    setReturnTime(nextHour);
+                                                    const nextDay = new Date(startDateTime);
+                                                    nextDay.setDate(startDateTime.getDate() + 2);
+                                                    setReturnDate(nextDay.toISOString().split('T')[0]);
+                                                }
+                                            }}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
                                             disabled={rentalType === 'hour'}
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="returnDate" className="block text-xs text-gray-500 mb-1">đến</label>
+                                        <label htmlFor="returnTimeDay" className="block text-xs text-gray-500 mb-1">Giờ trả</label>
                                         <input
-                                            type="date"
-                                            id="returnDate"
-                                            value={returnDate}
-                                            onChange={(e) => setReturnDate(e.target.value)}
+                                            type="time"
+                                            id="returnTimeDay"
+                                            value={returnTime}
+                                            onChange={(e) => {
+                                                const newReturnTime = e.target.value;
+                                                const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
+                                                const endDateTime = new Date(`${returnDate}T${newReturnTime}`);
+                                                if (endDateTime <= startDateTime) {
+                                                    toast.error('Giờ trả phải sau giờ nhận.', {
+                                                        position: "top-right",
+                                                        autoClose: 3000,
+                                                    });
+                                                    return;
+                                                }
+                                                if ((endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
+                                                    toast.error('Thời gian thuê theo ngày phải lớn hơn 24 giờ.', {
+                                                        position: "top-right",
+                                                        autoClose: 3000,
+                                                    });
+                                                    return;
+                                                }
+                                                setReturnTime(newReturnTime);
+                                            }}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
                                             disabled={rentalType === 'hour'}
-                                            min={pickupDate}
                                         />
                                     </div>
                                 </div>
@@ -453,15 +709,16 @@ const CarDetail = () => {
                                         checked={rentalType === 'hour'}
                                         onChange={() => {
                                             setRentalType('hour');
-                                            // Reset returnTime khi chuyển sang giờ
                                             const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
-                                            if (new Date(`${pickupDate}T${returnTime}`) <= startDateTime) {
-                                                setReturnTime('10:00'); // Đặt giờ kết thúc mặc định sau 1 giờ
+                                            const endDateTime = new Date(`${pickupDate}T${returnTime}`);
+                                            if (endDateTime <= startDateTime) {
+                                                const nextHour = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5);
+                                                setReturnTime(nextHour);
                                             }
                                         }}
                                         className="mr-2 text-red-600 focus:ring-red-500"
                                     />
-                                    <label htmlFor="rentByHour" className="font-medium text-gray-700">Theo giờ:</label>
+                                    <label htmlFor="rentByHour" className="font-medium text-gray-700">Theo giờ</label>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
@@ -473,33 +730,32 @@ const CarDetail = () => {
                                             onChange={(e) => {
                                                 const newDate = e.target.value;
                                                 setPickupDate(newDate);
-                                                // Kiểm tra và cập nhật returnTime khi thay đổi pickupDate
                                                 const startDateTime = new Date(`${newDate}T${pickupTime}`);
                                                 const endDateTime = new Date(`${newDate}T${returnTime}`);
                                                 if (endDateTime <= startDateTime) {
-                                                    setReturnTime('10:00'); // Đặt giờ kết thúc mặc định sau 1 giờ
+                                                    const nextHour = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5);
+                                                    setReturnTime(nextHour);
                                                 }
                                             }}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
                                             disabled={rentalType === 'day'}
-                                            min={new Date().toISOString().split('T')[0]} // Bắt đầu từ hôm nay
+                                            min={new Date().toISOString().split('T')[0]}
                                         />
                                     </div>
-                                    <div></div> {/* Loại bỏ input ngày trả */}
+                                    <div></div>
                                     <div>
-                                        <label htmlFor="pickupTimeInput" className="block text-xs text-gray-500 mb-1">Giờ bắt đầu</label>
+                                        <label htmlFor="pickupTimeHour" className="block text-xs text-gray-500 mb-1">Giờ bắt đầu</label>
                                         <input
                                             type="time"
-                                            id="pickupTimeInput"
+                                            id="pickupTimeHour"
                                             value={pickupTime}
                                             onChange={(e) => {
                                                 const newPickupTime = e.target.value;
                                                 setPickupTime(newPickupTime);
-                                                // Kiểm tra và cập nhật returnTime khi thay đổi pickupTime
                                                 const startDateTime = new Date(`${pickupDate}T${newPickupTime}`);
                                                 const endDateTime = new Date(`${pickupDate}T${returnTime}`);
                                                 if (endDateTime <= startDateTime) {
-                                                    const nextHour = new Date(startDateTime.getTime() + 60 * 60 * 1000).toTimeString().slice(0, 5);
+                                                    const nextHour = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5);
                                                     setReturnTime(nextHour);
                                                 }
                                             }}
@@ -508,200 +764,48 @@ const CarDetail = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="returnTimeInput" className="block text-xs text-gray-500 mb-1">Giờ kết thúc</label>
+                                        <label htmlFor="returnTimeHour" className="block text-xs text-gray-500 mb-1">Giờ kết thúc</label>
                                         <input
                                             type="time"
-                                            id="returnTimeInput"
+                                            id="returnTimeHour"
                                             value={returnTime}
                                             onChange={(e) => {
                                                 const newReturnTime = e.target.value;
                                                 const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
                                                 const endDateTime = new Date(`${pickupDate}T${newReturnTime}`);
-
                                                 if (endDateTime <= startDateTime) {
-                                                    alert("Giờ kết thúc phải sau giờ bắt đầu.");
+                                                    toast.error('Giờ kết thúc phải sau giờ bắt đầu.', {
+                                                        position: "top-right",
+                                                        autoClose: 3000,
+                                                    });
                                                     return;
                                                 }
-
                                                 const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
-
                                                 if (diffHours < 3) {
-                                                    alert("Thời gian thuê tối thiểu là 3 giờ.");
+                                                    toast.error('Thời gian thuê tối thiểu là 3 giờ.', {
+                                                        position: "top-right",
+                                                        autoClose: 3000,
+                                                    });
                                                     return;
                                                 }
-
                                                 if (diffHours > 24) {
-                                                    alert("Thời gian thuê theo giờ không được vượt quá 24 giờ.");
+                                                    toast.error('Thời gian thuê theo giờ không được vượt quá 24 giờ.', {
+                                                        position: "top-right",
+                                                        autoClose: 3000,
+                                                    });
                                                     return;
                                                 }
-
                                                 setReturnTime(newReturnTime);
                                             }}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
                                             disabled={rentalType === 'day'}
-                                            min={pickupTime} // Giới hạn giờ kết thúc không nhỏ hơn giờ bắt đầu
                                         />
                                     </div>
-
-            {/* Header */}
-            <Header logOut={logOut} handleChangePassword={handleChangePassword} customer={customer} />
-
-
-
-            <div className="max-w-7xl mx-auto px-4 py-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Content */}
-                    <div className="lg:col-span-2">
-
-
-                        {/* Car Details Card */}
-                        <div className="bg-white rounded-lg shadow">
-                            <div className="p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <span className="bg-blue-600 text-white px-3 py-1 rounded text-sm">Lựa chọn hàng đầu</span>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Car Image */}
-                                    <div>
-                                        <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                                            {car.imageUrl ? (
-                                                <img
-                                                    src={car.imageUrl}
-                                                    alt={car.vehicleName}
-                                                    className="w-full h-full object-cover rounded-lg"
-                                                />
-                                            ) : (
-                                                <Car className="w-32 h-32 text-gray-400" />
-                                            )}
-                                        </div>
-
-                                        {/* Car Features */}
-                                        <div className="space-y-2">
-                                            <div className="flex items-center space-x-2 text-sm">
-                                                <Users className="w-4 h-4 text-gray-600" />
-                                                <span>{car.seatCount} chỗ ngồi</span>
-                                            </div>
-                                            <div className="flex items-center space-x-2 text-sm">
-                                                <Settings className="w-4 h-4 text-gray-600" />
-                                                <span>{car.gearBox || 'Số tự động'}</span>
-                                            </div>
-                                            <div className="flex items-center space-x-2 text-sm">
-                                                <Fuel className="w-4 h-4 text-gray-600" />
-                                                <span>{car.fuelType || 'N/A'}</span>
-                                            </div>
-                                            <div className="flex items-center space-x-2 text-sm">
-                                                <span>🛡️ Không giới hạn số km/km</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Car Info */}
-                                    <div>
-                                        <h2 className="text-xl font-bold mb-2">{car.vehicleName}</h2>
-                                        <p className="text-sm text-gray-600 mb-2">Hoặc xe cùng loại tương tự</p>
-
-                                        <div className="mb-4">
-                                            <div className="flex items-center space-x-2 text-sm">
-                                                <MapPin className="w-4 h-4 text-gray-600" />
-                                                <span>{car.location || 'N/A'}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center space-x-2 mb-4">
-                                            <span className="bg-blue-600 text-white px-2 py-1 rounded text-sm font-bold">9.4</span>
-                                            <span className="text-sm font-medium">Xuất sắc</span>
-                                            <span className="text-xs text-gray-500">42 đánh giá</span>
-                                            <Info className="w-4 h-4 text-gray-400" />
-                                        </div>
-
-                                        <div className="bg-gray-50 rounded-lg p-4">
-                                            <h3 className="font-medium mb-2">Lựa chọn tuyệt vời!</h3>
-                                            <div className="space-y-1 text-sm">
-                                                <div className="flex items-center space-x-2">
-                                                    <CheckCircle className="w-4 h-4 text-green-600" />
-                                                    <span>Đánh giá của khách hàng:  x / 10</span>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <CheckCircle className="w-4 h-4 text-green-600" />
-                                                    <span>Chính sách nhiên liệu phổ biến nhất</span>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <CheckCircle className="w-4 h-4 text-green-600" />
-                                                    <span>Quầy thành toán đễ tìm</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Included Features */}
-                            <div className="border-t p-6">
-                                <h3 className="font-medium mb-3">Giá đã bao gồm</h3>
-                                <div className="grid grid-cols-2 gap-y-2 text-sm">
-                                    <div className="flex items-center space-x-2">
-                                        <CheckCircle className="w-4 h-4 text-green-600" />
-                                        <span>Miễn phí hủy tới 48 giờ trước khi nhận xe</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <CheckCircle className="w-4 h-4 text-green-600" />
-                                        <span>Bảo hiểm tai nạn đơn và cháy với mức miễn thường bằng 0 VND</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <CheckCircle className="w-4 h-4 text-green-600" />
-                                        <span>Bảo hiểm vật chất với mức miễn thường bằng 0 VND</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <CheckCircle className="w-4 h-4 text-green-600" />
-                                        <span>Số dặm/kilomet không giới hạn</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Additional Features */}
-                            <div className="border-t p-6">
-                                <div className="grid grid-cols-2 gap-y-2 text-sm">
-                                    <div>✓ Công ty nổi tiếng nhất tại đây</div>
-                                    <div>✓ Không phải chờ đội lâu</div>
-                                    <div>✓ Hủy đặt thuê miễn phí</div>
-                                    <div>✓ Số dặm/kilomét không giới hạn</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Pickup/Return Info */}
-                        <div className="bg-white rounded-lg shadow p-4">
-                            <h3 className="font-medium mb-4">Nhận xe và trả xe</h3>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <div className="flex items-center space-x-2 mb-1">
-                                        <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                                        <span className="text-sm font-medium">
-                                            {defaultStartDate.toLocaleDateString('vi-VN', { weekday: 'short', day: 'numeric', month: 'long' })} • 10:00
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-gray-600 ml-4">{car.location || 'N/A'}</p>
-                                </div>
-
-                                <div>
-                                    <div className="flex items-center space-x-2 mb-1">
-                                        <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-                                        <span className="text-sm font-medium">
-                                            {defaultEndDate.toLocaleDateString('vi-VN', { weekday: 'short', day: 'numeric', month: 'long' })} • 10:00
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-gray-600 ml-4">{car.location || 'N/A'}</p>
-
                                 </div>
                             </div>
                         </div>
 
-
+                        {/* ... (Phần thanh toán) ... */}
                         <div className="bg-white rounded-lg shadow p-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">Thanh toán đơn thuê xe</h2>
                             <div className="space-y-3 text-sm text-gray-700">
@@ -714,12 +818,22 @@ const CarDetail = () => {
                                 </div>
                                 <div className="flex justify-between font-bold">
                                     <span>Tổng cộng:</span>
-                                    <span>{totalPrice.toLocaleString()}đ {days > 0 ? `x ${days} ngày` : hours > 0 ? `x ${hours} giờ` : ''}</span>
+                                    <span>
+                                        {totalPrice.toLocaleString()}đ
+                                        {days > 0 && ` x ${days} ngày`}
+                                        {hours > 0 && ` ${days > 0 ? '+' : ''} ${hours} giờ`}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Phụ phí:</span>
-                                    <span>{SURCHARGE_FIXED.toLocaleString()}đ</span>
+                                    <span>{SURCHARGE_AMOUNT.toLocaleString()}đ</span>
                                 </div>
+                                {applyDiscount && (couponCode || discountCode) && (
+                                    <div className="flex justify-between text-green-600">
+                                        <span>Giảm giá:</span>
+                                        <span>-{COUPON_DISCOUNT.toLocaleString()}đ</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="border-t border-gray-300 pt-4 mt-4">
@@ -727,66 +841,42 @@ const CarDetail = () => {
                                 <div className="space-y-2">
                                     <div className="flex items-center">
                                         <input
-                                            type="radio"
-                                            id="couponRadio"
-                                            name="discountOption"
-                                            value="coupon"
-                                            checked={selectedDiscountOption === 'coupon'}
-                                            onChange={() => setSelectedDiscountOption('coupon')}
+                                            type="checkbox"
+                                            id="applyDiscount"
+                                            checked={applyDiscount}
+                                            onChange={(e) => setApplyDiscount(e.target.checked)}
                                             className="mr-2 text-red-600 focus:ring-red-500"
                                         />
-                                        <label htmlFor="couponRadio" className="text-gray-700 mr-2">Coupon: <span className="font-medium">200.000đ(Summer20)</span></label>
-                                        <input
-                                            type="text"
-                                            placeholder="Nhập mã coupon"
-                                            value={couponCode}
-                                            onChange={(e) => setCouponCode(e.target.value)}
-                                            className="flex-grow px-3 py-1 border border-gray-300 rounded-lg text-sm"
-                                            disabled={selectedDiscountOption !== 'coupon'}
-                                        />
+                                        <label htmlFor="applyDiscount" className="text-gray-700">Áp dụng giảm giá</label>
                                     </div>
-                                    <div className="flex items-center">
-                                        <input
-                                            type="radio"
-                                            id="discountCodeRadio"
-                                            name="discountOption"
-                                            value="discountCode"
-                                            checked={selectedDiscountOption === 'discountCode'}
-                                            onChange={() => setSelectedDiscountOption('discountCode')}
-                                            className="mr-2 text-red-600 focus:ring-red-500"
-                                        />
-                                        <label htmlFor="discountCodeRadio" className="text-gray-700 mr-2">Discount code:</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Nhập mã giảm giá"
-                                            value={discountCode}
-                                            onChange={(e) => setDiscountCode(e.target.value)}
-                                            className="flex-grow px-3 py-1 border border-gray-300 rounded-lg text-sm"
-                                            disabled={selectedDiscountOption !== 'discountCode'}
-                                        />
-
-                        {/* Price Summary */}
-                        <div className="bg-white rounded-lg shadow p-4">
-                            <h3 className="font-medium mb-4">Chi tiết giá xe</h3>
-
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span>Phí thuê xe</span>
-                                    <span>{car.pricePerDay?.toLocaleString()} VND</span>
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                    Giá VND được quy đổi thành đơn hàng định luật USD của bạn
-                                </div>
-
-                                <div className="border-t pt-2 mt-2">
-                                    <div className="flex justify-between font-medium">
-                                        <span>Giá cho 3 ngày:</span>
-                                        <span>{(car.pricePerDay * 3)?.toLocaleString()} VND</span>
-
-                                    </div>
+                                    {applyDiscount && (
+                                        <>
+                                            <div className="flex items-center">
+                                                <label htmlFor="couponCode" className="text-gray-700 mr-2">Coupon:</label>
+                                                <input
+                                                    type="text"
+                                                    id="couponCode"
+                                                    placeholder="Nhập mã coupon"
+                                                    value={couponCode}
+                                                    onChange={(e) => setCouponCode(e.target.value)}
+                                                    className="flex-grow px-3 py-1 border border-gray-300 rounded-lg text-sm"
+                                                />
+                                            </div>
+                                            <div className="flex items-center">
+                                                <label htmlFor="discountCode" className="text-gray-700 mr-2">Mã giảm giá:</label>
+                                                <input
+                                                    type="text"
+                                                    id="discountCode"
+                                                    placeholder="Nhập mã giảm giá"
+                                                    value={discountCode}
+                                                    onChange={(e) => setDiscountCode(e.target.value)}
+                                                    className="flex-grow px-3 py-1 border border-gray-300 rounded-lg text-sm"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
-
 
                             <div className="border-t border-gray-300 pt-4 mt-4">
                                 <div className="flex justify-between items-center font-bold text-lg text-gray-900 mb-2">
@@ -809,42 +899,13 @@ const CarDetail = () => {
                             </div>
                         </div>
 
+
                         <button
                             onClick={handleBookNow}
-                            disabled={car.status !== 'AVAILABLE'}
                             className="w-full bg-red-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-red-700 transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
                             Chọn đặt xe
                         </button>
-
-                            <div className="bg-green-50 border border-green-200 rounded p-3 mt-4">
-                                <p className="text-sm font-medium text-green-800">
-                                    Bạn đã tiết kiệm khoảng xxxxxx VND cho xe này - giá giảm tốt!
-                                </p>
-                                <p className="text-xs text-green-700 mt-1">
-                                    Giá xe hàng đầu ở khu vực {car.location || 'N/A'}. Chỉ có xxxxx VND ở chỗ đâm rây thay vì trong năm!
-                                </p>
-                            </div>
-
-                            <button
-                                onClick={handleBookNow}
-                                disabled={car.status !== 'AVAILABLE'}
-                                className="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed mt-4"
-                            >
-                                Đến bước thanh toán
-                            </button>
-                        </div>
-
-                        {/* Additional Info */}
-                        <div className="bg-white rounded-lg shadow p-4">
-                            <h3 className="font-medium mb-2">Thông tin thêm</h3>
-                            <div className="text-sm text-gray-600">
-                                <p>Biển số: {car.liecensePlate}</p>
-                                <p>Loại nhiên liệu: {car.fuelType}</p>
-                                <p>Trạng thái: {car.status === 'AVAILABLE' ? 'Có sẵn' : 'Đã thuê'}</p>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
             </div>

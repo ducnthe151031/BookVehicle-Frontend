@@ -1,23 +1,18 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../../service/authentication.js';
-
-import { Eye, EyeOff } from 'lucide-react';
-
-
+import {Eye, EyeOff, Loader2} from 'lucide-react';
+import {toast} from "react-toastify";
 
 const RegisterForm = () => {
     const [formData, setFormData] = useState({
         username: '',
         email: '',
         password: '',
-
         confirmPassword: '',
-        role: 'OWNER'
-
-        role: 'OWNER',
-
+        role: 'USER' // Changed default role to USER
     });
+    const [loading, setLoading] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -36,24 +31,41 @@ const RegisterForm = () => {
         setMessage('');
 
         if (formData.password !== formData.confirmPassword) {
-            setMessage('Mật khẩu và Nhập lại mật khẩu không khớp!');
+            toast.error('Mật khẩu và Nhập lại mật khẩu không khớp!', {
+                position: "top-right",
+                autoClose: 3000,
+            });
             return;
         }
 
         try {
+            setLoading(true);
+
             await register(formData);
-            setMessage('Đăng ký thành công!');
+            toast.success('Đăng ký thành công!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
             setTimeout(() => {
                 navigate('/login');
             }, 1000);
         } catch (error) {
             const apiMessage = error.response?.data?.message || 'Lỗi đăng ký!';
-            setMessage(apiMessage);
+            toast.error(apiMessage, {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        }finally {
+            setLoading(false);
+
         }
     };
 
     return (
-
         <div className="min-h-screen bg-white flex flex-col px-4 py-6">
             {/* Logo */}
             <div className="flex items-center space-x-2 mb-10 ml-6">
@@ -143,11 +155,34 @@ const RegisterForm = () => {
                             </div>
                         </div>
 
+                        {/* Role Selection Dropdown */}
+                        <div>
+                            <label className="block text-sm text-gray-600 mb-1">Vai trò</label>
+                            <select
+                                name="role"
+                                value={formData.role}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                            >
+                                <option value="USER">Người dùng</option>
+                                <option value="OWNER">Chủ xe</option>
+                                <option value="ADMIN">Quản trị viên</option>
+                            </select>
+                        </div>
+
                         <button
                             type="submit"
-                            className="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 font-semibold"
+                            disabled={loading}
+                            className="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 font-semibold flex items-center justify-center disabled:opacity-60"
                         >
-                            Đăng kí
+                            {loading ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                    Đang xử lý...
+                                </>
+                            ) : (
+                                'Đăng kí'
+                            )}
                         </button>
                     </form>
 
@@ -169,66 +204,6 @@ const RegisterForm = () => {
                         className="w-[420px] h-auto object-contain"
                     />
                 </div>
-
-        <div
-            className="min-h-screen bg-cover bg-center flex items-center justify-end"
-            style={{ backgroundImage: "url('https://www.cupraofficial.com.au/content/dam/public/cupra-website/cars/tavascan/automatic-gallery/x-large/atacama-desert-2024-cupra-tavascan-car.jpg')" }} // cập nhật đúng đường dẫn ảnh
-        >
-            <div className="bg-black bg-opacity-60 p-8 rounded-xl shadow-xl w-full max-w-sm mr-16 text-white">
-                <h2 className="text-2xl font-bold text-center text-orange-400 mb-6">Đăng ký</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <input
-                        type="text"
-                        name="username"
-                        placeholder="Tên người dùng"
-                        value={formData.username}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-4 py-2 rounded-lg bg-blue-50 text-black focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="Email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-4 py-2 rounded-lg bg-blue-50 text-black focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Mật khẩu"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-4 py-2 rounded-lg bg-blue-50 text-black focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                    <select
-                        name="role"
-                        value={formData.role}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-4 py-2 rounded-lg bg-blue-50 text-black focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    >
-                        <option value="ADMIN">ADMIN</option>
-                        <option value="USER">USER</option>
-                    </select>
-                    <button
-                        type="submit"
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg font-semibold transition"
-                    >
-                        Register
-                    </button>
-                </form>
-                {message && <p className="text-sm text-center mt-3 text-red-400">{message}</p>}
-                <p className="mt-6 text-sm text-center text-gray-200">
-                    Đã có tài khoản?{' '}
-                    <Link to="/login" className="text-orange-400 font-medium hover:underline">
-                        Đăng nhập
-                    </Link> đấy
-                </p>
-
             </div>
         </div>
     );
