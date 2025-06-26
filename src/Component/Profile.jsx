@@ -4,7 +4,8 @@ import { User, Mail, Calendar, Lock, Edit, MapPin, Check, Upload, FileText } fro
 import { getProfile, updateProfile } from '../service/authentication.js';
 import Header from './Header.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const Profile = () => {
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
@@ -138,6 +139,7 @@ const Profile = () => {
         }
     };
 
+    // Update the handleSubmit function in Profile.jsx
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -148,7 +150,7 @@ const Profile = () => {
 
             if (response.httpStatus === 200) {
                 setProfile(response.data);
-                setFormData({ // Update formData to reflect the saved state (backend returns filenames)
+                setFormData({
                     email: response.data.email || '',
                     phoneNumber: response.data.phoneNumber || '',
                     address: response.data.address || '',
@@ -157,23 +159,44 @@ const Profile = () => {
                     driverLicenseUrl: response.data.driverLicenseUrl || '',
                 });
                 setIsEditing(false);
-                // Clean up temporary preview URLs after successful submission
                 if (tempCccdPreviewUrl) URL.revokeObjectURL(tempCccdPreviewUrl);
                 setTempCccdPreviewUrl(null);
                 if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
                 setTempLicensePreviewUrl(null);
+<<<<<<< MinhNTHE173527
+                // Replace alert with toast notification
+                toast.success('Cập nhật hồ sơ thành công!', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+=======
                 alert('Cập nhật hồ sơ thành công!');
+>>>>>>> main
             } else {
-                setError('Cập nhật hồ sơ thất bại.');
+                toast.error('Cập nhật hồ sơ thất bại.', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
             }
+<<<<<<< MinhNTHE173527
+        } catch (error) {
+=======
         } catch (submitError) {
             console.error('Error updating profile:', submitError);
+>>>>>>> main
             setError('Có lỗi xảy ra khi cập nhật hồ sơ.');
+            toast.error(error.response?.data?.message, {
+                position: "top-right",
+                autoClose: 3000,
+            });
         } finally {
             setLoading(false);
         }
     };
-
     const handleCancel = () => {
         setIsEditing(false);
         // Reset formData to original profile values
@@ -449,12 +472,16 @@ const Profile = () => {
                         </div>
 
                         {/* Account Status */}
+<<<<<<< MinhNTHE173527
+
+=======
                         <div>
                             <h3 className="text-lg font-medium text-gray-900 mb-2">Trạng thái tài khoản</h3>
                             <div className="space-y-2 text-sm text-gray-600">
                                 <p>Đã kích hoạt: {profile.flagActive === 'ACTIVE' ? 'Có' : 'Không'}</p>
                             </div>
                         </div>
+>>>>>>> main
                     </div>
                 </div>
             </div>
