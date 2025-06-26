@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from "../../context/AuthContext.jsx";
 import { Eye, EyeOff } from 'lucide-react';
+import {toast} from "react-toastify";
 
 const LoginForm = () => {
     const [formData, setFormData] = useState({
@@ -24,13 +25,22 @@ const LoginForm = () => {
         e.preventDefault();
         try {
             const response = await login(formData);
-            setMessage('Đăng nhập thành công!');
+            toast.success('Đăng nhập thành công!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
             const userRole = response.decodedToken?.role;
             const redirectPath = userRole === 'ROLE_ADMIN' ? '/vehicle/brands' : '/home';
             setTimeout(() => navigate(redirectPath), 1000);
         } catch (error) {
-            const apiMessage = error.response?.data?.message || 'Đăng nhập thất bại, có lỗi xảy ra!';
-            setMessage(apiMessage);
+            toast.error(error.response?.data?.message, {
+                position: "top-right",
+                autoClose: 3000,
+            });
         }
     };
 
@@ -86,10 +96,7 @@ const LoginForm = () => {
                         </div>
 
                         <div className="flex justify-between items-center text-sm">
-                            <label className="flex items-center space-x-2">
-                                <input type="checkbox" className="h-4 w-4" />
-                                <span>Ghi nhớ</span>
-                            </label>
+
                             <button
                                 type="button"
                                 onClick={() => navigate('/forgot-password')}

@@ -17,10 +17,12 @@ import {
     Menu,
     X,
     ChevronDown,
-    Clock
+    Clock,
+    Crosshair
 } from 'lucide-react';
 import { getBrands, getCategories, getVehicles } from "../../service/authentication.js";
 import Header from "../Header.jsx";
+import {toast} from "react-toastify";
 
 const Home = () => {
     const { customer, logOut } = useAuth();
@@ -33,7 +35,8 @@ const Home = () => {
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [error, setError] = useState(null);
-    const [isSearching, setIsSearching] = useState(false); // Thêm trạng thái giả lập loading
+    const [isSearching, setIsSearching] = useState(false);
+    const [isLocating, setIsLocating] = useState(false);
 
     // Filter states
     const [filters, setFilters] = useState({
@@ -60,8 +63,9 @@ const Home = () => {
     const fuelTypes = ["DIESEL", "GASOLINE", "Điện", "Hybrid"];
     const locations = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Huế", "Nha Trang"];
 
-    // Current date for date input min
-    const today = new Date().toISOString().split('T')[0];
+    // Current date and time for datetime input min
+    const now = new Date();
+    const minDateTime = now.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
 
     // Helper function to construct the full image URL
     const getFullImageUrl = (filename) => {
@@ -84,17 +88,26 @@ const Home = () => {
                 if (brandsRes.httpStatus === 200) {
                     setBrands(brandsRes.data || []);
                 } else {
-                    setError('Không thể tải danh sách hãng xe.');
+                    toast.error('Không thể tải danh sách hãng xe.', {
+                        position: "top-right",
+                        autoClose: 3000,
+                    });
                 }
 
                 if (categoriesRes.httpStatus === 200) {
                     setCategories(categoriesRes.data || []);
                 } else {
-                    setError('Không thể tải danh sách loại xe.');
+                    toast.error('Không thể tải danh sách loại xe.', {
+                        position: "top-right",
+                        autoClose: 3000,
+                    });
                 }
             } catch (error) {
                 console.error('Error fetching initial data:', error);
-                setError('Có lỗi xảy ra khi tải dữ liệu ban đầu.');
+                toast.error('Có lỗi xảy ra khi tải dữ liệu ban đầu.', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
             } finally {
                 setLoading(false);
             }
@@ -124,11 +137,17 @@ const Home = () => {
                     setVehicles(response.data.data.content || []);
                     setTotalPages(response.data.data.totalPages || 0);
                 } else {
-                    setError('Không thể tải danh sách xe.');
+                    toast.error('Không thể tải danh sách xe.', {
+                        position: "top-right",
+                        autoClose: 3000,
+                    });
                 }
             } catch (error) {
                 console.error('Error fetching vehicles:', error);
-                setError('Có lỗi xảy ra khi tải xe.');
+                toast.error(error.response?.data?.message, {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
             } finally {
                 setLoading(false);
             }
@@ -198,16 +217,17 @@ const Home = () => {
         let newValue = value;
 
         if ((key === 'startDate' || key === 'endDate') && value) {
-            // Nếu người dùng chỉ chọn ngày thì thêm giờ mặc định
-            if (!value.includes('T')) {
-                newValue = `${value}T00:00:00`;
-            }
+            // Convert datetime-local input to desired format
+            newValue = value + ':00'; // Append seconds for format YYYY-MM-DDTHH:mm:ss
 
             const start = key === 'startDate' ? newValue : filters.startDate;
             const end = key === 'endDate' ? newValue : filters.endDate;
 
-            if (start && end && new Date(start) > new Date(end)) {
-                setError('Ngày trả phải sau ngày nhận.');
+            if (start && end && new Date(start) >= new Date(end)) {
+                toast.error('Ngày trả phải sau ngày nhận.', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
                 return;
             }
         }
@@ -270,7 +290,10 @@ const Home = () => {
     // Hàm giả lập tìm kiếm với hiệu ứng loading
     const handleSearch = async () => {
         if (!filters.startDate || !filters.endDate) {
-            setError('Vui lòng chọn cả ngày nhận và ngày trả.');
+            toast.error('Vui lòng chọn cả ngày nhận và ngày trả.', {
+                position: "top-right",
+                autoClose: 3000,
+            });
             return;
         }
 
@@ -296,11 +319,17 @@ const Home = () => {
                 setVehicles(response.data.data.content || []);
                 setTotalPages(response.data.data.totalPages || 0);
             } else {
-                setError('Không thể tải danh sách xe.');
+                toast.error('Không thể tải danh sách xe.', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
             }
         } catch (error) {
             console.error('Error fetching vehicles:', error);
-            setError('Có lỗi xảy ra khi tải xe.');
+            toast.error(error.response?.data?.message, {
+                position: "top-right",
+                autoClose: 3000,
+            });
         } finally {
             setIsSearching(false); // Kết thúc hiệu ứng loading
         }
@@ -316,27 +345,84 @@ const Home = () => {
             </div>
         );
     }
+    // Thêm hàm này vào trong component Home
+    const handleGeolocate = async () => {
+        if (!navigator.geolocation) {
+            toast.error('Trình duyệt của bạn không hỗ trợ định vị.', { position: "top-right" });
+            return;
+        }
 
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <p className="text-red-600">{error}</p>
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                        Thử lại
-                    </button>
-                </div>
-            </div>
+        setIsLocating(true);
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+
+                try {
+                    // Bước 2: Gọi API Reverse Geocoding của OpenStreetMap
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                    const data = await response.json();
+
+                    // Lấy tên thành phố từ kết quả trả về
+                    const city = data.address?.city || data.address?.state || data.address?.county;
+
+                    if (city) {
+                        // Cập nhật vào bộ lọc
+                        handleFilterChange('location', city, true);
+                        toast.success(`Đã xác định vị trí của bạn là: ${city}`, { position: "top-right" });
+                    } else {
+                        toast.warn('Không thể xác định tên thành phố từ vị trí của bạn.', { position: "top-right" });
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi reverse geocoding:", error);
+                    toast.error('Lỗi khi chuyển đổi vị trí thành địa chỉ.', { position: "top-right" });
+                } finally {
+                    setIsLocating(false);
+                }
+            },
+            (error) => {
+                let errorMessage = 'Lỗi khi lấy vị trí.';
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = 'Bạn đã từ chối quyền truy cập vị trí.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = 'Thông tin vị trí không có sẵn.';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = 'Yêu cầu lấy vị trí đã hết hạn.';
+                        break;
+                    default:
+                        errorMessage = 'Đã xảy ra lỗi không xác định.';
+                        break;
+                }
+                toast.error(errorMessage, { position: "top-right" });
+                setIsLocating(false);
+            }
         );
-    }
+    };
+
+    // if (error) {
+    //     return (
+    //         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    //             <div className="text-center">
+    //                 <p className="text-red-600">{error}</p>
+    //                 <button
+    //                     onClick={() => window.location.reload()}
+    //                     className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+    //                 >
+    //                     Thử lại
+    //                 </button>
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             <Header logOut={logOut} handleChangePassword={handleChangePassword} customer={customer} />
-            <div className="bg-white rounded-lg shadow-xl p-6 mx-auto max-w-5xl mt-40 relative z-10 grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            <div className="bg-white rounded-lg shadow-xl p-6 mx-auto max-w-5xl mt-20 relative z-10 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+
                 <div className="flex flex-col">
                     <label htmlFor="location" className="text-gray-600 text-sm mb-1">Địa điểm nhận xe</label>
                     <div className="relative">
@@ -346,25 +432,36 @@ const Home = () => {
                             id="location"
                             placeholder="Chọn một địa điểm"
                             value={filters.location}
+                            // Thêm pr-10 để chữ không bị che bởi icon
                             onChange={(e) => handleFilterChange('location', e.target.value, true)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-gray-700"
+                            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-gray-700"
                         />
+                        {/* NÚT ĐỊNH VỊ MỚI */}
+                        <button
+                            type="button"
+                            onClick={handleGeolocate}
+                            disabled={isLocating}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-red-600 disabled:cursor-wait"
+                        >
+                            {isLocating ? (
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                            ) : (
+                                <Crosshair className="w-5 h-5" />
+                            )}
+                        </button>
                     </div>
                 </div>
+
                 <div className="flex flex-col">
                     <label htmlFor="startDate" className="text-gray-600 text-sm mb-1">Ngày nhận xe</label>
                     <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
-                            type="date"
+                            type="datetime-local"
                             id="startDate"
-                            value={filters.startDate?.slice(0, 10) || ''}
-                            min={today}
-                            onChange={(e) => {
-                                const rawDate = e.target.value;
-                                const formatted = `${rawDate}T00:00:00`;
-                                handleFilterChange('startDate', formatted);
-                            }}
+                            value={filters.startDate?.slice(0, 16) || ''}
+                            min={minDateTime}
+                            onChange={(e) => handleFilterChange('startDate', e.target.value)}
                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-gray-700"
                         />
                     </div>
@@ -374,21 +471,17 @@ const Home = () => {
                     <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
-                            type="date"
+                            type="datetime-local"
                             id="endDate"
-                            value={filters.endDate?.slice(0, 10) || ''}
-                            min={filters.startDate?.slice(0, 10) || today}
-                            onChange={(e) => {
-                                const rawDate = e.target.value;
-                                const formatted = `${rawDate}T00:00:00`;
-                                handleFilterChange('endDate', formatted);
-                            }}
+                            value={filters.endDate?.slice(0, 16) || ''}
+                            min={filters.startDate?.slice(0, 16) || minDateTime}
+                            onChange={(e) => handleFilterChange('endDate', e.target.value)}
                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-gray-700"
                         />
                     </div>
                 </div>
                 <button
-                    onClick={handleSearch} // Sử dụng hàm handleSearch thay vì setCurrentPage trực tiếp
+                    onClick={handleSearch}
                     disabled={isSearching || !filters.startDate || !filters.endDate}
                     className={`col-span-1 md:col-span-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center space-x-2 ${isSearching ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
@@ -558,15 +651,7 @@ const Home = () => {
 
                     {/* Khu vực (Location) Dropdown - Frontend Filter */}
                     <div className="relative">
-                        <button
-                            className="flex items-center space-x-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
-                            onClick={() => toggleDropdown(setShowLocationDropdown, showLocationDropdown)}
-                        >
-                            <MapPin className="w-5 h-5"/>
-                            <span>Khu vực {filters.location && `: ${filters.location}`}</span>
-                            <ChevronDown
-                                className={`w-4 h-4 ml-2 transition-transform ${showLocationDropdown ? 'rotate-180' : ''}`}/>
-                        </button>
+
                         {showLocationDropdown && (
                             <div
                                 className="absolute z-10 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 max-h-60 overflow-y-auto">
@@ -625,12 +710,7 @@ const Home = () => {
                                 {/* Car Details */}
                                 <div className="p-4">
                                     <h3 className="text-xl font-bold text-gray-900 mb-1">{vehicle.vehicleName}</h3>
-                                    <div className="flex items-center mb-2">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star key={i} className="w-4 h-4 text-yellow-400 fill-current"/>
-                                        ))}
-                                        <span className="text-sm text-gray-600 ml-1">4.8 (436 Đánh giá)</span>
-                                    </div>
+
                                     <p className="text-sm text-gray-600 flex items-center mb-3">
                                         <MapPin className="w-4 h-4 mr-1 text-gray-500"/> {vehicle.location || 'N/A'}
                                     </p>
@@ -674,7 +754,6 @@ const Home = () => {
                                         <p className="text-2xl font-bold text-gray-900">{vehicle.pricePerDay?.toLocaleString()}đ/ngày</p>
                                         <button
                                             onClick={() => handleBookVehicle(vehicle.id)}
-                                            // disabled={vehicle.status !== 'AVAILABLE'}
                                             className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium text-base"
                                         >
                                             Xem chi tiết

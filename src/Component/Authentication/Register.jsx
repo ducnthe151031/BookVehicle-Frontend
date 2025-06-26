@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../../service/authentication.js';
-import { Eye, EyeOff } from 'lucide-react';
+import {Eye, EyeOff, Loader2} from 'lucide-react';
+import {toast} from "react-toastify";
 
 const RegisterForm = () => {
     const [formData, setFormData] = useState({
@@ -9,8 +10,9 @@ const RegisterForm = () => {
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'OWNER'
+        role: 'USER' // Changed default role to USER
     });
+    const [loading, setLoading] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -29,19 +31,37 @@ const RegisterForm = () => {
         setMessage('');
 
         if (formData.password !== formData.confirmPassword) {
-            setMessage('Mật khẩu và Nhập lại mật khẩu không khớp!');
+            toast.error('Mật khẩu và Nhập lại mật khẩu không khớp!', {
+                position: "top-right",
+                autoClose: 3000,
+            });
             return;
         }
 
         try {
+            setLoading(true);
+
             await register(formData);
-            setMessage('Đăng ký thành công!');
+            toast.success('Đăng ký thành công!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
             setTimeout(() => {
                 navigate('/login');
             }, 1000);
         } catch (error) {
             const apiMessage = error.response?.data?.message || 'Lỗi đăng ký!';
-            setMessage(apiMessage);
+            toast.error(apiMessage, {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        }finally {
+            setLoading(false);
+
         }
     };
 
@@ -135,11 +155,34 @@ const RegisterForm = () => {
                             </div>
                         </div>
 
+                        {/* Role Selection Dropdown */}
+                        <div>
+                            <label className="block text-sm text-gray-600 mb-1">Vai trò</label>
+                            <select
+                                name="role"
+                                value={formData.role}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                            >
+                                <option value="USER">Người dùng</option>
+                                <option value="OWNER">Chủ xe</option>
+                                <option value="ADMIN">Quản trị viên</option>
+                            </select>
+                        </div>
+
                         <button
                             type="submit"
-                            className="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 font-semibold"
+                            disabled={loading}
+                            className="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 font-semibold flex items-center justify-center disabled:opacity-60"
                         >
-                            Đăng kí
+                            {loading ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                    Đang xử lý...
+                                </>
+                            ) : (
+                                'Đăng kí'
+                            )}
                         </button>
                     </form>
 
