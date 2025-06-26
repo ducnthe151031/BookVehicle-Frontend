@@ -182,6 +182,7 @@ export const approveBooking = async (bookingId) => {
     }
 };
 
+
 export const rejectBooking = async (bookingId) => {
     try {
         const response = await axios.put(
@@ -194,6 +195,8 @@ export const rejectBooking = async (bookingId) => {
         throw e;
     }
 };
+
+
 export const getProfile = async () => {
     try {
         const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/v1/user/profile`, getAuthConfig());
