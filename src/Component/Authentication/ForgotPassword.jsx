@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { forgotPassword } from '../../service/authentication.js';
 import { Mail, User, Loader2 } from 'lucide-react';
+import {toast} from "react-toastify";
 
 const ForgotPassword = () => {
     const [formData, setFormData] = useState({
@@ -21,6 +22,10 @@ const ForgotPassword = () => {
         e.preventDefault();
         if (!formData.email || !formData.username) {
             setMessage('Vui lòng nhập cả email và username.');
+            toast.error('Vui lòng nhập cả email và username.', {
+                position: "top-right",
+                autoClose: 3000,
+            });
             return;
         }
         try {
@@ -28,13 +33,26 @@ const ForgotPassword = () => {
             setMessage('');
             const response = await forgotPassword(formData);
             if (response.httpStatus === 200) {
-                setMessage('Yêu cầu quên mật khẩu đã được gửi. Vui lòng kiểm tra email!');
+                toast.success('Yêu cầu quên mật khẩu đã được gửi. Vui lòng kiểm tra email!', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
                 setTimeout(() => navigate('/login'), 2000);
             } else {
-                setMessage(response.message || 'Gửi yêu cầu thất bại!');
+                toast.error(response.message || 'Gửi yêu cầu thất bại!', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
             }
         } catch (error) {
-            setMessage('Có lỗi xảy ra, vui lòng thử lại!');
+            toast.error(error.response?.data?.message, {
+                position: "top-right",
+                autoClose: 3000,
+            });
             console.error('Forgot password error:', error);
         } finally {
             setLoading(false);
