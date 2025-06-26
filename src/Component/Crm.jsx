@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    Building2, Menu, Users, DollarSign, Search,
+    Building2, Menu, Users, Search,
     BarChart2, MessageSquare, Calendar, Settings,
     Home, UserPlus, FileText, Bell, ChevronDown,
     Layout, Package, CheckCircle, Phone, Mail,

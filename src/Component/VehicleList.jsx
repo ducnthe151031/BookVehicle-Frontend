@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CarForm from './CarForm.jsx';
 import { getVehicles, deleteVehicle, getBrands, getCategories } from '../service/authentication.js'; // Import getBrands, getCategories
-import { Car, Fuel, Users, Tag, Building, Calendar, DollarSign, FileText, X, Plus, Edit, Trash2, Image as ImageIcon, CheckCircle } from 'lucide-react'; // Added ImageIcon, CheckCircle
+import { Car, Fuel, Users, Tag, Building, Calendar, FileText, X, Plus, Edit, Trash2, Image as ImageIcon, CheckCircle } from 'lucide-react'; // Added ImageIcon, CheckCircle
 import CRMLayout from "./Crm.jsx";
 
 const VehicleList = () => {
@@ -369,13 +369,13 @@ const VehicleList = () => {
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-1">
-                                                    <DollarSign className="w-3 h-3 text-gray-500" />
+
                                                     <span className="text-gray-900">{vehicle.pricePerDay ? vehicle.pricePerDay.toLocaleString('vi-VN') : 'N/A'} VNĐ</span>
                                                 </div>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-1">
-                                                    <DollarSign className="w-3 h-3 text-gray-500" />
+
                                                     <span className="text-gray-900">{vehicle.pricePerHour ? vehicle.pricePerHour.toLocaleString('vi-VN') : 'N/A'} VNĐ</span>
                                                 </div>
                                             </td>

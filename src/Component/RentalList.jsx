@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {Calendar, DollarSign, User, Car, Check, X, CheckCircle, XCircle} from 'lucide-react';
+import {Calendar, User, Car, Check, X, CheckCircle, XCircle} from 'lucide-react';
 import CRMLayout from './Crm.jsx';
 import {getRentals, getUserProfile, getCarDetails, approveBooking, rejectBooking} from '../service/authentication.js';
 
@@ -218,7 +218,7 @@ const RentalList = () => {
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     <div className="flex items-center gap-1">
-                                                        <DollarSign className="w-3 h-3 text-gray-500"/>
+
                                                         {rental.totalPrice ? rental.totalPrice.toLocaleString('vi-VN') : 'N/A'} VNĐ
                                                     </div>
                                                 </td>
