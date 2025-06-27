@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import LoginForm from "./Component/Authentication/Login.jsx";
 import RegisterForm from "./Component/Authentication/Register.jsx";
 import HomePage from "./Component/Authentication/Home.jsx";
@@ -16,32 +19,50 @@ import Profile from "./Component/Profile.jsx";
 import ChangePassword from "./Component/ChangePassword.jsx";
 import ForgotPassword from "./Component/Authentication/ForgotPassword.jsx";
 import ResetPassword from "./Component/Authentication/ResetPassword.jsx";
-import LandingPage from "./Component/LandingPage.jsx"; // Add CarDetail import
+import LandingPage from "./Component/LandingPage.jsx";
+import MyPayment from "./Component/myPayment.jsx";
 
 function App() {
-    return (
-        <Routes>
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/register" element={<RegisterForm />} />
-            <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
-            <Route path="/password" element={<ProtectedRoute><ChangePassword/></ProtectedRoute>} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/forgotPassword" element={<ResetPassword />} />
-            <Route path="/landing" element={<LandingPage />} />
+        return (
+            <>
+                    <Routes>
+                            <Route path="/login" element={<LoginForm />} />
+                            <Route path="/register" element={<RegisterForm />} />
+                            <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
+                            <Route path="/myPayment" element={<ProtectedRoute><MyPayment/></ProtectedRoute>} />
 
-            <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-            <Route path="/vehicle/add" element={<ProtectedRoute><CarForm /></ProtectedRoute>} />
-            <Route path="/vehicle" element={<ProtectedRoute><VehicleList /></ProtectedRoute>} />
-            <Route path="/:carId" element={<ProtectedRoute><CarDetail /></ProtectedRoute>} /> {/* Add CarDetail route */}
-            <Route path="/vehicle/bookings/:carId" element={<ProtectedRoute><BookingForm /></ProtectedRoute>} /> {/* Adjust BookingForm route */}
-            <Route path="/vehicle/brands" element={<ProtectedRoute><BrandList /></ProtectedRoute>} />
-            <Route path="/vehicle/categories" element={<ProtectedRoute><CategoryList /></ProtectedRoute>} />
-            <Route path="/rentals" element={<ProtectedRoute><RentalList /></ProtectedRoute>} />
-            <Route path="/crm" element={<ProtectedRoute><CRMLayout /></ProtectedRoute>} />
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/login" replace />} /> {/* Fallback for 404 */}
-        </Routes>
-    );
+                            <Route path="/password" element={<ProtectedRoute><ChangePassword/></ProtectedRoute>} />
+                            <Route path="/forgot-password" element={<ForgotPassword />} />
+                            <Route path="/forgotPassword" element={<ResetPassword />} />
+                            <Route path="/landing" element={<LandingPage />} />
+                            <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+                            <Route path="/vehicle/add" element={<ProtectedRoute><CarForm /></ProtectedRoute>} />
+                            <Route path="/vehicle" element={<ProtectedRoute><VehicleList /></ProtectedRoute>} />
+                            <Route path="/:carId" element={<ProtectedRoute><CarDetail /></ProtectedRoute>} />
+                            <Route path="/vehicle/bookings/:carId" element={<ProtectedRoute><BookingForm /></ProtectedRoute>} />
+                            <Route path="/vehicle/brands" element={<ProtectedRoute><BrandList /></ProtectedRoute>} />
+                            <Route path="/vehicle/categories" element={<ProtectedRoute><CategoryList /></ProtectedRoute>} />
+                            <Route path="/rentals" element={<ProtectedRoute><RentalList /></ProtectedRoute>} />
+                            <Route path="/crm" element={<ProtectedRoute><CRMLayout /></ProtectedRoute>} />
+                            <Route path="/" element={<Navigate to="/login" replace />} />
+                            <Route path="*" element={<Navigate to="/login" replace />} />
+                    </Routes>
+
+                    {/* Global ToastContainer - Add this for all components to use */}
+                    <ToastContainer
+                        position="top-right"
+                        autoClose={3000}
+                        hideProgressBar={false}
+                        newestOnTop={false}
+                        closeOnClick
+                        rtl={false}
+                        pauseOnFocusLoss
+                        draggable
+                        pauseOnHover
+                        theme="light"
+                    />
+            </>
+        );
 }
 
 export default App;
