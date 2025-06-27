@@ -42,12 +42,9 @@ const Header = ({ logOut, handleChangePassword, customer }) => {
                     </button>
                     <nav className="flex space-x-6 text-gray-700 text-sm">
                         <a href="home" className="hover:text-blue-600">Trang chủ</a>
-<<<<<<< MinhNTHE173527
                         <a href="profile" className="hover:text-blue-600">Thông tin cá nhân</a>
                         <a href="myPayment" className="hover:text-blue-600">Đơn thanh toán</a>
 
-=======
->>>>>>> main
                         {/*<a href="#" className="font-semibold text-gray-900">Các loại xe</a> /!* Bold for "Các loại xe" *!/*/}
                         {/*<a href="#" className="hover:text-blue-600">Người cho thuê</a>*/}
                         {/*<a href="#" className="hover:text-blue-600">Liên lạc với chúng tôi</a>*/}

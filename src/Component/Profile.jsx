@@ -163,7 +163,6 @@ const Profile = () => {
                 setTempCccdPreviewUrl(null);
                 if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
                 setTempLicensePreviewUrl(null);
-<<<<<<< MinhNTHE173527
                 // Replace alert with toast notification
                 toast.success('Cập nhật hồ sơ thành công!', {
                     position: "top-right",
@@ -173,21 +172,13 @@ const Profile = () => {
                     pauseOnHover: true,
                     draggable: true,
                 });
-=======
-                alert('Cập nhật hồ sơ thành công!');
->>>>>>> main
             } else {
                 toast.error('Cập nhật hồ sơ thất bại.', {
                     position: "top-right",
                     autoClose: 3000,
                 });
             }
-<<<<<<< MinhNTHE173527
         } catch (error) {
-=======
-        } catch (submitError) {
-            console.error('Error updating profile:', submitError);
->>>>>>> main
             setError('Có lỗi xảy ra khi cập nhật hồ sơ.');
             toast.error(error.response?.data?.message, {
                 position: "top-right",
@@ -472,16 +463,7 @@ const Profile = () => {
                         </div>
 
                         {/* Account Status */}
-<<<<<<< MinhNTHE173527
 
-=======
-                        <div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Trạng thái tài khoản</h3>
-                            <div className="space-y-2 text-sm text-gray-600">
-                                <p>Đã kích hoạt: {profile.flagActive === 'ACTIVE' ? 'Có' : 'Không'}</p>
-                            </div>
-                        </div>
->>>>>>> main
                     </div>
                 </div>
             </div>

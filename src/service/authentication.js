@@ -144,6 +144,21 @@ export const getRentals = async (page, size = 10) => {
     }
 };
 
+export const getMyRentals = async (page, size = 10) => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/user/rental-list`,
+            {
+                ...getAuthConfig(),
+                params: { page, size },
+            }
+        );
+        return response.data;
+    } catch (e) {
+        throw e;
+    }
+};
+
 export const getUserProfile = async () => {
     try {
         const response = await axios.get(
@@ -182,7 +197,6 @@ export const approveBooking = async (bookingId) => {
     }
 };
 
-
 export const rejectBooking = async (bookingId) => {
     try {
         const response = await axios.put(
@@ -195,8 +209,6 @@ export const rejectBooking = async (bookingId) => {
         throw e;
     }
 };
-
-
 export const getProfile = async () => {
     try {
         const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/v1/user/profile`, getAuthConfig());
@@ -239,4 +251,71 @@ export const resetPassword = async (data) => {
         newPassword // Gửi newPassword trong body
     }, );
     return response.data;
+};
+
+export const getReviewsByVehicle = async (vehicleId, page = 0, size = 5) => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/user/vehicle/${vehicleId}`,
+            {
+                params: { page, size }
+            }
+        );
+        return response.data;
+    } catch (e) {
+        throw e;
+    }
+};
+
+export const createReview = async (reviewData) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/user`,
+            reviewData,
+            getAuthConfig()
+        );
+        return response.data;
+    } catch (e) {
+        throw e;
+    }
+};
+
+
+export const updateReview = async (reviewId, reviewData) => {
+    try {
+        const response = await axios.put(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/user/${reviewId}`,
+            reviewData,
+            getAuthConfig()
+        );
+        return response.data;
+    } catch (e) {
+        throw e;
+    }
+};
+
+
+export const deleteReview = async (reviewId) => {
+    try {
+        const response = await axios.delete(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/user/${reviewId}`,
+            getAuthConfig()
+        );
+        return response.data;
+    } catch (e) {
+        throw e;
+    }
+};
+
+export const getRating = async (vehicleId) => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/user/average-rating/${vehicleId}`,
+            getAuthConfig()
+
+        );
+        return response.data;
+    } catch (e) {
+        throw e;
+    }
 };

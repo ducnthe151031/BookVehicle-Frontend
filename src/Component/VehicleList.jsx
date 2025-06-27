@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CarForm from './CarForm.jsx';
-
 import { getVehicles, deleteVehicle, getBrands, getCategories } from '../service/authentication.js';
 import { Car, Fuel, Users, Tag, Building, Calendar, DollarSign, FileText, X, Plus, Edit, Trash2, Image as ImageIcon, CheckCircle } from 'lucide-react';
-
-import { getVehicles, deleteVehicle, getBrands, getCategories } from '../service/authentication.js'; // Import getBrands, getCategories
-import { Car, Fuel, Users, Tag, Building, Calendar, FileText, X, Plus, Edit, Trash2, Image as ImageIcon, CheckCircle } from 'lucide-react'; // Added ImageIcon, CheckCircle
-
 import CRMLayout from "./Crm.jsx";
 
 // Import Drawer component and styles
@@ -21,13 +16,8 @@ const VehicleList = () => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const pageSize = 10;
-
     const [brands, setBrands] = useState([]);
     const [categories, setCategories] = useState([]);
-
-    const [brands, setBrands] = useState([]); // New state for brands
-    const [categories, setCategories] = useState([]); // New state for categories
-
 
     const [filters, setFilters] = useState({
         brands: '',
@@ -43,11 +33,7 @@ const VehicleList = () => {
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [editMode, setEditMode] = useState(false);
 
-
     // Helper to get full image URL
-
-    // Helper to get full image URL from filename (assuming backend serves from /v1/user/images/)
-
     const getFullImageUrl = (filename) => {
         if (!filename) return null;
         return `http://localhost:8080/v1/user/images/${filename}`;
@@ -85,11 +71,7 @@ const VehicleList = () => {
         }
     };
 
-
     // Fetch brands and categories
-
-    // Fetch brands and categories once on mount
-
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
@@ -108,15 +90,9 @@ const VehicleList = () => {
             }
         };
         fetchInitialData();
-
     }, []);
 
     // Fetch vehicles on page or filter change
-
-    }, []); // Empty dependency array means run once on mount
-
-    // Fetch vehicles whenever page or filters change
-
     useEffect(() => {
         fetchVehicles(page, filters);
     }, [page, filters]);
@@ -131,11 +107,7 @@ const VehicleList = () => {
 
     const handleFilterSubmit = (e) => {
         e.preventDefault();
-
         setPage(0);
-
-        setPage(0); // Reset to first page on new filter submission
-
     };
 
     const handleFilterReset = () => {
@@ -149,19 +121,11 @@ const VehicleList = () => {
             vehicleTypeId: '',
             location: '',
         });
-
         setPage(0);
     };
 
     const handlePageChange = (newPage) => {
         setPage(newPage);
-
-        setPage(0); // Reset page on filter clear
-    };
-
-    const handlePageChange = (newPage) => {
-        setPage(newPage); // Page effect hook will re-fetch
-
     };
 
     const handleEdit = (vehicle) => {
@@ -174,15 +138,8 @@ const VehicleList = () => {
         if (window.confirm(`Bạn có chắc muốn xóa xe với ID: ${vehicleId}?`)) {
             setLoading(true);
             try {
-
                 await deleteVehicle(vehicleId);
                 fetchVehicles(page, filters);
-
-                // Assuming deleteVehicle is fixed to handle the ID correctly
-                await deleteVehicle(vehicleId);
-                // Refresh the list after deletion
-                fetchVehicles(page, filters); // Re-fetch current page to ensure correct list
-
                 setError('');
                 toast.success('Xóa xe thành công!', {
                     position: "top-right",
@@ -210,19 +167,11 @@ const VehicleList = () => {
         setEditMode(false);
     };
 
-
     const handleAddFormSuccess = () => {
         setShowAddForm(false);
         setSelectedVehicle(null);
         setEditMode(false);
         fetchVehicles(page, filters);
-
-    const handleAddFormSuccess = () => { // No need for vehicleData param here
-        setShowAddForm(false);
-        setSelectedVehicle(null);
-        setEditMode(false);
-        fetchVehicles(page, filters); // Re-fetch current page to update list
-
     };
 
     return (
@@ -289,11 +238,6 @@ const VehicleList = () => {
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
                                 />
                             </div>
-
-
-
-
-
                             <div>
                                 <label className="block text-xs font-medium text-gray-700 mb-1">
                                     <Tag className="w-3 h-3 inline mr-1" />
@@ -313,15 +257,8 @@ const VehicleList = () => {
                                     <option value="HIDDEN">Đã ẩn</option>
                                 </select>
                             </div>
-
                         </form>
                         <div className="mt-3 flex justify-end gap-2">
-
-
-                        </form>
-                        <div className="mt-3 flex justify-end gap-2">
-
-
                             <button
                                 onClick={handleFilterReset}
                                 className="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-semibold rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 flex items-center gap-1"
@@ -372,11 +309,7 @@ const VehicleList = () => {
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                     <tr>
-
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ảnh</th>
-
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ảnh</th> {/* New column for image */}
-
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên xe</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hãng</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại xe</th>
@@ -388,25 +321,15 @@ const VehicleList = () => {
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hộp số</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Địa điểm</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại phương tiện</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đăng ký xe</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phê duyệt</th>
-
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại phương tiện</th> {/* Renamed from Loại xe ID */}
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đăng ký xe</th> {/* New column for registration doc */}
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phê duyệt</th> {/* New column for approval status */}
-
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                                     </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                     {vehicles.map((vehicle) => (
                                         <tr key={vehicle.id} className="hover:bg-gray-50">
-
-
-                                            {/* Vehicle Image */}
-
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 {vehicle.imageUrl ? (
                                                     <img src={getFullImageUrl(vehicle.imageUrl)} alt={vehicle.vehicleName} className="w-10 h-10 object-cover rounded" />
@@ -423,21 +346,13 @@ const VehicleList = () => {
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-1">
                                                     <Building className="w-3 h-3 text-gray-500" />
-
                                                     <span className="text-gray-900">{getBrandName(vehicle.branchId)}</span>
-
-                                                    <span className="text-gray-900">{getBrandName(vehicle.branchId)}</span> {/* Use helper */}
-
                                                 </div>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-1">
                                                     <Tag className="w-3 h-3 text-gray-500" />
-
                                                     <span className="text-gray-900">{getCategoryName(vehicle.categoryId)}</span>
-
-                                                    <span className="text-gray-900">{getCategoryName(vehicle.categoryId)}</span> {/* Use helper */}
-
                                                 </div>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
@@ -460,13 +375,13 @@ const VehicleList = () => {
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-1">
-
+                                                    <DollarSign className="w-3 h-3 text-gray-500" />
                                                     <span className="text-gray-900">{vehicle.pricePerDay ? vehicle.pricePerDay.toLocaleString('vi-VN') : 'N/A'} VNĐ</span>
                                                 </div>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-1">
-
+                                                    <DollarSign className="w-3 h-3 text-gray-500" />
                                                     <span className="text-gray-900">{vehicle.pricePerHour ? vehicle.pricePerHour.toLocaleString('vi-VN') : 'N/A'} VNĐ</span>
                                                 </div>
                                             </td>
