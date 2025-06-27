@@ -4,12 +4,14 @@ import { Lock, Check, ArrowLeft } from 'lucide-react';
 import { changePassword } from '../service/authentication.js';
 import Header from './Header.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ChangePassword = () => {
     const navigate = useNavigate();
     const { customer, logOut } = useAuth();
     const [formData, setFormData] = useState({
-        email:  '',
+        email: '',
         oldPassword: '',
         newPassword: '',
     });
@@ -27,6 +29,10 @@ const ChangePassword = () => {
         e.preventDefault();
         if (!formData.oldPassword || !formData.newPassword) {
             setError('Vui lòng nhập cả mật khẩu cũ và mật khẩu mới.');
+            toast.error('Vui lòng nhập cả mật khẩu cũ và mật khẩu mới.', {
+                position: "top-right",
+                autoClose: 3000,
+            });
             return;
         }
         try {
@@ -35,13 +41,29 @@ const ChangePassword = () => {
             const response = await changePassword(formData);
             if (response.httpStatus === 200) {
                 setSuccess(true);
+                toast.success('Mật khẩu đã được thay đổi thành công !', {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
                 setTimeout(() => navigate('/profile'), 2000); // Redirect after 2 seconds
             } else {
                 setError('Thay đổi mật khẩu thất bại. Vui lòng kiểm tra lại.');
+                toast.error('Thay đổi mật khẩu thất bại. Vui lòng kiểm tra lại.', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
             }
         } catch (error) {
             console.error('Error changing password:', error);
             setError('Có lỗi xảy ra khi thay đổi mật khẩu.');
+            toast.error(error.response?.data?.message, {
+                position: "top-right",
+                autoClose: 3000,
+            });
         } finally {
             setLoading(false);
         }
@@ -76,7 +98,7 @@ const ChangePassword = () => {
                             <p className="text-sm text-gray-600">Quay lại hồ sơ trong giây lát...</p>
                         </div>
                     ) : (
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Email</label>
                                 <input
@@ -85,7 +107,6 @@ const ChangePassword = () => {
                                     value={formData.email}
                                     onChange={handleChange}
                                     placeholder="Nhập email"
-
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
@@ -111,15 +132,15 @@ const ChangePassword = () => {
                                     placeholder="Nhập mật khẩu mới"
                                 />
                             </div>
-                            {error && <p className="text-sm text-red-600">{error}</p>}
                             <button
-                                type="submit"
+                                type="button"
+                                onClick={handleSubmit}
                                 disabled={loading}
                                 className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'Đang xử lý...' : 'Thay đổi mật khẩu'}
                             </button>
-                        </form>
+                        </div>
                     )}
                 </div>
             </div>
