@@ -1,9 +1,30 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import axios from 'axios';
 // Thêm icon User để làm avatar
-import { Car, Users, Fuel, ArrowLeft, MapPin, Star, CheckCircle, Info, Settings, Upload, Clock, Calendar, User } from 'lucide-react';
+import {
+    Car,
+    Users,
+    Fuel,
+    ArrowLeft,
+    MapPin,
+    Star,
+    CheckCircle,
+    Info,
+    Settings,
+    Upload,
+    Clock,
+    Calendar,
+    User,
+    XCircle
+} from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {createReview, getCarDetails, getRating, getReviewsByVehicle} from '../service/authentication.js';
+import {
+    createReview,
+    getCarDetails,
+    getRating,
+    getReviewsByVehicle,
+    validateCoupon
+} from '../service/authentication.js';
 import Header from "./Header.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { toast } from "react-toastify";
@@ -33,6 +54,11 @@ const CarDetail = () => {
     const [discountCode, setDiscountCode] = useState('');
     const [applyDiscount, setApplyDiscount] = useState(false);
 
+    // --- STATE MỚI CHO COUPON ---
+    const [couponCodeInput, setCouponCodeInput] = useState(''); // State cho ô input
+    const [appliedCoupon, setAppliedCoupon] = useState(null); // Lưu thông tin coupon đã áp dụng
+    const [couponLoading, setCouponLoading] = useState(false);
+    const [couponError, setCouponError] = useState('');
 
     // --- STATE MỚI CHO PHẦN ĐÁNH GIÁ ---
     const [reviews, setReviews] = useState([]);
@@ -109,9 +135,9 @@ const CarDetail = () => {
             totalPrice = car.pricePerHour * hours;
         }
 
-        // Áp dụng giảm giá nếu được chọn
-        if (applyDiscount && (couponCode || discountCode)) {
-            totalPrice = Math.max(0, totalPrice - COUPON_DISCOUNT);
+        // Áp dụng giảm giá từ coupon đã xác thực
+        if (appliedCoupon) {
+            totalPrice = Math.max(0, totalPrice - appliedCoupon.discountAmount);
         }
 
         return { days, hours, duration: rentalType === 'day' ? days : hours, totalPrice };
@@ -120,6 +146,33 @@ const CarDetail = () => {
     const { days, hours, totalPrice } = calculateDurationAndTotal();
     const calculatedSubtotal = totalPrice + SURCHARGE_AMOUNT;
 
+    // --- HÀM MỚI ĐỂ XỬ LÝ COUPON ---
+    const handleApplyCoupon = async () => {
+        if (!couponCodeInput.trim()) {
+            setCouponError('Vui lòng nhập mã coupon.');
+            return;
+        }
+        setCouponLoading(true);
+        setCouponError('');
+        try {
+            const response = await validateCoupon(couponCodeInput);
+            const data = response.data;
+            if (data.httpStatus === 200) {
+                setAppliedCoupon(data.data);
+                toast.success(`Áp dụng mã giảm giá ${data.data.discountAmount.toLocaleString('vi-VN')} VNĐ thành công!`);
+
+
+            } else {
+                setCouponError(response.message || 'Mã giảm giá không hợp lệ.');
+                setAppliedCoupon(null);
+            }
+        } catch (err) {
+            setCouponError(err.response?.data?.message || 'Mã không hợp lệ hoặc đã hết hạn.');
+            setAppliedCoupon(null);
+        } finally {
+            setCouponLoading(false);
+        }
+    };
 
 
 
@@ -227,7 +280,7 @@ const CarDetail = () => {
             totalPrice: calculatedSubtotal,
             cccdFileName: cccdFile ? cccdFile.name : null,
             licenseFileName: licenseFile ? licenseFile.name : null,
-            couponCode: applyDiscount ? couponCode : null,
+            couponCode: appliedCoupon ? appliedCoupon.couponCode : null,
             discountCode: applyDiscount ? discountCode : null,
         };
 
@@ -407,6 +460,17 @@ const CarDetail = () => {
         );
     }
 
+
+    const handleRemoveCoupon = () => {
+        // 1. Xóa thông tin coupon đã áp dụng khỏi state
+        setAppliedCoupon(null);
+
+        // 2. Xóa mã coupon trong ô nhập liệu
+        setCouponCodeInput('');
+
+        // 3. Xóa bất kỳ thông báo lỗi nào liên quan đến coupon
+        setCouponError('');
+    };
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -836,46 +900,37 @@ const CarDetail = () => {
                                 )}
                             </div>
 
-                            <div className="border-t border-gray-300 pt-4 mt-4">
-                                <h3 className="font-bold text-gray-900 mb-3">Áp dụng giảm giá</h3>
-                                <div className="space-y-2">
-                                    <div className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            id="applyDiscount"
-                                            checked={applyDiscount}
-                                            onChange={(e) => setApplyDiscount(e.target.checked)}
-                                            className="mr-2 text-red-600 focus:ring-red-500"
-                                        />
-                                        <label htmlFor="applyDiscount" className="text-gray-700">Áp dụng giảm giá</label>
-                                    </div>
-                                    {applyDiscount && (
-                                        <>
-                                            <div className="flex items-center">
-                                                <label htmlFor="couponCode" className="text-gray-700 mr-2">Coupon:</label>
-                                                <input
-                                                    type="text"
-                                                    id="couponCode"
-                                                    placeholder="Nhập mã coupon"
-                                                    value={couponCode}
-                                                    onChange={(e) => setCouponCode(e.target.value)}
-                                                    className="flex-grow px-3 py-1 border border-gray-300 rounded-lg text-sm"
-                                                />
-                                            </div>
-                                            <div className="flex items-center">
-                                                <label htmlFor="discountCode" className="text-gray-700 mr-2">Mã giảm giá:</label>
-                                                <input
-                                                    type="text"
-                                                    id="discountCode"
-                                                    placeholder="Nhập mã giảm giá"
-                                                    value={discountCode}
-                                                    onChange={(e) => setDiscountCode(e.target.value)}
-                                                    className="flex-grow px-3 py-1 border border-gray-300 rounded-lg text-sm"
-                                                />
-                                            </div>
-                                        </>
+                            <div className="border-t border-gray-200 pt-4 mt-4">
+                                <label htmlFor="couponCodeInput" className="block text-sm font-medium text-gray-700 mb-2">Mã giảm giá</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        id="couponCodeInput"
+                                        placeholder="Nhập mã của bạn"
+                                        value={couponCodeInput}
+                                        onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                                        className="flex-grow px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-red-500 focus:outline-none"
+                                        disabled={!!appliedCoupon || couponLoading}
+                                    />
+                                    {!appliedCoupon ? (
+                                        <button
+                                            onClick={handleApplyCoupon}
+                                            disabled={couponLoading}
+                                            className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+                                        >
+                                            {couponLoading ? '...' : 'Áp dụng'}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={handleRemoveCoupon}
+                                            className="p-2 text-gray-500 hover:text-red-600"
+                                            title="Xóa mã giảm giá"
+                                        >
+                                            <XCircle className="w-5 h-5" />
+                                        </button>
                                     )}
                                 </div>
+                                {couponError && <p className="text-red-500 text-xs mt-1">{couponError}</p>}
                             </div>
 
                             <div className="border-t border-gray-300 pt-4 mt-4">
@@ -883,19 +938,7 @@ const CarDetail = () => {
                                     <span>Thành tiền</span>
                                     <span>{calculatedSubtotal.toLocaleString()}đ</span>
                                 </div>
-                                <div className="text-sm text-gray-600 space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span>Phụ phí có thể phát sinh</span>
-                                        <Info className="w-4 h-4 text-gray-400" />
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs text-gray-500">
-                                        <span>Phí quá giờ</span>
-                                        <span>{OVERTIME_FEE_PER_HOUR.toLocaleString()}đ/giờ</span>
-                                    </div>
-                                    <p className="text-xs text-gray-500">
-                                        Phụ phí phát sinh nếu hoàn trả muộn
-                                    </p>
-                                </div>
+
                             </div>
                         </div>
 
