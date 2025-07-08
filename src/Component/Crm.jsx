@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    Building2, Menu, Users, Search,
+    Building2, Menu, Users, DollarSign, Search,
     BarChart2, MessageSquare, Calendar, Settings,
     Home, UserPlus, FileText, Bell, ChevronDown,
     Layout, Package, CheckCircle, Phone, Mail,
@@ -39,6 +39,8 @@ const CRMLayout = ({ children }) => {
         { name: 'Loại xe', icon: Building2, path: '/vehicle/categories', roles: ['ROLE_ADMIN'] },
         { name: 'Danh sách xe', icon: Car, path: '/vehicle', roles: ['ROLE_ADMIN'] },
         { name: 'Danh sách thuê xe', icon: Car, path: '/rentals', roles: ['ROLE_ADMIN'] },
+        { name: 'Mã coupon', icon: Car, path: '/coupon', roles: ['ROLE_ADMIN'] }
+
     ];
 
     const filteredNavigation = navigation.filter(
