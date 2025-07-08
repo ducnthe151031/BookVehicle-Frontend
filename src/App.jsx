@@ -21,6 +21,7 @@ import ForgotPassword from "./Component/Authentication/ForgotPassword.jsx";
 import ResetPassword from "./Component/Authentication/ResetPassword.jsx";
 import LandingPage from "./Component/LandingPage.jsx";
 import MyPayment from "./Component/myPayment.jsx";
+import CouponListPage from "./Component/CouponList.jsx";
 
 function App() {
         return (
@@ -32,6 +33,7 @@ function App() {
                             <Route path="/myPayment" element={<ProtectedRoute><MyPayment/></ProtectedRoute>} />
 
                             <Route path="/password" element={<ProtectedRoute><ChangePassword/></ProtectedRoute>} />
+                            <Route path="/coupon" element={<ProtectedRoute><CouponListPage/></ProtectedRoute>} />
                             <Route path="/forgot-password" element={<ForgotPassword />} />
                             <Route path="/forgotPassword" element={<ResetPassword />} />
                             <Route path="/landing" element={<LandingPage />} />

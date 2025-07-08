@@ -319,3 +319,67 @@ export const getRating = async (vehicleId) => {
         throw e;
     }
 };
+
+
+export const getCoupons = async () => {
+    try {
+        // Assuming your backend returns data in the format { data: { content: [], totalPages: X } }
+        // If not, you might need to adjust how the response is handled in the component.
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/coupons`,
+            getAuthConfig(),
+
+        );
+        return response;
+    } catch (e) {
+        throw e;
+    }
+};
+
+export const createCoupon = async (couponData) => {
+    try {
+        return await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/coupons`,
+            couponData,
+            getAuthConfig()
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
+export const updateCoupon = async (id, couponData) => {
+    try {
+        return await axios.put(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/coupons/${id}`,
+            couponData,
+            getAuthConfig()
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
+export const deleteCoupon = async (id) => {
+    try {
+        return await axios.delete(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/coupons/${id}`,
+            getAuthConfig()
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
+
+export const validateCoupon = async (couponCode) => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/coupons/code/${couponCode}`,
+            getAuthConfig()
+        );
+        return response;
+    } catch (e) {
+        throw e;
+    }
+};
