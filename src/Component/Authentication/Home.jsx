@@ -20,7 +20,7 @@ import {
     Clock,
     Crosshair
 } from 'lucide-react';
-import { getBrands, getCategories, getVehicles } from "../../service/authentication.js";
+import {getBrands, getCategories, getVehicles, getVehiclesIsApproved} from "../../service/authentication.js";
 import Header from "../Header.jsx";
 import {toast} from "react-toastify";
 
@@ -132,7 +132,7 @@ const Home = () => {
                     endDate: filters.endDate
                 };
 
-                const response = await getVehicles(currentPage, 20, serverFilters);
+                const response = await getVehiclesIsApproved(currentPage, 20, serverFilters);
                 if (response.data.httpStatus === 200) {
                     setVehicles(response.data.data.content || []);
                     setTotalPages(response.data.data.totalPages || 0);

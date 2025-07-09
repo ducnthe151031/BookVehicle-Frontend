@@ -166,7 +166,7 @@ const RegisterForm = () => {
                             >
                                 <option value="USER">Người dùng</option>
                                 <option value="OWNER">Chủ xe</option>
-                                <option value="ADMIN">Quản trị viên</option>
+                                <option value="STAFF">Quản trị viên</option>
                             </select>
                         </div>
 

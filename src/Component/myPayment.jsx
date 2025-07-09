@@ -187,9 +187,7 @@ const MyPayment = () => {
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại
                                             thuê
                                         </th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đã
-                                            thanh toán
-                                        </th>
+
 
                                     </tr>
                                     </thead>
@@ -235,22 +233,7 @@ const MyPayment = () => {
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     {rental.rentType}
                                                 </td>
-                                                <td className="px-2 py-1 whitespace-nowrap text-sm">
-                                                  <span
-                                                      className={`inline-flex items-center gap-1 py-0.5 px-2 text-xs font-medium rounded-full 
-                                                      ${rental.paymentStatus ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
-                                                  >
-                                                    {rental.paymentStatus ? (
-                                                        <>
-                                                            <CheckCircle size={14}/> Đã thanh toán
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <XCircle size={14}/> Chưa thanh toán
-                                                        </>
-                                                    )}
-                                                  </span>
-                                                </td>
+
 
 
                                             </tr>
