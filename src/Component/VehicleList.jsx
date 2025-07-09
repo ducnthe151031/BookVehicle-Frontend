@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import CarForm from './CarForm.jsx';
-import { getVehicles, deleteVehicle, getBrands, getCategories } from '../service/authentication.js';
-import { Car, Fuel, Users, Tag, Building, Calendar, DollarSign, FileText, X, Plus, Edit, Trash2, Image as ImageIcon, CheckCircle } from 'lucide-react';
+import {getVehicles, deleteVehicle, getBrands, getCategories, approveVehicle} from '../service/authentication.js';
+import {
+    Car,
+    Fuel,
+    Users,
+    Tag,
+    Building,
+    Calendar,
+    DollarSign,
+    FileText,
+    X,
+    Plus,
+    Edit,
+    Trash2,
+    Image as ImageIcon,
+    CheckCircle,
+    CheckIcon
+} from 'lucide-react';
 import CRMLayout from "./Crm.jsx";
 
 // Import Drawer component and styles
@@ -174,6 +190,33 @@ const VehicleList = () => {
         fetchVehicles(page, filters);
     };
 
+    async function handleApproved(vehicleId) {
+        if (window.confirm(`Bạn có chắc muốn phê duyệt thông tin xe có ID: ${vehicleId}?`)) {
+            setLoading(true);
+            try {
+                await approveVehicle(vehicleId);
+                fetchVehicles(page, filters);
+                setError('');
+                toast.success('Phê duyệt xe thành công!', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+            } catch (err) {
+                setError(err.response?.data?.message || 'Không thể phê duyệt xe');
+                toast.error('Phê duyệt xe thất bại: ' + (err.response?.data?.message || 'Lỗi không xác định'), {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+            } finally {
+                setLoading(false);
+            }
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-6 px-4">
             <div className="max-w-6xl mx-auto">
@@ -251,7 +294,6 @@ const VehicleList = () => {
                                 >
                                     <option value="">Tất cả</option>
                                     <option value="AVAILABLE">Có sẵn</option>
-                                    <option value="UNAVAILABLE">Không có sẵn</option>
                                     <option value="RENTED">Đã thuê</option>
                                     <option value="MAINTENANCE">Đang bảo trì</option>
                                     <option value="HIDDEN">Đã ẩn</option>
@@ -399,7 +441,9 @@ const VehicleList = () => {
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                           <span className={`inline-block py-0.5 px-2 text-xs font-medium rounded-full ${vehicle.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                            {vehicle.status}
+                            {vehicle.status === 'AVAILABLE' && 'Có sẵn'}
+                              {vehicle.status === 'RENTED' && 'Đã thuê'}
+                              {vehicle.status === 'PENDING' && 'Đang xử lý đơn'}
                           </span>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
@@ -422,10 +466,14 @@ const VehicleList = () => {
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm text-center">
                                                 {vehicle.approved ? (
-                                                    <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
+                                                    <CheckIcon className="w-5 h-5 text-green-500 mx-auto" />
                                                 ) : (
-                                                    <X className="w-5 h-5 text-red-500 mx-auto" />
-                                                )}
+                                                    <button
+                                                        onClick={() => handleApproved(vehicle.id)}
+                                                        className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-all duration-200"
+                                                    >
+                                                        <CheckCircle className="w-4 h-4" />
+                                                    </button>                                                )}
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex gap-1">
@@ -489,6 +537,7 @@ const VehicleList = () => {
                                     onClick={handleAddFormClose}
                                     className="text-gray-600 hover:text-gray-800"
                                 >
+                                    >
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>

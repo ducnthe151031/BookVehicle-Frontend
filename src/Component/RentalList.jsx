@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {Calendar, User, Car, Check, X, CheckCircle, XCircle} from 'lucide-react';
+import {Calendar, DollarSign, User, Car, Check, X, CheckCircle, XCircle} from 'lucide-react';
 import CRMLayout from './Crm.jsx';
 import {getRentals, getUserProfile, getCarDetails, approveBooking, rejectBooking} from '../service/authentication.js';
 
@@ -23,7 +23,7 @@ const RentalList = () => {
                     // Tính toán rentType dựa trên chênh lệch thời gian
                     const startDate = new Date(rental.startDate);
                     const endDate = new Date(rental.endDate);
-                    const timeDiffMs = endDate - startDate; //  Chênh lệch thời gian tính bằng mili giây
+                    const timeDiffMs = endDate - startDate; // Chênh lệch thời gian tính bằng mili giây
                     const hoursDiff = timeDiffMs / (1000 * 60 * 60); // Chuyển sang giờ
 
                     let rentType;
@@ -92,16 +92,7 @@ const RentalList = () => {
         }
     };
 
-    const getStatusDisplay = (status) => {
-        const statusMap = {
-            PENDING: {text: 'Chờ duyệt', color: 'bg-yellow-100 text-yellow-800'},
-            APPROVED: {text: 'Đã duyệt', color: 'bg-green-100 text-green-800'},
-            REJECTED: {text: 'Từ chối', color: 'bg-red-100 text-red-800'},
-            CANCELLED: {text: 'Đã hủy', color: 'bg-gray-100 text-gray-800'},
-            COMPLETED: {text: 'Hoàn thành', color: 'bg-blue-100 text-blue-800'},
-        };
-        return statusMap[status] || {text: status, color: 'bg-gray-100 text-gray-800'};
-    };
+
 
     const formatDate = (dateString, isHourly) => {
         const date = new Date(dateString);
@@ -173,21 +164,19 @@ const RentalList = () => {
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng
                                             giá
                                         </th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng
-                                            thái duyệt
-                                        </th>
+
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại
                                             thuê
                                         </th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đã
-                                            thanh toán
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái
+
                                         </th>
+
 
                                     </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                     {rentals.map((rental) => {
-                                        const statusDisplay = getStatusDisplay(rental.status);
                                         const showApproveButton = rental.status === 'PENDING';
                                         const isHourly = rental.rentType.includes('giờ');
                                         return (
@@ -218,19 +207,21 @@ const RentalList = () => {
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     <div className="flex items-center gap-1">
-
+                                                        <DollarSign className="w-3 h-3 text-gray-500"/>
                                                         {rental.totalPrice ? rental.totalPrice.toLocaleString('vi-VN') : 'N/A'} VNĐ
                                                     </div>
                                                 </td>
-                                                <td className="px-2 py-1 whitespace-nowrap text-sm">
-                                                        <span
-                                                            className={`inline-block py-0.5 px-2 text-xs font-medium rounded-full ${statusDisplay.color}`}>
-                                                            {statusDisplay.text}
-                                                        </span>
-                                                </td>
+
 
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     {rental.rentType}
+                                                </td>
+                                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                                                    {rental.status === 'REJECTED'
+                                                        ? 'Đã hủy'
+                                                        : rental.status === 'APPROVED'
+                                                            ? 'Đã thuê'
+                                                            : 'Đang xử lý đơn'}
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                   <span
@@ -249,6 +240,7 @@ const RentalList = () => {
                                                   </span>
                                                 </td>
 
+
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                     {showApproveButton && (
                                                         <>
@@ -256,13 +248,13 @@ const RentalList = () => {
                                                                 onClick={() => handleApprove(rental.id)}
                                                                 className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-all duration-200"
                                                             >
-                                                                Phê duyệt
+                                                                Đã giao
                                                             </button>
                                                             <button
                                                                 onClick={() => handleReject(rental.id)}
                                                                 className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-700 transition-all duration-200"
                                                             >
-                                                                Từ chối
+                                                                Hủy đơn
                                                             </button>
 
                                                         </>

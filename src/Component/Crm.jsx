@@ -37,7 +37,7 @@ const CRMLayout = ({ children }) => {
     const navigation = [
         { name: 'Hãng xe', icon: Building2, path: '/vehicle/brands', roles: ['ROLE_ADMIN'] },
         { name: 'Loại xe', icon: Building2, path: '/vehicle/categories', roles: ['ROLE_ADMIN'] },
-        { name: 'Danh sách xe', icon: Car, path: '/vehicle', roles: ['ROLE_ADMIN'] },
+        { name: 'Danh sách xe', icon: Car, path: '/vehicle', roles: ['ROLE_ADMIN','ROLE_OWNER'] },
         { name: 'Danh sách thuê xe', icon: Car, path: '/rentals', roles: ['ROLE_ADMIN'] },
         { name: 'Mã coupon', icon: Car, path: '/coupon', roles: ['ROLE_ADMIN'] }
 
