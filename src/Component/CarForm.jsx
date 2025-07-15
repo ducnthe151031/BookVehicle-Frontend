@@ -38,7 +38,10 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
         { id: '6', name: 'BMW' },
         { id: '7', name: 'Mercedes-Benz' },
         { id: '8', name: 'Audi' },
-        { id: '9', name: 'Kia' },
+        { id: '9', name: 'MG' },
+        { id: '10', name: 'Vinfast' },
+        { id: '11', name: 'Kawasaki' },
+        { id: '12', name: 'Ducati' }
     ];
 
     const categories = [

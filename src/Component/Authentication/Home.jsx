@@ -490,7 +490,7 @@ const Home = () => {
                     ) : (
                         <>
                             <Search className="w-5 h-5" />
-                            <span>Tìm một chiếc xe</span>
+                            <span>Tìm xe</span>
                         </>
                     )}
                 </button>
