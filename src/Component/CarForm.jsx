@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Car, MapPin, Calendar, DollarSign, Fuel, Settings, Users, Tag, Building, FileText, Plus, X, Upload } from 'lucide-react';
 import CRMLayout from "./Crm.jsx";
-import { createCar, updateVehicle } from "../service/authentication.js";
-import {toast} from "react-toastify";
+import { createCar, updateVehicle, getBrands, getCategories } from "../service/authentication.js";
+import { toast } from "react-toastify";
 
 const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
     const [formData, setFormData] = useState({
@@ -25,37 +25,11 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
 
     const [errors, setErrors] = useState({});
     const [message, setMessage] = useState('');
-
     const [mainImagePreviewUrl, setMainImagePreviewUrl] = useState(null);
     const [regDocPreviewUrl, setRegDocPreviewUrl] = useState(null);
-
-    const brands = [
-        { id: '1', name: 'TOYOTA' },
-        { id: '2', name: 'HYUNDAI' },
-        { id: '3', name: 'HONDA' },
-        { id: '4', name: 'KIA' },
-        { id: '5', name: 'Yamaha' },
-        { id: '6', name: 'BMW' },
-        { id: '7', name: 'Mercedes-Benz' },
-        { id: '8', name: 'Audi' },
-        { id: '9', name: 'MG' },
-        { id: '10', name: 'Vinfast' },
-        { id: '11', name: 'Kawasaki' },
-        { id: '12', name: 'Ducati' }
-    ];
-
-    const categories = [
-        { id: '1', name: 'Sedan' },
-        { id: '2', name: 'SUV' },
-        { id: '3', name: '7 chỗ' },
-        { id: '4', name: 'SPORT' },
-        { id: '5', name: 'TRUCK' },
-        { id: '6', name: '4 chỗ' },
-        { id: '7', name: 'Tay ga' },
-        { id: '8', name: 'Xe côn' },
-        { id: '9', name: 'Xe gắn máy' },
-
-    ];
+    const [brands, setBrands] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     const getFullImageUrl = (filename) => {
         if (!filename || filename === 'Chưa cập nhật' || filename.startsWith('data:image')) return null;
@@ -77,6 +51,43 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
         }
         return 'Chưa cập nhật';
     };
+
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            setLoading(true);
+            try {
+                const [brandsRes, categoriesRes] = await Promise.all([
+                    getBrands(),
+                    getCategories()
+                ]);
+                if (brandsRes.httpStatus === 200) {
+                    setBrands(brandsRes.data || []);
+                } else {
+                    toast.error('Không thể tải danh sách hãng xe', {
+                        position: "top-right",
+                        autoClose: 3000,
+                    });
+                }
+                if (categoriesRes.httpStatus === 200) {
+                    setCategories(categoriesRes.data || []);
+                } else {
+                    toast.error('Không thể tải danh sách loại xe', {
+                        position: "top-right",
+                        autoClose: 3000,
+                    });
+                }
+            } catch (err) {
+                console.error("Error fetching brands/categories:", err);
+                toast.error('Lỗi khi tải danh sách hãng hoặc loại xe', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchInitialData();
+    }, []);
 
     useEffect(() => {
         if (isEditMode && initialData) {
@@ -129,9 +140,8 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
         const { name, value } = e.target;
         let processedValue = value;
 
-        // Ensure numeric fields are not negative
         if (name === 'seats' || name === 'dailyPrice' || name === 'hourlyPrice') {
-            processedValue = Math.max(0, Number(value) || 0); // Prevent negative values
+            processedValue = Math.max(0, Number(value) || 0);
             if (name === 'seats' && (processedValue < 2 || processedValue > 50)) {
                 setErrors({ ...errors, [name]: 'Số ghế phải từ 2-50 và không âm' });
             } else if (name === 'dailyPrice' && processedValue < 100000) {
@@ -185,7 +195,6 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
         setMessage('');
 
         if (!validateForm()) {
-            // setMessage('Vui lòng kiểm tra lại thông tin nhập vào.');
             toast.error('Vui lòng kiểm tra lại thông tin nhập vào.', {
                 position: "top-right",
                 autoClose: 3000,
@@ -225,13 +234,9 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                         draggable: true,
                     });
                 } else {
-                    toast.success('Cập nhật xe thành công!', {
+                    toast.error(response.message || 'Cập nhật xe thất bại.', {
                         position: "top-right",
                         autoClose: 3000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
                     });
                 }
             } else {
@@ -256,7 +261,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                     if (regDocPreviewUrl) URL.revokeObjectURL(regDocPreviewUrl);
                     setRegDocPreviewUrl(null);
                 } else {
-                    toast.error(response.message || 'Tạo xe thất bại.', {
+                    toast.error(response.message || 'Tạo xe thành công.', {
                         position: "top-right",
                         autoClose: 3000,
                     });
@@ -266,17 +271,22 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
             if (onSuccess) onSuccess();
         } catch (error) {
             setMessage(error.response?.data?.message || (isEditMode ? 'Lỗi khi cập nhật xe' : 'Lỗi khi tạo xe'));
-            console.error("Submission error:", error);
+            toast.error(error.response?.data?.message || (isEditMode ? 'Lỗi khi cập nhật xe' : 'Lỗi khi tạo xe'), {
+                position: "top-right",
+                autoClose: 3000,
+            });
         }
     };
 
     return (
         <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl  overflow-hidden ">
-
+            <div className="bg-white rounded-2xl overflow-hidden">
                 <div className="p-5">
+                    {loading && (
+                        <div className="text-center text-gray-600 text-sm">Đang tải dữ liệu...</div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div >
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 <Car className="w-4 h-4 inline mr-2" />
                                 Tên xe
@@ -305,6 +315,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white ${
                                     errors.brand ? 'border-red-500 bg-red-50' : 'border-gray-300'
                                 }`}
+                                disabled={loading}
                             >
                                 <option value="">Chọn hãng xe</option>
                                 {brands.map((brand) => (
@@ -328,6 +339,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white ${
                                     errors.category ? 'border-red-500 bg-red-50' : 'border-gray-300'
                                 }`}
+                                disabled={loading}
                             >
                                 <option value="">Chọn phân loại</option>
                                 {categories.map((cat) => (
@@ -349,6 +361,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                                 value={formData.type}
                                 onChange={handleChange}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white"
+                                disabled={loading}
                             >
                                 <option value="DIESEL">Diesel</option>
                                 <option value="GASOLINE">Xăng</option>
@@ -493,6 +506,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                                 </div>
                             )}
                         </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 <Tag className="w-4 h-4 inline mr-2" />
@@ -505,6 +519,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white ${
                                     errors.vehicleTypeId ? 'border-red-500 bg-red-50' : 'border-gray-300'
                                 }`}
+                                disabled={loading}
                             >
                                 <option value="">Chọn loại xe</option>
                                 <option value="1">Ô tô</option>
@@ -523,6 +538,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                                 value={formData.gearbox}
                                 onChange={handleChange}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white"
+                                disabled={loading}
                             >
                                 <option value="AUTOMATIC">Tự động</option>
                                 <option value="MANUAL">Số sàn</option>
@@ -559,8 +575,6 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                             />
                             {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
                         </div>
-
-
                     </div>
 
                     <div className="mt-8 flex justify-end gap-4">
@@ -577,6 +591,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                             type="submit"
                             onClick={handleSubmit}
                             className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                            disabled={loading}
                         >
                             <Plus className="w-5 h-5" />
                             {isEditMode ? 'Cập nhật' : 'Tạo Xe'}
@@ -595,7 +610,6 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                 </div>
             </div>
         </div>
-
     );
 };
 
