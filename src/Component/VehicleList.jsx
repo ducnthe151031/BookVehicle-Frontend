@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import CarForm from './CarForm.jsx';
-import {getVehicles, deleteVehicle, getBrands, getCategories, approveVehicle} from '../service/authentication.js';
+import {
+    getVehicles,
+    deleteVehicle,
+    getBrands,
+    getCategories,
+    approveVehicle,
+    rejectVehicle
+} from '../service/authentication.js';
 import {
     Car,
     Fuel,
@@ -19,11 +26,9 @@ import {
     CheckIcon
 } from 'lucide-react';
 import CRMLayout from "./Crm.jsx";
-
-// Import Drawer component and styles
 import Drawer from 'react-modern-drawer';
 import 'react-modern-drawer/dist/index.css';
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
 const VehicleList = () => {
     const [vehicles, setVehicles] = useState([]);
@@ -34,7 +39,6 @@ const VehicleList = () => {
     const pageSize = 10;
     const [brands, setBrands] = useState([]);
     const [categories, setCategories] = useState([]);
-
     const [filters, setFilters] = useState({
         brands: '',
         categories: '',
@@ -45,29 +49,29 @@ const VehicleList = () => {
         vehicleTypeId: '',
         location: '',
     });
-    const [showAddForm, setShowAddForm] = useState(false); // Controls drawer visibility
+    const [showAddForm, setShowAddForm] = useState(false);
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [editMode, setEditMode] = useState(false);
+    // New states for rejection sidebar
+    const [showRejectForm, setShowRejectForm] = useState(false);
+    const [rejectVehicleId, setRejectVehicleId] = useState(null);
+    const [rejectReason, setRejectReason] = useState('');
 
-    // Helper to get full image URL
     const getFullImageUrl = (filename) => {
         if (!filename) return null;
         return `http://localhost:8080/v1/user/images/${filename}`;
     };
 
-    // Helper to get brand name
     const getBrandName = (brandId) => {
         const brand = brands.find(b => b.id === brandId);
         return brand ? brand.name : 'N/A';
     };
 
-    // Helper to get category name
     const getCategoryName = (categoryId) => {
         const category = categories.find(c => c.id === categoryId);
         return category ? category.name : 'N/A';
     };
 
-    // Fetch vehicles
     const fetchVehicles = async (pageNumber, filterParams) => {
         setLoading(true);
         setError('');
@@ -87,7 +91,6 @@ const VehicleList = () => {
         }
     };
 
-    // Fetch brands and categories
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
@@ -108,7 +111,6 @@ const VehicleList = () => {
         fetchInitialData();
     }, []);
 
-    // Fetch vehicles on page or filter change
     useEffect(() => {
         fetchVehicles(page, filters);
     }, [page, filters]);
@@ -147,7 +149,7 @@ const VehicleList = () => {
     const handleEdit = (vehicle) => {
         setSelectedVehicle(vehicle);
         setEditMode(true);
-        setShowAddForm(true); // Open drawer for editing
+        setShowAddForm(true);
     };
 
     const handleDelete = async (vehicleId) => {
@@ -190,7 +192,7 @@ const VehicleList = () => {
         fetchVehicles(page, filters);
     };
 
-    async function handleApproved(vehicleId) {
+    const handleApproved = async (vehicleId) => {
         if (window.confirm(`Bạn có chắc muốn phê duyệt thông tin xe có ID: ${vehicleId}?`)) {
             setLoading(true);
             try {
@@ -215,7 +217,54 @@ const VehicleList = () => {
                 setLoading(false);
             }
         }
-    }
+    };
+
+    const handleRejected = (vehicleId) => {
+        setRejectVehicleId(vehicleId);
+        setRejectReason(''); // Reset reason input
+        setShowRejectForm(true); // Open rejection sidebar
+    };
+
+    const handleRejectSubmit = async () => {
+        if (!rejectReason.trim()) {
+            toast.error('Vui lòng nhập lý do từ chối!', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
+        setLoading(true);
+        try {
+            await rejectVehicle(rejectVehicleId, rejectReason);
+            fetchVehicles(page, filters);
+            setError('');
+            toast.success('Từ chối phê duyệt xe thành công!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
+            setShowRejectForm(false);
+            setRejectVehicleId(null);
+            setRejectReason('');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Không thể từ chối xe');
+            toast.error('Từ chối xe thất bại: ' + (err.response?.data?.message || 'Lỗi không xác định'), {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRejectFormClose = () => {
+        setShowRejectForm(false);
+        setRejectVehicleId(null);
+        setRejectReason('');
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-6 px-4">
@@ -295,8 +344,6 @@ const VehicleList = () => {
                                     <option value="">Tất cả</option>
                                     <option value="AVAILABLE">Có sẵn</option>
                                     <option value="RENTED">Đã thuê</option>
-                                    <option value="MAINTENANCE">Đang bảo trì</option>
-                                    <option value="HIDDEN">Đã ẩn</option>
                                 </select>
                             </div>
                         </form>
@@ -324,7 +371,7 @@ const VehicleList = () => {
                                 onClick={() => {
                                     setSelectedVehicle(null);
                                     setEditMode(false);
-                                    setShowAddForm(true); // Open drawer
+                                    setShowAddForm(true);
                                 }}
                                 className="px-3 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 flex items-center gap-1"
                             >
@@ -366,6 +413,9 @@ const VehicleList = () => {
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại phương tiện</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đăng ký xe</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phê duyệt</th>
+
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lí do từ chối</th>
+
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                                     </tr>
                                     </thead>
@@ -440,19 +490,19 @@ const VehicleList = () => {
                                                 </div>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
-                          <span className={`inline-block py-0.5 px-2 text-xs font-medium rounded-full ${vehicle.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                            {vehicle.status === 'AVAILABLE' && 'Có sẵn'}
-                              {vehicle.status === 'RENTED' && 'Đã thuê'}
-                              {vehicle.status === 'PENDING' && 'Đang xử lý đơn'}
-                          </span>
+                                                <span className={`inline-block py-0.5 px-2 text-xs font-medium rounded-full ${vehicle.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                    {vehicle.status === 'AVAILABLE' && 'Có sẵn'}
+                                                    {vehicle.status === 'RENTED' && 'Đã thuê'}
+                                                    {vehicle.status === 'PENDING' && 'Đang xử lý đơn'}
+                                                </span>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-1">
                                                     <Car className="w-3 h-3 text-gray-500" />
                                                     <span className="text-gray-900">
-                              {vehicle.vehicleTypeId === '1' ? 'Ô tô' :
-                                  vehicle.vehicleTypeId === '2' ? 'Xe máy' : 'N/A'}
-                            </span>
+                                                        {vehicle.vehicleTypeId === '1' ? 'Ô tô' :
+                                                            vehicle.vehicleTypeId === '2' ? 'Xe máy' : 'N/A'}
+                                                    </span>
                                                 </div>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm text-center">
@@ -464,16 +514,35 @@ const VehicleList = () => {
                                                     <span className="text-gray-400">N/A</span>
                                                 )}
                                             </td>
+
                                             <td className="px-2 py-1 whitespace-nowrap text-sm text-center">
-                                                {vehicle.approved ? (
+                                                {vehicle.approved === true ? (
                                                     <CheckIcon className="w-5 h-5 text-green-500 mx-auto" />
+                                                ) : vehicle.approved === false ? (
+                                                    <X className="w-5 h-5 text-red-500 mx-auto" />
                                                 ) : (
-                                                    <button
-                                                        onClick={() => handleApproved(vehicle.id)}
-                                                        className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-all duration-200"
-                                                    >
-                                                        <CheckCircle className="w-4 h-4" />
-                                                    </button>                                                )}
+                                                    <div className="flex justify-center gap-2">
+                                                        <button
+                                                            onClick={() => handleApproved(vehicle.id)}
+                                                            className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
+                                                        >
+                                                            <CheckCircle className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleRejected(vehicle.id)}
+                                                            className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-gray-900">
+                                                        {vehicle.reason}
+                                                    </span>
+                                                </div>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex gap-1">
@@ -509,8 +578,8 @@ const VehicleList = () => {
                                     Trang trước
                                 </button>
                                 <span className="text-sm text-gray-600">
-                  Trang {page + 1} / {totalPages}
-                </span>
+                                    Trang {page + 1} / {totalPages}
+                                </span>
                                 <button
                                     onClick={() => handlePageChange(page + 1)}
                                     disabled={page === totalPages - 1}
@@ -537,11 +606,9 @@ const VehicleList = () => {
                                     onClick={handleAddFormClose}
                                     className="text-gray-600 hover:text-gray-800"
                                 >
-                                    >
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
-                            {/* Add the key prop here */}
                             <CarForm
                                 key={selectedVehicle ? selectedVehicle.id : 'new-vehicle'}
                                 onClose={handleAddFormClose}
@@ -549,6 +616,53 @@ const VehicleList = () => {
                                 initialData={editMode ? selectedVehicle : null}
                                 isEditMode={editMode}
                             />
+                        </div>
+                    </Drawer>
+
+                    {/* Drawer for Rejection Reason */}
+                    <Drawer
+                        open={showRejectForm}
+                        onClose={handleRejectFormClose}
+                        direction="right"
+                        className="w-full max-w-md"
+                        size="md"
+                    >
+                        <div className="p-6 bg-white h-full">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-bold text-gray-900">Lý do từ chối</h3>
+                                <button
+                                    onClick={handleRejectFormClose}
+                                    className="text-gray-600 hover:text-gray-800"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Nhập lý do từ chối
+                                </label>
+                                <textarea
+                                    value={rejectReason}
+                                    onChange={(e) => setRejectReason(e.target.value)}
+                                    placeholder="Vui lòng nhập lý do từ chối..."
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                                    rows="5"
+                                />
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    onClick={handleRejectFormClose}
+                                    className="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-semibold rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={handleRejectSubmit}
+                                    className="px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200"
+                                >
+                                    Gửi
+                                </button>
+                            </div>
                         </div>
                     </Drawer>
                 </div>
