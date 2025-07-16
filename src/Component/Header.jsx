@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Car } from 'lucide-react'; // Import Car icon
+import { User, Car } from 'lucide-react';
+import {useAuth} from "../context/AuthContext.jsx"; // Import Car icon
 
 const Header = ({ logOut, handleChangePassword, customer }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,7 +44,10 @@ const Header = ({ logOut, handleChangePassword, customer }) => {
                     <nav className="flex space-x-6 text-gray-700 text-sm">
                         <a href="home" className="hover:text-blue-600">Trang chủ</a>
                         <a href="profile" className="hover:text-blue-600">Thông tin cá nhân</a>
-                        <a href="myPayment" className="hover:text-blue-600">Đơn thanh toán</a>
+                        {customer?.role === "ROLE_OWNER" ?
+                            <a href="list" className="hover:text-blue-600">Danh sách xe</a>
+                            :<a href="myPayment" className="hover:text-blue-600">Đơn thanh toán</a>
+                        }
 
                         {/*<a href="#" className="font-semibold text-gray-900">Các loại xe</a> /!* Bold for "Các loại xe" *!/*/}
                         {/*<a href="#" className="hover:text-blue-600">Người cho thuê</a>*/}

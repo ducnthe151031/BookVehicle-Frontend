@@ -194,7 +194,7 @@ const CarDetail = () => {
                 if (response.httpStatus === 200) {
                     setCar(response.data);
                     // Lấy reviews sau khi có thông tin xe
-                    fetchReviews();
+                    fetchReviews(true);
                 } else {
                     setError('Không thể tải thông tin xe.');
                 }
@@ -500,7 +500,7 @@ const CarDetail = () => {
                                     <p className="text-lg font-semibold text-gray-800">Tên xe: {car.vehicleName}</p>
                                     <div className="flex items-center text-sm text-gray-600 mt-1">
                                         <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
-                                        <span>Đánh giá trung bình: {ratingInfo || 'N/A'}</span>
+                                        <span>Đánh giá trung bình: {ratingInfo || 'N/A'} / 5</span>
                                     </div>
                                 </div>
                                 <div className="space-y-3">
@@ -908,7 +908,7 @@ const CarDetail = () => {
                                         id="couponCodeInput"
                                         placeholder="Nhập mã của bạn"
                                         value={couponCodeInput}
-                                        onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                                        onChange={(e) => setCouponCodeInput(e.target.value)}
                                         className="flex-grow px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-red-500 focus:outline-none"
                                         disabled={!!appliedCoupon || couponLoading}
                                     />

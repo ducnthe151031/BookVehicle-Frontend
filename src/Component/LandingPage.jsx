@@ -377,7 +377,7 @@ const LandingPage = () => {
                     className="col-span-1 md:col-span-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center space-x-2"
                 >
                     <Search className="w-5 h-5" />
-                    <span>Tìm một chiếc xe</span>
+                    <span>Tìm xe</span>
                 </button>
             </div>
 
