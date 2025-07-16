@@ -140,6 +140,21 @@ export const approveVehicle = async (vehicleId) => {
     }
 };
 
+export const rejectVehicle = async (vehicleId, reason) => {
+    try {
+        return await axios.delete(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/reject-vehicle`,
+            {
+                ...getAuthConfig(),
+                data: { id: vehicleId, reason: reason },
+            }
+
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
 
 export const updateVehicle = async (vehicleId, vehicleData) => {
     try {
@@ -422,3 +437,78 @@ export const validateCoupon = async (couponCode) => {
         throw e;
     }
 };
+
+export const createCategory = async (category) => {
+    try {
+        return await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/category-list`,
+            category,
+            getAuthConfig()
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
+
+export const updateCategory = async (id, category) => {
+    try {
+        return await axios.put(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/category-list/${id}`,
+            category,
+            getAuthConfig()
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
+
+export const deleteCategory = async (id) => {
+    try {
+        return await axios.delete(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/category-list/${id}`,
+            getAuthConfig()
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
+export const createBrand = async (brand) => {
+    try {
+        return await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/brand-list`,
+            brand,
+            getAuthConfig()
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
+
+export const updateBrand = async (id, brand) => {
+    try {
+        return await axios.put(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/brand-list/${id}`,
+            brand,
+            getAuthConfig()
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
+
+export const deleteBrand = async (id) => {
+    try {
+        return await axios.delete(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/brand-list/${id}`,
+            getAuthConfig()
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
