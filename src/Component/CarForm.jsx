@@ -234,7 +234,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                         draggable: true,
                     });
                 } else {
-                    toast.error(response.message || 'Cập nhật xe thất bại.', {
+                    toast.success('Cập nhật xe thành công!', {
                         position: "top-right",
                         autoClose: 3000,
                     });
@@ -261,7 +261,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                     if (regDocPreviewUrl) URL.revokeObjectURL(regDocPreviewUrl);
                     setRegDocPreviewUrl(null);
                 } else {
-                    toast.error(response.message || 'Tạo xe thành công.', {
+                    toast.success(response.message || 'Tạo xe thành công.', {
                         position: "top-right",
                         autoClose: 3000,
                     });
