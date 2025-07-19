@@ -94,7 +94,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
             setFormData({
                 id: initialData.id || '',
                 name: initialData.vehicleName || '',
-                brand: initialData.branchId || '',
+                brand: initialData.brandId || '',
                 category: initialData.categoryId || '',
                 type: initialData.fuelType || 'GASOLINE',
                 seats: initialData.seatCount || '',
@@ -261,7 +261,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                     if (regDocPreviewUrl) URL.revokeObjectURL(regDocPreviewUrl);
                     setRegDocPreviewUrl(null);
                 } else {
-                    toast.error(response.message || 'Tạo xe thành công.', {
+                    toast.success(response.message || 'Tạo xe thành công.', {
                         position: "top-right",
                         autoClose: 3000,
                     });
