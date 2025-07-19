@@ -438,7 +438,7 @@ const VehicleList = () => {
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-1">
                                                     <Building className="w-3 h-3 text-gray-500" />
-                                                    <span className="text-gray-900">{getBrandName(vehicle.branchId)}</span>
+                                                    <span className="text-gray-900">{getBrandName(vehicle.brandId)}</span>
                                                 </div>
                                             </td>
                                             <td className="px-2 py-1 whitespace-nowrap text-sm">

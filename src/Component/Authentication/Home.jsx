@@ -730,7 +730,7 @@ const Home = () => {
                                         </div>
                                         <div className="flex items-center">
                                             <Car className="w-4 h-4 mr-1 text-gray-500"/>
-                                            <span>{getBrandName(vehicle.branchId) || 'N/A'}</span>
+                                            <span>{getBrandName(vehicle.brandId) || 'N/A'}</span>
                                         </div>
                                         <div className="flex items-center">
                                             <Car className="w-4 h-4 mr-1 text-gray-500"/>

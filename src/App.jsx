@@ -11,7 +11,7 @@ import BookingForm from "./Component/BookingForm.jsx";
 import ProtectedRoute from "./Component/Authentication/shared/ProtectedRoute.jsx";
 import CRMLayout from "./Component/Crm.jsx";
 import VehicleList from "./Component/VehicleList.jsx";
-import BrandList from "./Component/Branch.jsx";
+import BrandList from "./Component/Brand.jsx";
 import CategoryList from "./Component/CategoryList.jsx";
 import RentalList from "./Component/RentalList.jsx";
 import CarDetail from "./Component/CarDetail.jsx";
