@@ -42,7 +42,7 @@ const RegisterForm = () => {
             setLoading(true);
 
             await register(formData);
-            toast.success('Đăng ký thành công!', {
+            toast.success('Vui lòng check email để kích hoạt tài khoản!', {
                 position: "top-right",
                 autoClose: 3000,
                 hideProgressBar: false,
@@ -166,7 +166,7 @@ const RegisterForm = () => {
                             >
                                 <option value="USER">Người dùng</option>
                                 <option value="OWNER">Chủ xe</option>
-                                <option value="STAFF">Quản trị viên</option>
+                                <option value="ADMIN">Quản trị viên</option>
                             </select>
                         </div>
 
