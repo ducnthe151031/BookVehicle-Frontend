@@ -74,6 +74,8 @@ export const getVehiclesIsApproved = async (page, size, filters = {}) => {
             startDate: filters.startDate || undefined,
             endDate: filters.endDate || undefined,
             status: filters.status || undefined,
+            fuelType: filters.fuelType || undefined,
+
         };
         return await axios.get(
             `${import.meta.env.VITE_API_BASE_URL}/v1/admin/list/approved`,

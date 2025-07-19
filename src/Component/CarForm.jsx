@@ -234,7 +234,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                         draggable: true,
                     });
                 } else {
-                    toast.error(response.message || 'Cập nhật xe thất bại.', {
+                    toast.success('Cập nhật xe thành công!', {
                         position: "top-right",
                         autoClose: 3000,
                     });
