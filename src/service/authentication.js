@@ -50,6 +50,8 @@ export const getVehicles = async (page, size, filters = {}) => {
             startDate: filters.startDate || undefined,
             endDate: filters.endDate || undefined,
             status: filters.status || undefined,
+            fuelType: filters.fuelType || undefined,
+
         };
         return await axios.get(
             `${import.meta.env.VITE_API_BASE_URL}/v1/admin/list`,
@@ -257,6 +259,19 @@ export const rejectBooking = async (bookingId) => {
     try {
         const response = await axios.put(
             `${import.meta.env.VITE_API_BASE_URL}/v1/admin/reject-booking/${bookingId}`,
+            {},
+            getAuthConfig()
+        );
+        return response.data;
+    } catch (e) {
+        throw e;
+    }
+};
+
+export const approveReturned = async (bookingId) => {
+    try {
+        const response = await axios.put(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/approve-returned-booking/${bookingId}`,
             {},
             getAuthConfig()
         );

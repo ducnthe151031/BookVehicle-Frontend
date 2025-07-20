@@ -18,11 +18,13 @@ import {
     X,
     ChevronDown,
     Clock,
-    Crosshair
+    Crosshair,
+    CarFront, Factory
 } from 'lucide-react';
 import {getBrands, getCategories, getVehicles, getVehiclesIsApproved} from "../../service/authentication.js";
 import Header from "../Header.jsx";
 import {toast} from "react-toastify";
+import {FaCar, FaMotorcycle} from "react-icons/fa";
 
 const Home = () => {
     const { customer, logOut } = useAuth();
@@ -60,8 +62,12 @@ const Home = () => {
     const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
     // Hardcoded values for dropdowns
-    const fuelTypes = [ "Xăng", "Điện", "Hybrid"];
-    const locations = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Huế", "Nha Trang"];
+    const fuelTypes = [
+        { value: 'Gasoline', label: 'Xăng' },
+        { value: 'Diesel', label: 'Dầu' },
+        { value: 'Electric', label: 'Điện' },
+        { value: 'Hybrid', label: 'Hybrid' }
+    ];    const locations = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Huế", "Nha Trang"];
 
     // Current date and time for datetime input min
     const now = new Date();
@@ -509,7 +515,7 @@ const Home = () => {
                         className={`flex items-center space-x-2 px-6 py-3 rounded-full shadow-md transition-colors ${Object.values(filters).every(f => !f && !filters.fuelEfficient && !filters.fourPlusDoors) ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                         onClick={clearFilters}
                     >
-                        <Car className="w-5 h-5"/>
+                        <CarFront className="w-5 h-5" />
                         <span>Tất cả xe</span>
                     </button>
 
@@ -517,7 +523,7 @@ const Home = () => {
                         className={`flex items-center space-x-2 px-6 py-3 rounded-full transition-colors ${filters.vehicleTypeId === '1' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                         onClick={() => handleFilterChange('vehicleTypeId', '1', true)}
                     >
-                        <Car className="w-5 h-5"/>
+                        <Car className="w-5 h-5" />
                         <span>Ô tô</span>
                     </button>
 
@@ -525,7 +531,7 @@ const Home = () => {
                         className={`flex items-center space-x-2 px-6 py-3 rounded-full transition-colors ${filters.vehicleTypeId === '2' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                         onClick={() => handleFilterChange('vehicleTypeId', '2', true)}
                     >
-                        <Car className="w-5 h-5"/>
+                        <FaMotorcycle className="w-5 h-5"/>
                         <span>Xe máy</span>
                     </button>
 
@@ -535,7 +541,7 @@ const Home = () => {
                             className="flex items-center space-x-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
                             onClick={() => toggleDropdown(setShowBrandDropdown, showBrandDropdown)}
                         >
-                            <Car className="w-5 h-5"/>
+                            <Factory className="w-5 h-5"/>
                             <span>
       Hãng xe
                                 {filters.brands && `: ${brands.find(b => b.id === filters.brands)?.name || filters.brands}`}
@@ -579,7 +585,7 @@ const Home = () => {
                             className="flex items-center space-x-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
                             onClick={() => toggleDropdown(setShowCategoryDropdown, showCategoryDropdown)}
                         >
-                            <Car className="w-5 h-5"/>
+                            <FaCar className="w-5 h-5"/>
                             <span>
       Loại xe
                                 {filters.categories && `: ${categories.find(c => c.id === filters.categories)?.name || filters.categories}`}
@@ -643,15 +649,15 @@ const Home = () => {
                                 </a>
                                 {fuelTypes.map((fuel) => (
                                     <a
-                                        key={fuel}
+                                        key={fuel.value}
                                         href="#"
                                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            handleFilterChange('fuelType', fuel, true);
+                                            handleFilterChange('fuelType', fuel.value, true);
                                         }}
                                     >
-                                        {fuel}
+                                        {fuel.label}
                                     </a>
                                 ))}
                             </div>
@@ -735,17 +741,16 @@ const Home = () => {
                                         <div className="flex items-center">
                                             <Fuel className="w-4 h-4 mr-1 text-gray-500" />
                                             <span>
-                {vehicle.fuelType === 'GASOLINE' ? 'Xăng' :
-                    vehicle.fuelType === 'DIESEL' ? 'Dầu' :
-                        vehicle.fuelType === 'ELECTRIC' ? 'Điện' :
-                            vehicle.fuelType === 'HYBRID' ? 'Hybrid' :
+                {vehicle.fuelType === 'Gasoline' ? 'Xăng' :
+                    vehicle.fuelType === 'Diesel' ? 'Dầu' :
+                        vehicle.fuelType === 'Electric' ? 'Điện' :
+                            vehicle.fuelType === 'Hybrid' ? 'Hybrid' :
                                 vehicle.fuelType || 'N/A'}
             </span>
                                         </div>
 
                                         {/* Brand */}
                                         <div className="flex items-center">
-
                                             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-1 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                                                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -763,23 +768,44 @@ const Home = () => {
                                             <span>{getCategoryName(vehicle.categoryId) || 'N/A'}</span>
                                         </div>
 
-                                        {/* Status */}
+                                        {/* Bien so xe */}
                                         <div className="flex items-center">
-                                            {vehicle.status === 'AVAILABLE' ? (
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-1 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <circle cx="12" cy="12" r="10"></circle>
-                                                    <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-                                                    <line x1="9" y1="9" x2="9.01" y2="9"></line>
-                                                    <line x1="15" y1="9" x2="15.01" y2="9"></line>
-                                                </svg>
-                                            ) : (
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-1 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <circle cx="12" cy="12" r="10"></circle>
-                                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-                                                </svg>
-                                            )}
-                                            <span>{vehicle.status === 'AVAILABLE' ? 'Có sẵn' : 'Đã thuê'}</span>
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="w-4 h-4 mr-1.5 text-gray-600 flex-shrink-0"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                aria-hidden="true"
+                                            >
+                                                <rect x="3" y="8" width="18" height="12" rx="1"></rect>
+                                                <path d="M7 16h.01"></path>
+                                                <path d="M17 16h.01"></path>
+                                                <path d="M7 12h10"></path>
+                                            </svg>
+                                            <span>{vehicle?.liecensePlate}</span>
                                         </div>
+
+                                        {/* Status */}
+                                        {/*<div className="flex items-center">*/}
+                                        {/*    {vehicle.status === 'AVAILABLE' ? (*/}
+                                        {/*        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-1 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">*/}
+                                        {/*            <circle cx="12" cy="12" r="10"></circle>*/}
+                                        {/*            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>*/}
+                                        {/*            <line x1="9" y1="9" x2="9.01" y2="9"></line>*/}
+                                        {/*            <line x1="15" y1="9" x2="15.01" y2="9"></line>*/}
+                                        {/*        </svg>*/}
+                                        {/*    ) : (*/}
+                                        {/*        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-1 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">*/}
+                                        {/*            <circle cx="12" cy="12" r="10"></circle>*/}
+                                        {/*            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>*/}
+                                        {/*        </svg>*/}
+                                        {/*    )}*/}
+                                        {/*    <span>{vehicle.status === 'AVAILABLE' ? 'Có sẵn' : 'Đã thuê'}</span>*/}
+                                        {/*</div>*/}
 
                                         {/* Vehicle Type */}
                                         <div className="flex items-center">

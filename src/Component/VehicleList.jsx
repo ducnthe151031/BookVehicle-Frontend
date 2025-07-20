@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import CarForm from './CarForm.jsx';
 import {
@@ -33,6 +34,7 @@ import CRMLayout from "./Crm.jsx";
 import Drawer from 'react-modern-drawer';
 import 'react-modern-drawer/dist/index.css';
 import { toast } from "react-toastify";
+import { FaCar, FaIndustry as Factory } from "react-icons/fa";
 
 const VehicleList = () => {
     const [vehicles, setVehicles] = useState([]);
@@ -46,6 +48,22 @@ const VehicleList = () => {
     const [categories, setCategories] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isLocating, setIsLocating] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [vehicleToDelete, setVehicleToDelete] = useState(null);
+    const [showImageGallery, setShowImageGallery] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [showRegDocGallery, setShowRegDocGallery] = useState(false);
+    const [currentRegDocIndex, setCurrentRegDocIndex] = useState(0);
+
+    const openImageGallery = (index = 0) => {
+        setCurrentImageIndex(index);
+        setShowImageGallery(true);
+    };
+
+    const openRegDocGallery = (index = 0) => {
+        setCurrentRegDocIndex(index);
+        setShowRegDocGallery(true);
+    };
 
     // Filter states
     const [filters, setFilters] = useState({
@@ -69,7 +87,12 @@ const VehicleList = () => {
     const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
     // Hardcoded values for dropdowns
-    const fuelTypes = ["Xăng", "Điện", "Hybrid"];
+    const fuelTypes = [
+        { value: 'Gasoline', label: 'Xăng' },
+        { value: 'Diesel', label: 'Dầu' },
+        { value: 'Electric', label: 'Điện' },
+        { value: 'Hybrid', label: 'Hybrid' }
+    ];
     const locations = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Huế", "Nha Trang"];
 
     // Current date and time for datetime input min
@@ -87,7 +110,7 @@ const VehicleList = () => {
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedDetail, setSelectedDetail] = useState(null);
 
-// Hàm mở modal chi tiết
+    // Hàm mở modal chi tiết
     const openDetailModal = (vehicle) => {
         setSelectedDetail(vehicle);
         setShowDetailModal(true);
@@ -103,9 +126,22 @@ const VehicleList = () => {
             </div>
         </div>
     );
+
     const getFullImageUrl = (filename) => {
-        if (!filename) return null;
+        if (!filename) return 'https://via.placeholder.com/150';
+        if (filename.includes(',')) {
+            const firstImage = filename.split(',')[0];
+            return `http://localhost:8080/v1/user/images/${firstImage}`;
+        }
         return `http://localhost:8080/v1/user/images/${filename}`;
+    };
+
+    const isImageFile = (filename) => {
+        return filename && /\.(jpg|jpeg|png|gif)$/i.test(filename);
+    };
+
+    const isPDFFile = (filename) => {
+        return filename && /\.pdf$/i.test(filename);
     };
 
     const getBrandName = (brandId) => {
@@ -362,39 +398,64 @@ const VehicleList = () => {
     };
 
     const handleEdit = (vehicle) => {
-        setSelectedVehicle(vehicle);
+        setSelectedVehicle({
+            ...vehicle,
+            id: vehicle.id,
+            vehicleName: vehicle.vehicleName,
+            branchId: vehicle.branchId,
+            categoryId: vehicle.categoryId,
+            fuelType: vehicle.fuelType,
+            seatCount: vehicle.seatCount,
+            pricePerDay: vehicle.pricePerDay,
+            pricePerHour: vehicle.pricePerHour,
+            liecensePlate: vehicle.liecensePlate,
+            description: vehicle.description,
+            gearBox: vehicle.gearBox,
+            location: vehicle.location,
+            vehicleTypeId: vehicle.vehicleTypeId,
+            imageUrl: vehicle.imageUrl,
+            registrationDocumentUrl: vehicle.registrationDocumentUrl
+        });
         setEditMode(true);
         setShowAddForm(true);
     };
 
-    const handleDelete = async (vehicleId) => {
-        if (window.confirm(`Bạn có chắc muốn xóa xe với ID: ${vehicleId}?`)) {
-            setLoading(true);
-            try {
-                await deleteVehicle(vehicleId);
-                fetchVehicles(page, {
-                    vehicleName: filters.vehicleName,
-                    brands: filters.brands,
-                    categories: filters.categories,
-                    status: filters.status,
-                    startDate: filters.startDate,
-                    endDate: filters.endDate,
-                    fuelType: filters.fuelType
-                });
-                setError('');
-                toast.success('Xóa xe thành công!', {
-                    position: "top-right",
-                    autoClose: 3000,
-                });
-            } catch (err) {
-                setError(err.response?.data?.message || 'Không thể xóa xe');
-                toast.error('Xóa xe thất bại: ' + (err.response?.data?.message || 'Lỗi không xác định'), {
-                    position: "top-right",
-                    autoClose: 3000,
-                });
-            } finally {
-                setLoading(false);
-            }
+    const handleDelete = (vehicleId) => {
+        const vehicle = vehicles.find(v => v.id === vehicleId);
+        setVehicleToDelete(vehicle);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!vehicleToDelete) return;
+
+        setLoading(true);
+        try {
+            await deleteVehicle(vehicleToDelete.id);
+            fetchVehicles(page, {
+                vehicleName: filters.vehicleName,
+                brands: filters.brands,
+                categories: filters.categories,
+                status: filters.status,
+                startDate: filters.startDate,
+                endDate: filters.endDate,
+                fuelType: filters.fuelType
+            });
+            setError('');
+            toast.success('Xóa xe thành công!', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } catch (err) {
+            setError(err.response?.data?.message || 'Không thể xóa xe');
+            toast.error('Xóa xe thất bại: ' + (err.response?.data?.message || 'Lỗi không xác định'), {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setLoading(false);
+            setShowDeleteModal(false);
+            setVehicleToDelete(null);
         }
     };
 
@@ -403,6 +464,9 @@ const VehicleList = () => {
         setSelectedVehicle(null);
         setEditMode(false);
     };
+
+    const [showApproveModal, setShowApproveModal] = useState(false);
+    const [vehicleToApprove, setVehicleToApprove] = useState(null);
 
     const handleAddFormSuccess = () => {
         setShowAddForm(false);
@@ -419,34 +483,42 @@ const VehicleList = () => {
         });
     };
 
-    const handleApproved = async (vehicleId) => {
-        if (window.confirm(`Bạn có chắc muốn phê duyệt thông tin xe có ID: ${vehicleId}?`)) {
-            setLoading(true);
-            try {
-                await approveVehicle(vehicleId);
-                fetchVehicles(page, {
-                    vehicleName: filters.vehicleName,
-                    brands: filters.brands,
-                    categories: filters.categories,
-                    status: filters.status,
-                    startDate: filters.startDate,
-                    endDate: filters.endDate,
-                    fuelType: filters.fuelType
-                });
-                setError('');
-                toast.success('Phê duyệt xe thành công!', {
-                    position: "top-right",
-                    autoClose: 3000,
-                });
-            } catch (err) {
-                setError(err.response?.data?.message || 'Không thể phê duyệt xe');
-                toast.error('Phê duyệt xe thất bại: ' + (err.response?.data?.message || 'Lỗi không xác định'), {
-                    position: "top-right",
-                    autoClose: 3000,
-                });
-            } finally {
-                setLoading(false);
-            }
+    const handleApproved = (vehicleId) => {
+        const vehicle = vehicles.find(v => v.id === vehicleId);
+        setVehicleToApprove(vehicle);
+        setShowApproveModal(true);
+    };
+
+    const confirmApprove = async () => {
+        if (!vehicleToApprove) return;
+
+        setLoading(true);
+        try {
+            await approveVehicle(vehicleToApprove.id);
+            fetchVehicles(page, {
+                vehicleName: filters.vehicleName,
+                brands: filters.brands,
+                categories: filters.categories,
+                status: filters.status,
+                startDate: filters.startDate,
+                endDate: filters.endDate,
+                fuelType: filters.fuelType
+            });
+            setError('');
+            toast.success('Phê duyệt xe thành công!', {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } catch (err) {
+            setError(err.response?.data?.message || 'Không thể phê duyệt xe');
+            toast.error('Phê duyệt xe thất bại: ' + (err.response?.data?.message || 'Lỗi không xác định'), {
+                position: "top-right",
+                autoClose: 3000,
+            });
+        } finally {
+            setLoading(false);
+            setShowApproveModal(false);
+            setVehicleToApprove(null);
         }
     };
 
@@ -600,17 +672,16 @@ const VehicleList = () => {
 
                             {/* Cột 3 */}
                             <div className="space-y-4">
-
-                                <div className="relative z-50"> {/* Tăng z-index lên cao */}
+                                <div className="relative z-50">
                                     <label className="text-gray-600 text-sm mb-1">Hãng xe</label>
                                     <button
                                         className="flex items-center space-x-2 px-3 py-2 w-full bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                         onClick={() => toggleDropdown(setShowBrandDropdown, showBrandDropdown)}
                                     >
-                                        <Car className="w-5 h-5" />
+                                        <Factory className="w-5 h-5" />
                                         <span className="truncate">
-              {filters.brands ? brands.find(b => b.id === filters.brands)?.name || filters.brands : "Tất cả Hãng"}
-            </span>
+                                            {filters.brands ? brands.find(b => b.id === filters.brands)?.name || filters.brands : "Tất cả Hãng"}
+                                        </span>
                                         <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${showBrandDropdown ? 'rotate-180' : ''}`} />
                                     </button>
                                     {showBrandDropdown && (
@@ -637,7 +708,8 @@ const VehicleList = () => {
                                                 >
                                                     {brand.name}
                                                 </a>
-                                            ))}                                        </div>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
 
@@ -647,10 +719,10 @@ const VehicleList = () => {
                                         className="flex items-center space-x-2 px-3 py-2 w-full bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                         onClick={() => toggleDropdown(setShowCategoryDropdown, showCategoryDropdown)}
                                     >
-                                        <Car className="w-5 h-5" />
+                                        <FaCar className="w-5 h-5" />
                                         <span className="truncate">
-              {filters.categories ? categories.find(c => c.id === filters.categories)?.name || filters.categories : "Tất cả Loại"}
-            </span>
+                                            {filters.categories ? categories.find(c => c.id === filters.categories)?.name || filters.categories : "Tất cả Loại"}
+                                        </span>
                                         <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
                                     </button>
                                     {showCategoryDropdown && (
@@ -677,7 +749,8 @@ const VehicleList = () => {
                                                 >
                                                     {category.name}
                                                 </a>
-                                            ))}                                        </div>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -692,8 +765,8 @@ const VehicleList = () => {
                                     >
                                         <Fuel className="w-5 h-5" />
                                         <span className="truncate">
-              {filters.fuelType || "Tất cả Nhiên liệu"}
-            </span>
+                                            {filters.fuelType || "Tất cả Nhiên liệu"}
+                                        </span>
                                         <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${showFuelDropdown ? 'rotate-180' : ''}`} />
                                     </button>
                                     {showFuelDropdown && (
@@ -708,19 +781,21 @@ const VehicleList = () => {
                                             >
                                                 Tất cả Nhiên liệu
                                             </a>
+
                                             {fuelTypes.map((fuel) => (
                                                 <a
-                                                    key={fuel}
+                                                    key={fuel.value}
                                                     href="#"
                                                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                     onClick={(e) => {
                                                         e.preventDefault();
-                                                        handleFilterChange('fuelType', fuel, true);
+                                                        handleFilterChange('fuelType', fuel.value, true);
                                                     }}
                                                 >
-                                                    {fuel}
+                                                    {fuel.label}
                                                 </a>
-                                            ))}                                        </div>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
 
@@ -734,7 +809,7 @@ const VehicleList = () => {
                                         <option value="">Tất cả</option>
                                         <option value="AVAILABLE">Có sẵn</option>
                                         <option value="RENTED">Đã thuê</option>
-                                        <option value="PENDING">Đang xử lý đơn</option>
+                                        <option value="PENDING">Đang xử lý</option>
                                     </select>
                                 </div>
                             </div>
@@ -746,24 +821,23 @@ const VehicleList = () => {
                                         className={`flex-1 px-4 py-2 rounded-lg transition-colors ${filters.vehicleTypeId === '1' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                                         onClick={() => handleFilterChange('vehicleTypeId', '1', true)}
                                     >
-            <span className="flex items-center justify-center gap-2">
-              <Car className="w-4 h-4" />
-              Ô tô
-            </span>
+                                        <span className="flex items-center justify-center gap-2">
+                                            <Car className="w-4 h-4" />
+                                            Ô tô
+                                        </span>
                                     </button>
                                     <button
                                         className={`flex-1 px-4 py-2 rounded-lg transition-colors ${filters.vehicleTypeId === '2' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                                         onClick={() => handleFilterChange('vehicleTypeId', '2', true)}
                                     >
-            <span className="flex items-center justify-center gap-2">
-              <Car className="w-4 h-4" />
-              Xe máy
-            </span>
+                                        <span className="flex items-center justify-center gap-2">
+                                            <Car className="w-4 h-4" />
+                                            Xe máy
+                                        </span>
                                     </button>
                                 </div>
 
                                 <div className="flex space-x-2">
-
                                     <button
                                         onClick={clearFilters}
                                         className="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-semibold rounded-lg hover:bg-gray-300 flex items-center justify-center gap-1"
@@ -776,6 +850,7 @@ const VehicleList = () => {
                         </div>
                     </div>
                 </div>
+
                 {/* Vehicle List */}
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
@@ -823,7 +898,6 @@ const VehicleList = () => {
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phê duyệt</th>
-
                                     </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
@@ -831,45 +905,26 @@ const VehicleList = () => {
                                         <tr key={vehicle.id} className="hover:bg-gray-50">
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 {vehicle.imageUrl ? (
-                                                    <img
-                                                        src={getFullImageUrl(vehicle.imageUrl)}
-                                                        alt={vehicle.vehicleName}
-                                                        className="w-12 h-12 object-cover rounded"
-                                                    />
+                                                    <div className="relative">
+                                                        <img
+                                                            src={getFullImageUrl(vehicle.imageUrl)}
+                                                            alt={vehicle.vehicleName}
+                                                            className="w-12 h-12 object-cover rounded"
+                                                        />
+                                                        {vehicle.imageUrl.includes(',') && (
+                                                            <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                                                +{vehicle.imageUrl.split(',').length - 1}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 ) : (
                                                     <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
                                                         <ImageIcon className="w-6 h-6 text-gray-400" />
                                                     </div>
                                                 )}
                                             </td>
-
                                             <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 {vehicle.vehicleName}
-
-                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
-                                                <div className="flex items-center gap-1">
-                                                    <Car className="w-3 h-3 text-gray-500" />
-                                                    <span className="text-gray-900">{vehicle.vehicleName}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
-                                                <div className="flex items-center gap-1">
-                                                    <Building className="w-3 h-3 text-gray-500" />
-                                                    <span className="text-gray-900">{getBrandName(vehicle.brandId)}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
-                                                <div className="flex items-center gap-1">
-                                                    <Tag className="w-3 h-3 text-gray-500" />
-                                                    <span className="text-gray-900">{getCategoryName(vehicle.categoryId)}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-2 py-1 whitespace-nowrap text-sm">
-                                                <div className="flex items-center gap-1">
-                                                    <Fuel className="w-3 h-3 text-gray-500" />
-                                                    <span className="text-gray-900">{vehicle.fuelType}</span>
-                                                </div>
-                                            </td>
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                                                 {getBrandName(vehicle.branchId)}
@@ -881,14 +936,14 @@ const VehicleList = () => {
                                                 {vehicle.pricePerHour?.toLocaleString('vi-VN')} VNĐ
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            vehicle.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' :
-                                vehicle.status === 'RENTED' ? 'bg-red-100 text-red-800' :
-                                    'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {vehicle.status === 'AVAILABLE' ? 'Có sẵn' :
-                              vehicle.status === 'RENTED' ? 'Đã thuê' : 'Đang xử lý'}
-                        </span>
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                        vehicle.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' :
+                                                            vehicle.status === 'RENTED' ? 'bg-red-100 text-red-800' :
+                                                                'bg-yellow-100 text-yellow-800'
+                                                    }`}>
+                                                        {vehicle.status === 'AVAILABLE' ? 'Có sẵn' :
+                                                            vehicle.status === 'RENTED' ? 'Đã thuê' : 'Đang xử lý'}
+                                                    </span>
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 <div className="flex gap-2">
@@ -935,7 +990,6 @@ const VehicleList = () => {
                                                     </div>
                                                 )}
                                             </td>
-
                                         </tr>
                                     ))}
                                     </tbody>
@@ -945,118 +999,134 @@ const VehicleList = () => {
 
                         {/* Modal chi tiết xe */}
                         {showDetailModal && selectedDetail && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                                    <div className="p-6">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <h3 className="text-xl font-bold text-gray-900">Chi tiết xe</h3>
+                            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+                                <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                                    <div className="p-6 sm:p-8">
+                                        {/* Header */}
+                                        <div className="flex justify-between items-center mb-6">
+                                            <h3 className="text-2xl font-semibold text-gray-800">Chi tiết xe</h3>
                                             <button
                                                 onClick={() => setShowDetailModal(false)}
-                                                className="text-gray-500 hover:text-gray-700"
+                                                className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                                                aria-label="Đóng modal"
                                             >
                                                 <X className="w-6 h-6" />
                                             </button>
                                         </div>
 
+                                        {/* Content */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {/* Cột 1 */}
-                                            <div className="space-y-4">
-                                                <div className="flex items-center gap-3">
-                                                    {selectedDetail.imageUrl ? (
-                                                        <img
-                                                            src={getFullImageUrl(selectedDetail.imageUrl)}
-                                                            alt={selectedDetail.vehicleName}
-                                                            className="w-20 h-20 object-cover rounded-lg"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                                                            <ImageIcon className="w-8 h-8 text-gray-400" />
-                                                        </div>
-                                                    )}
-                                                    <div>
-                                                        <h4 className="text-lg font-semibold">{selectedDetail.vehicleName}</h4>
-                                                        <p className="text-gray-600">{getBrandName(selectedDetail.branchId)}</p>
+                                            {/* Cột 1: Ảnh xe và giấy đăng ký */}
+                                            <div className="space-y-6">
+                                                {/* Ảnh xe */}
+                                                <div>
+                                                    <h4 className="font-medium text-gray-700 text-lg mb-2">Ảnh xe</h4>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {selectedDetail.imageUrl?.split(',').map((img, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className="relative cursor-pointer group"
+                                                                onClick={() => openImageGallery(index)}
+                                                            >
+                                                                <img
+                                                                    src={getFullImageUrl(img)}
+                                                                    alt={`Ảnh xe ${index + 1}`}
+                                                                    className="w-full h-32 object-cover rounded-lg border border-gray-200 transition-transform duration-200 group-hover:scale-105"
+                                                                    onError={(e) => (e.target.src = 'https://via.placeholder.com/150')}
+                                                                />
+                                                                {index === 3 && selectedDetail.imageUrl.split(',').length > 4 && (
+                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                                                                        <span className="text-white font-semibold">
+                                                                            +{selectedDetail.imageUrl.split(',').length - 4}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )).slice(0, 4)}
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-2">
-                                                    <DetailItem
-                                                        icon={<Tag className="w-4 h-4" />}
-                                                        label="Biển số"
-                                                        value={selectedDetail.liecensePlate}
-                                                    />
-                                                    <DetailItem
-                                                        icon={<Users className="w-4 h-4" />}
-                                                        label="Số ghế"
-                                                        value={selectedDetail.seatCount}
-                                                    />
-                                                    <DetailItem
-                                                        icon={<Fuel className="w-4 h-4" />}
-                                                        label="Nhiên liệu"
-                                                        value={selectedDetail.fuelType}
-                                                    />
-                                                    <DetailItem
-                                                        icon={<Tag className="w-4 h-4" />}
-                                                        label="Loại xe"
-                                                        value={getCategoryName(selectedDetail.categoryId)}
-                                                    />
+                                                {/* Giấy đăng ký xe */}
+                                                <div>
+                                                    <h4 className="font-medium text-gray-700 text-lg mb-2">Giấy đăng ký xe</h4>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {selectedDetail.registrationDocumentUrl?.split(',').map((doc, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className="relative cursor-pointer group"
+                                                                onClick={() => isImageFile(doc) ? openRegDocGallery(index) : window.open(getFullImageUrl(doc), '_blank')}
+                                                            >
+                                                                {isImageFile(doc) ? (
+                                                                    <img
+                                                                        src={getFullImageUrl(doc)}
+                                                                        alt={`Giấy đăng ký xe ${index + 1}`}
+                                                                        className="w-full h-32 object-cover rounded-lg border border-gray-200 transition-transform duration-200 group-hover:scale-105"
+                                                                        onError={(e) => (e.target.src = 'https://via.placeholder.com/150')}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
+                                                                        <FileText className="w-8 h-8 text-gray-500" />
+                                                                        <span className="text-xs text-gray-600 mt-2">PDF</span>
+                                                                    </div>
+                                                                )}
+                                                                {index === 3 && selectedDetail.registrationDocumentUrl.split(',').length > 4 && (
+                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                                                                        <span className="text-white font-semibold">
+                                                                            +{selectedDetail.registrationDocumentUrl.split(',').length - 4}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )).slice(0, 4)}
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            {/* Cột 2 */}
+                                            {/* Cột 2: Thông tin chi tiết */}
                                             <div className="space-y-4">
-
                                                 <DetailItem
-                                                    icon={<Building className="w-4 h-4" />}
+                                                    icon={<Building className="w-5 h-5 text-blue-600" />}
                                                     label="Địa điểm"
                                                     value={selectedDetail.location}
                                                 />
-
                                                 <DetailItem
-                                                    icon={<Car className="w-4 h-4" />}
+                                                    icon={<Car className="w-5 h-5 text-blue-600" />}
                                                     label="Loại phương tiện"
                                                     value={selectedDetail.vehicleTypeId === '1' ? 'Ô tô' : 'Xe máy'}
                                                 />
-
                                                 <DetailItem
-                                                    icon={<Car className="w-4 h-4" />}
-                                                    label="Lí do không phê duyệt"
-                                                    value={selectedDetail.reason}
+                                                    icon={<Car className="w-5 h-5 text-blue-600" />}
+                                                    label="Lý do không phê duyệt"
+                                                    value={selectedDetail.reason || 'Không có lý do'}
                                                 />
-
-
+                                                <DetailItem
+                                                    icon={<Tag className="w-5 h-5 text-blue-600" />}
+                                                    label="Biển số"
+                                                    value={selectedDetail.liecensePlate}
+                                                />
+                                                <DetailItem
+                                                    icon={<Users className="w-5 h-5 text-blue-600" />}
+                                                    label="Số ghế"
+                                                    value={selectedDetail.seatCount}
+                                                />
+                                                <DetailItem
+                                                    icon={<Fuel className="w-5 h-5 text-blue-600" />}
+                                                    label="Nhiên liệu"
+                                                    value={selectedDetail.fuelType}
+                                                />
+                                                <DetailItem
+                                                    icon={<Tag className="w-5 h-5 text-blue-600" />}
+                                                    label="Mô tả"
+                                                    value={selectedDetail.description || 'Không có mô tả'}
+                                                />
                                             </div>
                                         </div>
 
-                                        {/* Mô tả */}
-                                        <div className="mt-6">
-                                            <h4 className="font-medium text-gray-700 mb-2">Mô tả</h4>
-                                            <p className="text-gray-600 text-sm">
-                                                {selectedDetail.description || 'Không có mô tả'}
-                                            </p>
-                                        </div>
-
-                                        {/* Đăng ký xe */}
-                                        {selectedDetail.registrationDocumentUrl && (
-                                            <div className="mt-4">
-                                                <h4 className="font-medium text-gray-700 mb-2">Đăng ký xe</h4>
-                                                <a
-                                                    href={getFullImageUrl(selectedDetail.registrationDocumentUrl)}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-blue-600 hover:underline flex items-center gap-1"
-                                                >
-                                                    <FileText className="w-4 h-4" />
-                                                    Xem giấy đăng ký
-                                                </a>
-                                            </div>
-                                        )}
-
-                                        {/* Button đóng */}
-                                        <div className="mt-6 flex justify-end">
+                                        {/* Footer */}
+                                        <div className="mt-8 flex justify-end">
                                             <button
                                                 onClick={() => setShowDetailModal(false)}
-                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
                                             >
                                                 Đóng
                                             </button>
@@ -1066,104 +1136,390 @@ const VehicleList = () => {
                             </div>
                         )}
 
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="mt-3 flex justify-center items-center gap-2">
-                                <button
-                                    onClick={() => setPage(prev => Math.max(0, prev - 1))}
-                                    disabled={page === 0}
-                                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-700"
-                                >
-                                    Trang trước
-                                </button>
-                                <span className="text-sm text-gray-600">
-                                    Trang {page + 1} / {totalPages}
-                                </span>
-                                <button
-                                    onClick={() => setPage(prev => Math.min(totalPages - 1, prev + 1))}
-                                    disabled={page === totalPages - 1}
-                                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-700"
-                                >
-                                    Trang sau
-                                </button>
+                        {/* Modal chi tiết xe */}
+                        {showDetailModal && selectedDetail && (
+                            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+                                <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                                    <div className="p-6 sm:p-8">
+                                        {/* Header */}
+                                        <div className="flex justify-between items-center mb-6">
+                                            <h3 className="text-2xl font-semibold text-gray-800">Chi tiết xe</h3>
+                                            <button
+                                                onClick={() => setShowDetailModal(false)}
+                                                className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                                                aria-label="Đóng modal"
+                                            >
+                                                <X className="w-6 h-6" />
+                                            </button>
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {/* Cột 1: Ảnh xe và giấy đăng ký */}
+                                            <div className="space-y-6">
+                                                {/* Ảnh xe */}
+                                                <div>
+                                                    <h4 className="font-medium text-gray-700 text-lg mb-2">Ảnh xe</h4>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {selectedDetail.imageUrl?.split(',').map((img, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className="relative cursor-pointer group"
+                                                                onClick={() => openImageGallery(index)}
+                                                            >
+                                                                <img
+                                                                    src={getFullImageUrl(img)}
+                                                                    alt={`Ảnh xe ${index + 1}`}
+                                                                    className="w-full h-32 object-cover rounded-lg border border-gray-200 transition-transform duration-200 group-hover:scale-105"
+                                                                    onError={(e) => (e.target.src = 'https://via.placeholder.com/150')}
+                                                                />
+                                                                {index === 3 && selectedDetail.imageUrl.split(',').length > 4 && (
+                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                                                                        <span className="text-white font-semibold">
+                                                                            +{selectedDetail.imageUrl.split(',').length - 4}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )).slice(0, 4)}
+                                                    </div>
+                                                </div>
+
+                                                {/* Giấy đăng ký xe */}
+                                                <div>
+                                                    <h4 className="font-medium text-gray-700 text-lg mb-2">Giấy đăng ký xe</h4>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {selectedDetail.registrationDocumentUrl?.split(',').map((doc, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className="relative cursor-pointer group"
+                                                                onClick={() => isImageFile(doc) ? openRegDocGallery(index) : window.open(getFullImageUrl(doc), '_blank')}
+                                                            >
+                                                                {isImageFile(doc) ? (
+                                                                    <img
+                                                                        src={getFullImageUrl(doc)}
+                                                                        alt={`Giấy đăng ký xe ${index + 1}`}
+                                                                        className="w-full h-32 object-cover rounded-lg border border-gray-200 transition-transform duration-200 group-hover:scale-105"
+                                                                        onError={(e) => (e.target.src = 'https://via.placeholder.com/150')}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-full h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center border border-gray-200">
+                                                                        <FileText className="w-8 h-8 text-gray-500" />
+                                                                        <span className="text-xs text-gray-600 mt-2">PDF</span>
+                                                                    </div>
+                                                                )}
+                                                                {index === 3 && selectedDetail.registrationDocumentUrl.split(',').length > 4 && (
+                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                                                                        <span className="text-white font-semibold">
+                                                                            +{selectedDetail.registrationDocumentUrl.split(',').length - 4}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )).slice(0, 4)}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Cột 2: Thông tin chi tiết */}
+                                            <div className="space-y-4">
+                                                <DetailItem
+                                                    icon={<Building className="w-5 h-5 text-blue-600" />}
+                                                    label="Địa điểm"
+                                                    value={selectedDetail.location}
+                                                />
+                                                <DetailItem
+                                                    icon={<Car className="w-5 h-5 text-blue-600" />}
+                                                    label="Loại phương tiện"
+                                                    value={selectedDetail.vehicleTypeId === '1' ? 'Ô tô' : 'Xe máy'}
+                                                />
+                                                <DetailItem
+                                                    icon={<Car className="w-5 h-5 text-blue-600" />}
+                                                    label="Lý do không phê duyệt"
+                                                    value={selectedDetail.reason || 'Không có lý do'}
+                                                />
+                                                <DetailItem
+                                                    icon={<Tag className="w-5 h-5 text-blue-600" />}
+                                                    label="Biển số"
+                                                    value={selectedDetail.liecensePlate}
+                                                />
+                                                <DetailItem
+                                                    icon={<Users className="w-5 h-5 text-blue-600" />}
+                                                    label="Số ghế"
+                                                    value={selectedDetail.seatCount}
+                                                />
+                                                <DetailItem
+                                                    icon={<Fuel className="w-5 h-5 text-blue-600" />}
+                                                    label="Nhiên liệu"
+                                                    value={selectedDetail.fuelType}
+                                                />
+                                                <DetailItem
+                                                    icon={<Tag className="w-5 h-5 text-blue-600" />}
+                                                    label="Mô tả"
+                                                    value={selectedDetail.description || 'Không có mô tả'}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Footer */}
+                                        <div className="mt-8 flex justify-end">
+                                            <button
+                                                onClick={() => setShowDetailModal(false)}
+                                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                                            >
+                                                Đóng
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* Drawer for Add/Edit Car Form */}
-                    <Drawer
-                        open={showAddForm}
-                        onClose={handleAddFormClose}
-                        direction="right"
-                        className="w-full max-w-4xl"
-                        size="lg"
-                    >
-                        <div className="p-6 bg-white h-full overflow-y-auto">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-bold text-gray-900">{editMode ? 'Chỉnh sửa xe' : 'Thêm xe mới'}</h3>
+                        {/* Gallery for imageUrl */}
+                        {showImageGallery && selectedDetail.imageUrl && (
+                            <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50 p-4">
                                 <button
-                                    onClick={handleAddFormClose}
-                                    className="text-gray-600 hover:text-gray-800"
+                                    onClick={() => setShowImageGallery(false)}
+                                    className="absolute top-4 right-4 text-white text-2xl"
                                 >
-                                    <X className="w-6 h-6" />
+                                    <X className="w-8 h-8" />
                                 </button>
-                            </div>
-                            <CarForm
-                                key={selectedVehicle ? selectedVehicle.id : 'new-vehicle'}
-                                onClose={handleAddFormClose}
-                                onSuccess={handleAddFormSuccess}
-                                initialData={editMode ? selectedVehicle : null}
-                                isEditMode={editMode}
-                            />
-                        </div>
-                    </Drawer>
 
-                    {/* Drawer for Rejection Reason */}
-                    <Drawer
-                        open={showRejectForm}
-                        onClose={handleRejectFormClose}
-                        direction="right"
-                        className="w-full max-w-md"
-                        size="md"
-                    >
-                        <div className="p-6 bg-white h-full">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-bold text-gray-900">Lý do từ chối</h3>
-                                <button
-                                    onClick={handleRejectFormClose}
-                                    className="text-gray-600 hover:text-gray-800"
-                                >
-                                    <X className="w-6 h-6" />
-                                </button>
+                                <div className="max-w-4xl w-full max-h-[80vh] flex items-center justify-center">
+                                    <img
+                                        src={getFullImageUrl(selectedDetail.imageUrl.split(',')[currentImageIndex])}
+                                        alt={`Ảnh xe ${currentImageIndex + 1}`}
+                                        className="max-w-full max-h-full object-contain"
+                                    />
+                                </div>
+
+                                <div className="flex gap-2 mt-4 overflow-x-auto py-2 px-4">
+                                    {selectedDetail.imageUrl.split(',').map((img, index) => (
+                                        <img
+                                            key={index}
+                                            src={getFullImageUrl(img)}
+                                            alt={`Ảnh xe ${index + 1}`}
+                                            className={`w-16 h-16 object-cover rounded cursor-pointer ${currentImageIndex === index ? 'ring-2 ring-blue-500' : 'opacity-70'}`}
+                                            onClick={() => setCurrentImageIndex(index)}
+                                        />
+                                    ))}
+                                </div>
                             </div>
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Nhập lý do từ chối
-                                </label>
-                                <textarea
-                                    value={rejectReason}
-                                    onChange={(e) => setRejectReason(e.target.value)}
-                                    placeholder="Vui lòng nhập lý do từ chối..."
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
-                                    rows="5"
+                        )}
+
+                        {/* Gallery for registrationDocumentUrl */}
+                        {showRegDocGallery && selectedDetail.registrationDocumentUrl && (
+                            <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50 p-4">
+                                <button
+                                    onClick={() => setShowRegDocGallery(false)}
+                                    className="absolute top-4 right-4 text-white text-2xl"
+                                >
+                                    <X className="w-8 h-8" />
+                                </button>
+
+                                <div className="max-w-4xl w-full max-h-[80vh] flex items-center justify-center">
+                                    {isImageFile(selectedDetail.registrationDocumentUrl.split(',')[currentRegDocIndex]) ? (
+                                        <img
+                                            src={getFullImageUrl(selectedDetail.registrationDocumentUrl.split(',')[currentRegDocIndex])}
+                                            alt={`Giấy đăng ký xe ${currentRegDocIndex + 1}`}
+                                            className="max-w-full max-h-full object-contain"
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center bg-gray-100 rounded-lg p-4">
+                                            <FileText className="w-12 h-12 text-gray-500 mb-2" />
+                                            <span className="text-white text-sm">PDF: Không hỗ trợ xem trước</span>
+                                            <a
+                                                href={getFullImageUrl(selectedDetail.registrationDocumentUrl.split(',')[currentRegDocIndex])}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="mt-2 text-blue-400 hover:text-blue-300 underline"
+                                            >
+                                                Mở file PDF
+                                            </a>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex gap-2 mt-4 overflow-x-auto py-2 px-4">
+                                    {selectedDetail.registrationDocumentUrl.split(',').map((doc, index) => (
+                                        <div
+                                            key={index}
+                                            className={`w-16 h-16 rounded cursor-pointer ${currentRegDocIndex === index ? 'ring-2 ring-blue-500' : 'opacity-70'}`}
+                                            onClick={() => setCurrentRegDocIndex(index)}
+                                        >
+                                            {isImageFile(doc) ? (
+                                                <img
+                                                    src={getFullImageUrl(doc)}
+                                                    alt={`Giấy đăng ký xe ${index + 1}`}
+                                                    className="w-full h-full object-cover rounded"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full bg-gray-100 rounded flex flex-col items-center justify-center">
+                                                    <FileText className="w-6 h-6 text-gray-500" />
+                                                    <span className="text-xs text-gray-600">PDF</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Delete Modal */}
+                        {showDeleteModal && vehicleToDelete && (
+                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                                <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h3 className="text-lg font-bold text-gray-900">Xác nhận xóa</h3>
+                                        <button
+                                            onClick={() => {
+                                                setShowDeleteModal(false);
+                                                setVehicleToDelete(null);
+                                            }}
+                                            className="text-gray-500 hover:text-gray-700"
+                                        >
+                                            <X className="w-6 h-6" />
+                                        </button>
+                                    </div>
+                                    <p className="text-gray-600 mb-6">
+                                        Bạn có chắc muốn xóa xe <span className="font-semibold">{vehicleToDelete.vehicleName}</span> không?
+                                    </p>
+                                    <div className="flex justify-end gap-2">
+                                        <button
+                                            onClick={() => {
+                                                setShowDeleteModal(false);
+                                                setVehicleToDelete(null);
+                                            }}
+                                            className="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-semibold rounded-lg hover:bg-gray-300"
+                                        >
+                                            Hủy
+                                        </button>
+                                        <button
+                                            onClick={confirmDelete}
+                                            className="px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600"
+                                        >
+                                            Xóa
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Approve Modal */}
+                        {showApproveModal && vehicleToApprove && (
+                            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                                <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-fade-in-up">
+                                    <div className="flex justify-between items-start mb-4 border-b pb-3">
+                                        <h3 className="text-lg font-bold text-gray-900">Xác nhận phê duyệt</h3>
+                                        <button
+                                            onClick={() => {
+                                                setShowApproveModal(false);
+                                                setVehicleToApprove(null);
+                                            }}
+                                            className="text-gray-400 hover:text-gray-600"
+                                        >
+                                            <X className="w-6 h-6" />
+                                        </button>
+                                    </div>
+                                    <p className="text-gray-600 mb-6">
+                                        Bạn có chắc muốn phê duyệt xe <span className="font-semibold">{vehicleToApprove.vehicleName}</span> không?
+                                    </p>
+                                    <div className="flex justify-end gap-2">
+                                        <button
+                                            onClick={() => {
+                                                setShowApproveModal(false);
+                                                setVehicleToApprove(null);
+                                            }}
+                                            className="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-semibold rounded-lg hover:bg-gray-300"
+                                        >
+                                            Hủy
+                                        </button>
+                                        <button
+                                            onClick={confirmApprove}
+                                            className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700"
+                                        >
+                                            Phê duyệt
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Drawer for Add/Edit Car Form */}
+                        <Drawer
+                            open={showAddForm}
+                            onClose={handleAddFormClose}
+                            direction="right"
+                            className="w-full max-w-4xl"
+                            size="lg"
+                        >
+                            <div className="p-6 bg-white h-full overflow-y-auto">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-lg font-bold text-gray-900">{editMode ? 'Chỉnh sửa xe' : 'Thêm xe mới'}</h3>
+                                    <button
+                                        onClick={handleAddFormClose}
+                                        className="text-gray-600 hover:text-gray-800"
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+                                <CarForm
+                                    key={selectedVehicle ? selectedVehicle.id : 'new-vehicle'}
+                                    onClose={handleAddFormClose}
+                                    onSuccess={handleAddFormSuccess}
+                                    initialData={editMode ? selectedVehicle : null}
+                                    isEditMode={editMode}
                                 />
                             </div>
-                            <div className="flex justify-end gap-2">
-                                <button
-                                    onClick={handleRejectFormClose}
-                                    className="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-semibold rounded-lg hover:bg-gray-300"
-                                >
-                                    Hủy
-                                </button>
-                                <button
-                                    onClick={handleRejectSubmit}
-                                    className="px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600"
-                                >
-                                    Gửi
-                                </button>
+                        </Drawer>
+
+                        {/* Drawer for Rejection Reason */}
+                        <Drawer
+                            open={showRejectForm}
+                            onClose={handleRejectFormClose}
+                            direction="right"
+                            className="w-full max-w-md"
+                            size="md"
+                        >
+                            <div className="p-6 bg-white h-full">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-lg font-bold text-gray-900">Lý do từ chối</h3>
+                                    <button
+                                        onClick={handleRejectFormClose}
+                                        className="text-gray-600 hover:text-gray-800"
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Nhập lý do từ chối
+                                    </label>
+                                    <textarea
+                                        value={rejectReason}
+                                        onChange={(e) => setRejectReason(e.target.value)}
+                                        placeholder="Vui lòng nhập lý do từ chối..."
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                                        rows="5"
+                                    />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <button
+                                        onClick={handleRejectFormClose}
+                                        className="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-semibold rounded-lg hover:bg-gray-300"
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        onClick={handleRejectSubmit}
+                                        className="px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600"
+                                    >
+                                        Gửi
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </Drawer>
+                        </Drawer>
+                    </div>
                 </div>
             </div>
         </div>

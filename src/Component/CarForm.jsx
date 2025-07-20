@@ -96,7 +96,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
             setFormData({
                 id: initialData.id || '',
                 name: initialData.vehicleName || '',
-                brand: initialData.brandId || '',
+                brand: initialData.branchId || '',
                 category: initialData.categoryId || '',
                 type: initialData.fuelType || 'Gasoline',
                 seats: initialData.seatCount || '',

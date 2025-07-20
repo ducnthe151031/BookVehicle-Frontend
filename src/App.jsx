@@ -11,7 +11,7 @@ import BookingForm from "./Component/BookingForm.jsx";
 import ProtectedRoute from "./Component/Authentication/shared/ProtectedRoute.jsx";
 import CRMLayout from "./Component/Crm.jsx";
 import VehicleList from "./Component/VehicleList.jsx";
-import BrandList from "./Component/Brand.jsx";
+import BrandList from "./Component/Branch.jsx";
 import CategoryList from "./Component/CategoryList.jsx";
 import RentalList from "./Component/RentalList.jsx";
 import CarDetail from "./Component/CarDetail.jsx";
@@ -23,6 +23,8 @@ import LandingPage from "./Component/LandingPage.jsx";
 import MyPayment from "./Component/myPayment.jsx";
 import CouponListPage from "./Component/CouponList.jsx";
 import VehicleListForStaff from "./Component/VehicleListForStaff.jsx";
+import ProfileForAdmin from "./Component/ProfileForAdmin.jsx";
+import ChanPasswordForAdmin from "./Component/ChangePassWordForAdmin.jsx";
 
 function App() {
         return (
@@ -33,6 +35,8 @@ function App() {
                             <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
                             <Route path="/myPayment" element={<ProtectedRoute><MyPayment/></ProtectedRoute>} />
                             <Route path="/list" element={<ProtectedRoute><VehicleListForStaff/></ProtectedRoute>} />
+                            <Route path="/prfAdmin" element={<ProtectedRoute><ProfileForAdmin/></ProtectedRoute>} />
+                            <Route path="/passwordAdmin" element={<ProtectedRoute><ChanPasswordForAdmin/></ProtectedRoute>} />
 
                             <Route path="/password" element={<ProtectedRoute><ChangePassword/></ProtectedRoute>} />
                             <Route path="/coupon" element={<ProtectedRoute><CouponListPage/></ProtectedRoute>} />
