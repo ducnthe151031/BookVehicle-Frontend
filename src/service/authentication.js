@@ -74,6 +74,8 @@ export const getVehiclesIsApproved = async (page, size, filters = {}) => {
             startDate: filters.startDate || undefined,
             endDate: filters.endDate || undefined,
             status: filters.status || undefined,
+            fuelType: filters.fuelType || undefined,
+
         };
         return await axios.get(
             `${import.meta.env.VITE_API_BASE_URL}/v1/admin/list/approved`,
@@ -134,6 +136,21 @@ export const approveVehicle = async (vehicleId) => {
                 ...getAuthConfig(),
                 data: { id: vehicleId }, // Send id in body as per your API
             }
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
+export const rejectVehicle = async (vehicleId, reason) => {
+    try {
+        return await axios.delete(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/reject-vehicle`,
+            {
+                ...getAuthConfig(),
+                data: { id: vehicleId, reason: reason },
+            }
+
         );
     } catch (e) {
         throw e;

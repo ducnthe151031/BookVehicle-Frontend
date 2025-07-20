@@ -130,7 +130,7 @@ const BookingForm = ({ onClose, onSuccess }) => {
                 // customerId: customer?.id, // Example: customer ID if logged in
                 // status: "PENDING", // Backend should set status for new bookings
                 // createdBy: customer?.username, // Example: username if logged in
-                // brandId: selectedVehicle?.branchId, // From selected vehicle
+                // brandId: selectedVehicle?.brandId, // From selected vehicle
                 // categoryId: selectedVehicle?.categoryId, // From selected vehicle
                 // rentType: "DAY", // Assuming this form is always for daily rental based on its inputs
                 // totalPrice: calculatedTotalPrice, // Needs to be calculated based on selected vehicle and dates
@@ -202,7 +202,7 @@ const BookingForm = ({ onClose, onSuccess }) => {
                                     {vehicles.map((vehicle) => (
                                         <option key={vehicle.id} value={vehicle.id}>
                                             {/* Display vehicle details: Name (Brand) - Price/day */}
-                                            {`${vehicle.vehicleName} (${vehicle.branchId || 'N/A'}) - ${vehicle.pricePerDay ? vehicle.pricePerDay.toLocaleString('vi-VN') : 'N/A'} VNĐ/ngày`}
+                                            {`${vehicle.vehicleName} (${vehicle.brandId || 'N/A'}) - ${vehicle.pricePerDay ? vehicle.pricePerDay.toLocaleString('vi-VN') : 'N/A'} VNĐ/ngày`}
                                         </option>
                                     ))}
                                 </select>
