@@ -1,7 +1,15 @@
 import React, {useState, useEffect} from 'react';
 import {Calendar, DollarSign, User, Car, Check, X, CheckCircle, XCircle} from 'lucide-react';
 import CRMLayout from './Crm.jsx';
-import {getRentals, getUserProfile, getCarDetails, approveBooking, rejectBooking} from '../service/authentication.js';
+import {
+    getRentals,
+    getUserProfile,
+    getCarDetails,
+    approveBooking,
+    rejectBooking,
+    approveReturned
+} from '../service/authentication.js';
+import {FaListAlt as ClipboardList} from "react-icons/fa";
 
 const RentalList = () => {
     const [rentals, setRentals] = useState([]);
@@ -103,12 +111,22 @@ const RentalList = () => {
         }
     };
 
+    const handleReturned = async (bookingId) => {
+        try {
+            await approveReturned(bookingId);
+            // Refresh the list after approval
+            fetchRentals(page);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Không thể phê duyệt đơn');
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-6 px-4">
             <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-6">
                     <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-full mb-3">
-                        <Car className="w-7 h-7 text-white"/>
+                        <ClipboardList className="w-7 h-7 text-white"/>
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-1">Danh Sách Thuê Xe</h1>
                     <p className="text-gray-600 text-sm">Quản lý các đơn thuê xe</p>
@@ -128,7 +146,7 @@ const RentalList = () => {
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
                         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                            <Car className="w-5 h-5"/>
+                            <ClipboardList className="w-5 h-5"/>
                             Danh sách thuê xe
                         </h2>
                     </div>
@@ -177,7 +195,7 @@ const RentalList = () => {
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                     {rentals.map((rental) => {
-                                        const showApproveButton = rental.status === 'PENDING';
+                                        const showApproveButton = rental.deliveryStatus === null;
                                         const isHourly = rental.rentType.includes('giờ');
                                         return (
                                             <tr key={rental.id} className="hover:bg-gray-50">
@@ -216,12 +234,14 @@ const RentalList = () => {
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     {rental.rentType}
                                                 </td>
+
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                                                    {rental.status === 'REJECTED'
-                                                        ? 'Đã hủy'
-                                                        : rental.status === 'APPROVED'
-                                                            ? 'Đã thuê'
-                                                            : 'Đang xử lý đơn'}
+                                                    {rental.deliveryStatus === 'READY_TO_PICK' ? 'Chờ lấy xe'
+                                                        : rental.deliveryStatus === 'TRANSIT' ? 'Đang giao xe'
+                                                            : rental.deliveryStatus === 'DELIVERED' ? 'Đã nhận xe'
+                                                                : rental.deliveryStatus === 'RETURNED' ? 'Đã trả xe':
+                                                                    'N/A'
+                                                    }
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                   <span
@@ -248,7 +268,7 @@ const RentalList = () => {
                                                                 onClick={() => handleApprove(rental.id)}
                                                                 className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-all duration-200"
                                                             >
-                                                                Đã giao
+                                                                Bắt đầu giao
                                                             </button>
                                                             <button
                                                                 onClick={() => handleReject(rental.id)}
@@ -261,6 +281,16 @@ const RentalList = () => {
 
 
                                                     )}
+                                                    {
+                                                        rental.deliveryStatus === 'DELIVERED' && (
+                                                            <button
+                                                                onClick={() => handleReturned(rental.id)}
+                                                                className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-all duration-200"
+                                                            >
+                                                                Xác nhận đã trả xe
+                                                            </button>
+                                                        )
+                                                    }
                                                 </td>
                                             </tr>
                                         );

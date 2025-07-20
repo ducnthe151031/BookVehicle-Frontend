@@ -5,7 +5,8 @@ import { Tag, DollarSign, X, Plus, Edit, Trash2 } from 'lucide-react';
 import Drawer from 'react-modern-drawer';
 import 'react-modern-drawer/dist/index.css';
 import { toast } from "react-toastify";
-import CRMLayout from "./Crm.jsx"; // Assuming you have this layout
+import CRMLayout from "./Crm.jsx";
+import {FaTicketAlt as TicketPercent} from "react-icons/fa";
 
 const CouponList = () => {
     const [coupons, setCoupons] = useState([]);
@@ -14,22 +15,19 @@ const CouponList = () => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const pageSize = 10;
-
     const [showAddForm, setShowAddForm] = useState(false);
     const [selectedCoupon, setSelectedCoupon] = useState(null);
     const [editMode, setEditMode] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [couponToDelete, setCouponToDelete] = useState(null);
 
     const fetchCoupons = async (pageNumber) => {
         setLoading(true);
         setError('');
         try {
-            // Note: The getCoupons service function needs to handle pagination from backend
-            // For now, we assume it returns all coupons and we paginate on the client.
-            // A better approach is server-side pagination.
-            const response = await getCoupons(); // Adjust if your backend supports pagination
+            const response = await getCoupons();
             const data = response.data;
             if (data.httpStatus === 200) {
-                // Client-side pagination logic (for demonstration)
                 const allCoupons = data.data || [];
                 setTotalPages(Math.ceil(allCoupons.length / pageSize));
                 const paginatedCoupons = allCoupons.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize);
@@ -60,19 +58,27 @@ const CouponList = () => {
         setShowAddForm(true);
     };
 
-    const handleDelete = async (couponId) => {
-        if (window.confirm(`Bạn có chắc muốn xóa coupon này?`)) {
-            setLoading(true);
-            try {
-                await deleteCoupon(couponId);
-                fetchCoupons(page);
-                toast.success('Xóa coupon thành công!');
-            } catch (err) {
-                const errorMessage = err.response?.data?.message || 'Không thể xóa coupon';
-                toast.error('Xóa coupon thất bại: ' + errorMessage);
-            } finally {
-                setLoading(false);
-            }
+    const handleDelete = (couponId) => {
+        const coupon = coupons.find(c => c.id === couponId);
+        setCouponToDelete(coupon);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!couponToDelete) return;
+
+        setLoading(true);
+        try {
+            await deleteCoupon(couponToDelete.id);
+            fetchCoupons(page);
+            toast.success('Xóa coupon thành công!');
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Không thể xóa coupon';
+            toast.error('Xóa coupon thất bại: ' + errorMessage);
+        } finally {
+            setLoading(false);
+            setShowDeleteModal(false);
+            setCouponToDelete(null);
         }
     };
 
@@ -86,7 +92,7 @@ const CouponList = () => {
         setShowAddForm(false);
         setSelectedCoupon(null);
         setEditMode(false);
-        fetchCoupons(0); // Refresh from the first page
+        fetchCoupons(0);
         setPage(0);
     };
 
@@ -95,7 +101,7 @@ const CouponList = () => {
             <div className="max-w-4xl mx-auto">
                 <div className="text-center mb-6">
                     <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-full mb-3">
-                        <Tag className="w-7 h-7 text-white" />
+                        <TicketPercent className="w-7 h-7 text-white" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-1">Danh Sách Coupon</h1>
                     <p className="text-gray-600 text-sm">Quản lý mã giảm giá cho hệ thống</p>
@@ -105,7 +111,7 @@ const CouponList = () => {
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
                         <div className="flex justify-between items-center">
                             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                                <Tag className="w-5 h-5" />
+                                <TicketPercent className="w-5 h-5" />
                                 Danh sách mã giảm giá
                             </h2>
                             <button
@@ -181,6 +187,46 @@ const CouponList = () => {
                             </div>
                         )}
                     </div>
+
+                    {/* Delete Confirmation Modal */}
+                    {showDeleteModal && couponToDelete && (
+                        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 transition-opacity">
+                            <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all animate-fade-in-up">
+                                <div className="flex justify-between items-center mb-4 border-b pb-3">
+                                    <h3 className="text-xl font-bold text-gray-800">Xác nhận xóa</h3>
+                                    <button
+                                        onClick={() => {
+                                            setShowDeleteModal(false);
+                                            setCouponToDelete(null);
+                                        }}
+                                        className="text-gray-400 hover:text-gray-600"
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+                                <p className="text-gray-600 mb-6">
+                                    Bạn có chắc chắn muốn xóa coupon <span className="font-semibold">{couponToDelete.couponCode}</span> không?
+                                </p>
+                                <div className="flex justify-end gap-3 pt-4 border-t">
+                                    <button
+                                        onClick={() => {
+                                            setShowDeleteModal(false);
+                                            setCouponToDelete(null);
+                                        }}
+                                        className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-semibold text-sm"
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        onClick={confirmDelete}
+                                        className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold text-sm"
+                                    >
+                                        Xóa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <Drawer open={showAddForm} onClose={handleAddFormClose} direction="right" size={400}>
                         <div className="p-6 bg-white h-full overflow-y-auto">

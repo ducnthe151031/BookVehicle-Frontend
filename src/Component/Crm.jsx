@@ -5,27 +5,42 @@ import {
     Home, UserPlus, FileText, Bell, ChevronDown,
     Layout, Package, CheckCircle, Phone, Mail,
     Plus, Filter, MoreHorizontal, ArrowRight, X,
-    LogOut, User, Car
+    LogOut, User, Car, ListTree
 } from 'lucide-react';
+import {
+    FaCar,
+    FaIndustry as Factory,
+    FaListAlt as ClipboardList,
+    FaTicketAlt as TicketPercent,
+    FaUserCircle as UserCircle,
+    FaKey as KeyRound
+} from 'react-icons/fa';
+import { GiCarKey } from 'react-icons/gi';
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate, useLocation } from "react-router-dom";
 import BookingForm from "./BookingForm.jsx";
 
-const Unauthorized = () => (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-xl shadow-lg max-w-md">
-            <X className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Không có quyền truy cập</h2>
-            <p className="text-gray-600 mb-6">Bạn không có quyền để truy cập vào trang này. Vui lòng liên hệ quản trị viên nếu cần hỗ trợ.</p>
-            <button
-                onClick={() => navigate('/home')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-                Quay lại trang chủ
-            </button>
-        </div>
-    </div>
-);
+const Unauthorized = () => {
+        const navigate = useNavigate();
+
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+                <div className="text-center p-8 bg-white rounded-xl shadow-lg max-w-md">
+                    <X className="w-12 h-12 text-red-500 mx-auto mb-4"/>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Không có quyền truy cập</h2>
+                    <p className="text-gray-600 mb-6">Bạn không có quyền để truy cập vào trang này. Vui lòng liên hệ quản
+                        trị viên nếu cần hỗ trợ.</p>
+                    <button
+                        onClick={() => navigate('/home')}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                        Quay lại trang chủ
+                    </button>
+                </div>
+            </div>
+        )
+    }
+;
 
 const CRMLayout = ({ children }) => {
     const [collapsedSidebar, setCollapsedSidebar] = useState(false);
@@ -35,11 +50,15 @@ const CRMLayout = ({ children }) => {
     const navigate = useNavigate();
 
     const navigation = [
-        { name: 'Hãng xe', icon: Building2, path: '/vehicle/brands', roles: ['ROLE_ADMIN'] },
-        { name: 'Loại xe', icon: Building2, path: '/vehicle/categories', roles: ['ROLE_ADMIN'] },
+        { name: 'Hãng xe', icon: Factory, path: '/vehicle/brands', roles: ['ROLE_ADMIN'] },
+        { name: 'Loại xe', icon: FaCar, path: '/vehicle/categories', roles: ['ROLE_ADMIN'] },
         { name: 'Danh sách xe', icon: Car, path: '/vehicle', roles: ['ROLE_ADMIN','ROLE_OWNER'] },
-        { name: 'Danh sách thuê xe', icon: Car, path: '/rentals', roles: ['ROLE_ADMIN'] },
-        { name: 'Mã coupon', icon: Car, path: '/coupon', roles: ['ROLE_ADMIN'] }
+        { name: 'Danh sách thuê xe', icon: ClipboardList, path: '/rentals', roles: ['ROLE_ADMIN'] },
+        { name: 'Mã coupon', icon: TicketPercent, path: '/coupon', roles: ['ROLE_ADMIN'] },
+        { name: 'Hồ sơ cá nhân', icon: UserCircle, path: '/prfAdmin', roles: ['ROLE_ADMIN'] },
+        { name: 'Đổi mật khẩu', icon: KeyRound, path: '/passwordAdmin', roles: ['ROLE_ADMIN'] }
+
+
 
     ];
 
@@ -72,7 +91,7 @@ const CRMLayout = ({ children }) => {
                                 <Car className="h-5 w-5 text-gray-800" />
                             </div>
                             <div className="ml-3">
-                                <h1 className="font-bold text-lg text-white">Thuê Xe</h1>
+                                <h2 className="font-bold text-lg text-white">ADMIN</h2>
                             </div>
                         </div>
                     )}
@@ -128,15 +147,7 @@ const CRMLayout = ({ children }) => {
 
                         {showUserMenu && !collapsedSidebar && (
                             <div className="absolute bottom-full left-0 right-0 mb-2 bg-gray-700 rounded-xl shadow-lg border border-gray-600 py-2">
-                                <button className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 transition-colors">
-                                    <User className="w-4 h-4 mr-3 text-gray-400" />
-                                    Hồ sơ cá nhân
-                                </button>
-                                <button className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 transition-colors">
-                                    <Settings className="w-4 h-4 mr-3 text-gray-400" />
-                                    Cài đặt
-                                </button>
-                                <hr className="my-2 border-gray-600" />
+
                                 <button
                                     onClick={logOut}
                                     className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-red-600 transition-colors"
