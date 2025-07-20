@@ -10,7 +10,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
         name: '',
         brand: '',
         category: '',
-        type: 'GASOLINE',
+        type: 'Gasoline',
         seats: '',
         dailyPrice: '',
         hourlyPrice: '',
@@ -30,10 +30,12 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
     const [brands, setBrands] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [imagePreviews, setImagePreviews] = useState([]); // Thay cho mainImagePreviewUrl
+    const [regDocPreviewUrls, setRegDocPreviewUrls] = useState([]); // Thêm dòng này
 
     const getFullImageUrl = (filename) => {
         if (!filename || filename === 'Chưa cập nhật' || filename.startsWith('data:image')) return null;
-        return `http://localhost:8080/v1/admin/images/${filename}`;
+        return `http://localhost:8080/v1/user/images/${filename}`;
     };
 
     const getDisplayName = (filename) => {
@@ -96,7 +98,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                 name: initialData.vehicleName || '',
                 brand: initialData.branchId || '',
                 category: initialData.categoryId || '',
-                type: initialData.fuelType || 'GASOLINE',
+                type: initialData.fuelType || 'Gasoline',
                 seats: initialData.seatCount || '',
                 dailyPrice: initialData.pricePerDay || '',
                 hourlyPrice: initialData.pricePerHour || '',
@@ -112,9 +114,42 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
             setMainImagePreviewUrl(null);
             if (regDocPreviewUrl) URL.revokeObjectURL(regDocPreviewUrl);
             setRegDocPreviewUrl(null);
+            if (initialData.imageUrl) {
+                const urls = initialData.imageUrl.split(',');
+                setImagePreviews(urls.map((url) => getFullImageUrl(url)).filter(Boolean));
+            }
+            if (initialData.registrationDocumentUrl) {
+                const urls = initialData.registrationDocumentUrl.split(',');
+                setRegDocPreviewUrls(urls.map((url) => getFullImageUrl(url)).filter(Boolean));
+            }
         }
     }, [isEditMode, initialData]);
+    const handleRemoveImage = (indexToRemove) => {
+        // Xóa khỏi preview
+        const newPreviews = [...imagePreviews];
+        URL.revokeObjectURL(newPreviews[indexToRemove]);
+        newPreviews.splice(indexToRemove, 1);
+        setImagePreviews(newPreviews);
 
+        // Xóa khỏi form data
+        const currentImages = formData.imageUrl ? formData.imageUrl.split(',') : [];
+        currentImages.splice(indexToRemove, 1);
+        setFormData(prev => ({ ...prev, imageUrl: currentImages.join(',') }));
+    };
+    const handleRemoveRegDoc = (indexToRemove) => {
+        // Xóa khỏi preview
+        const newPreviews = [...regDocPreviewUrls];
+        if (newPreviews[indexToRemove]) {
+            URL.revokeObjectURL(newPreviews[indexToRemove]);
+        }
+        newPreviews.splice(indexToRemove, 1);
+        setRegDocPreviewUrls(newPreviews);
+
+        // Xóa khỏi form data
+        const currentDocs = formData.registrationDocumentUrl ? formData.registrationDocumentUrl.split(',') : [];
+        currentDocs.splice(indexToRemove, 1);
+        setFormData((prev) => ({ ...prev, registrationDocumentUrl: currentDocs.join(',') }));
+    };
     const validateForm = () => {
         const newErrors = {};
 
@@ -122,20 +157,23 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
         if (!formData.brand.trim()) newErrors.brand = 'Hãng xe không được để trống';
         if (!formData.category.trim()) newErrors.category = 'Phân loại xe không được để trống';
         if (!formData.type.trim()) newErrors.type = 'Loại nhiên liệu không được để trống';
-        if (!formData.seats || formData.seats < 2 || formData.seats > 50 || formData.seats < 0) newErrors.seats = 'Số ghế phải từ 2-50 và không âm';
-        if (!formData.dailyPrice || formData.dailyPrice < 100000 || formData.dailyPrice < 0) newErrors.dailyPrice = 'Giá ngày phải từ 100,000 VNĐ và không âm';
-        if (formData.hourlyPrice && (formData.hourlyPrice < 10000 || formData.hourlyPrice < 0)) newErrors.hourlyPrice = 'Giá giờ phải từ 10,000 VNĐ và không âm';
-        if (formData.licensePlate && !/^\d{2}[A-Z]{1,2}-?\d{4,5}$/i.test(formData.licensePlate)) newErrors.licensePlate = 'Biển số không đúng định dạng (VD: 30A-12345)';
+        if (!formData.seats || formData.seats < 2 || formData.seats > 50 || formData.seats < 0)
+            newErrors.seats = 'Số ghế phải từ 2-50 và không âm';
+        if (!formData.dailyPrice || formData.dailyPrice < 100000 || formData.dailyPrice < 0)
+            newErrors.dailyPrice = 'Giá ngày phải từ 100,000 VNĐ và không âm';
+        if (formData.hourlyPrice && (formData.hourlyPrice < 10000 || formData.hourlyPrice < 0))
+            newErrors.hourlyPrice = 'Giá giờ phải từ 10,000 VNĐ và không âm';
+        if (formData.licensePlate && !/^\d{2}[A-Z]{1,2}-?\d{4,5}$/i.test(formData.licensePlate))
+            newErrors.licensePlate = 'Biển số không đúng định dạng (VD: 30A-12345)';
         if (!formData.location.trim()) newErrors.location = 'Địa điểm không được để trống';
         if (!formData.vehicleTypeId.trim()) newErrors.vehicleTypeId = 'Loại xe không được để trống';
-
         if (!isEditMode && !formData.imageUrl) newErrors.imageUrl = 'Ảnh đại diện không được để trống';
-        if (!isEditMode && !formData.registrationDocumentUrl) newErrors.registrationDocumentUrl = 'Giấy đăng ký xe không được để trống';
+        if (!isEditMode && !formData.registrationDocumentUrl)
+            newErrors.registrationDocumentUrl = 'Giấy đăng ký xe không được để trống';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         let processedValue = value;
@@ -159,37 +197,39 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
         });
     };
 
+    const [imageUrls, setImageUrls] = useState([]); // Thay vì imageUrl đơn lẻ
+
     const handleFileInputChange = (e, fieldName) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
+        if (e.target.files && e.target.files.length > 0) {
+            const files = Array.from(e.target.files);
+            const newPreviews = [];
+            const newUrls = [];
 
-            reader.onloadend = () => {
-                const base64String = reader.result.split(',')[1];
-                setFormData(prev => ({ ...prev, [fieldName]: base64String }));
-            };
-            reader.readAsDataURL(file);
+            files.forEach((file) => {
+                const previewUrl = URL.createObjectURL(file);
+                newPreviews.push(previewUrl);
 
-            const previewUrl = URL.createObjectURL(file);
-            if (fieldName === 'imageUrl') {
-                if (mainImagePreviewUrl) URL.revokeObjectURL(mainImagePreviewUrl);
-                setMainImagePreviewUrl(previewUrl);
-            } else if (fieldName === 'registrationDocumentUrl') {
-                if (regDocPreviewUrl) URL.revokeObjectURL(regDocPreviewUrl);
-                setRegDocPreviewUrl(previewUrl);
-            }
-        } else {
-            setFormData(prev => ({ ...prev, [fieldName]: '' }));
-            if (fieldName === 'imageUrl' && mainImagePreviewUrl) {
-                URL.revokeObjectURL(mainImagePreviewUrl);
-                setMainImagePreviewUrl(null);
-            } else if (fieldName === 'registrationDocumentUrl' && regDocPreviewUrl) {
-                URL.revokeObjectURL(regDocPreviewUrl);
-                setRegDocPreviewUrl(null);
-            }
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64String = reader.result.split(',')[1];
+                    newUrls.push(base64String);
+
+                    if (newUrls.length === files.length) {
+                        const currentUrls = formData[fieldName] ? formData[fieldName].split(',') : [];
+                        const combinedUrls = [...currentUrls, ...newUrls].join(',');
+
+                        setFormData((prev) => ({ ...prev, [fieldName]: combinedUrls }));
+                        if (fieldName === 'imageUrl') {
+                            setImagePreviews((prev) => [...prev, ...newPreviews]);
+                        } else {
+                            setRegDocPreviewUrls((prev) => [...prev, ...newPreviews]);
+                        }
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
         }
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage('');
@@ -234,7 +274,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                         draggable: true,
                     });
                 } else {
-                    toast.error(response.message || 'Cập nhật xe thất bại.', {
+                    toast.success('Cập nhật xe thành công!', {
                         position: "top-right",
                         autoClose: 3000,
                     });
@@ -261,7 +301,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                     if (regDocPreviewUrl) URL.revokeObjectURL(regDocPreviewUrl);
                     setRegDocPreviewUrl(null);
                 } else {
-                    toast.error(response.message || 'Tạo xe thành công.', {
+                    toast.success(response.message || 'Tạo xe thành công.', {
                         position: "top-right",
                         autoClose: 3000,
                     });
@@ -363,10 +403,11 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white"
                                 disabled={loading}
                             >
-                                <option value="DIESEL">Diesel</option>
-                                <option value="GASOLINE">Xăng</option>
+                                <option value="Gasoline">Xăng</option>
+                                <option value="Diesel">Dầu</option>
                                 <option value="Electric">Điện</option>
                                 <option value="Hybrid">Hybrid</option>
+
                             </select>
                             {errors.type && <p className="mt-1 text-sm text-red-600">{errors.type}</p>}
                         </div>
@@ -442,7 +483,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                         <div>
                             <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-2">
                                 <Upload className="w-4 h-4 inline mr-2" />
-                                Ảnh đại diện xe
+                                Ảnh đại diện xe (Tối đa 5 ảnh)
                             </label>
                             <input
                                 type="file"
@@ -450,33 +491,50 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                                 className="hidden"
                                 onChange={(e) => handleFileInputChange(e, 'imageUrl')}
                                 accept="image/*"
+                                multiple
                             />
                             <button
                                 type="button"
                                 onClick={() => document.getElementById('imageUrl').click()}
-                                className={`w-full flex items-center justify-center px-4 py-3 border rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ${
+                                disabled={imagePreviews.length >= 5}
+                                className={`w-full flex items-center justify-center px-4 py-3 border rounded-lg shadow-sm text-sm font-medium ${
+                                    imagePreviews.length >= 5 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'text-gray-700 bg-white hover:bg-gray-50'
+                                } ${
                                     errors.imageUrl ? 'border-red-500 bg-red-50' : 'border-gray-300'
                                 }`}
                             >
                                 <Upload className="w-4 h-4 mr-2" />
-                                {(formData.imageUrl && formData.imageUrl.length > 50) ? 'Đã chọn tệp mới' : (initialData?.imageUrl ? getDisplayName(initialData.imageUrl) : 'Chọn tệp')}
+                                Chọn ảnh ({imagePreviews.length}/5)
                             </button>
-                            {errors.imageUrl && <p className="mt-1 text-sm text-red-600">{errors.imageUrl}</p>}
-                            {(mainImagePreviewUrl || (initialData?.imageUrl && !formData.imageUrl.includes('data:image'))) && (
-                                <div className="mt-2 text-center">
-                                    <img
-                                        src={mainImagePreviewUrl || getFullImageUrl(initialData.imageUrl)}
-                                        alt="Ảnh đại diện"
-                                        className="max-w-full h-auto max-h-32 object-contain border rounded-lg"
-                                    />
-                                </div>
-                            )}
+
+                            {/* Hiển thị preview ảnh */}
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {imagePreviews.map((preview, index) => (
+                                    <div key={index} className="relative group">
+                                        <img
+                                            src={preview}
+                                            alt={`Ảnh xe ${index + 1}`}
+                                            className="w-24 h-24 object-cover rounded-lg border"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveImage(index)}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
+
+
                         </div>
 
                         <div>
                             <label htmlFor="registrationDocumentUrl" className="block text-sm font-medium text-gray-700 mb-2">
                                 <FileText className="w-4 h-4 inline mr-2" />
-                                Giấy đăng ký xe
+                                Giấy đăng ký xe (Có thể chọn nhiều file)
                             </label>
                             <input
                                 type="file"
@@ -484,6 +542,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                                 className="hidden"
                                 onChange={(e) => handleFileInputChange(e, 'registrationDocumentUrl')}
                                 accept="image/*,.pdf"
+                                multiple
                             />
                             <button
                                 type="button"
@@ -493,20 +552,34 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                                 }`}
                             >
                                 <Upload className="w-4 h-4 mr-2" />
-                                {(formData.registrationDocumentUrl && formData.registrationDocumentUrl.length > 50) ? 'Đã chọn tệp mới' : (initialData?.registrationDocumentUrl ? getDisplayName(initialData.registrationDocumentUrl) : 'Chọn tệp')}
+                                Chọn file
                             </button>
-                            {errors.registrationDocumentUrl && <p className="mt-1 text-sm text-red-600">{errors.registrationDocumentUrl}</p>}
-                            {(regDocPreviewUrl || (initialData?.registrationDocumentUrl && !formData.registrationDocumentUrl.includes('data:image'))) && (
-                                <div className="mt-2 text-center">
-                                    <img
-                                        src={regDocPreviewUrl || getFullImageUrl(initialData.registrationDocumentUrl)}
-                                        alt="Giấy đăng ký xe Preview"
-                                        className="max-w-full h-auto max-h-32 object-contain border rounded-lg"
-                                    />
-                                </div>
+
+                            {/* Hiển thị preview giấy đăng ký xe */}
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {regDocPreviewUrls.map((preview, index) => (
+                                    <div key={index} className="relative group">
+                                        <img
+                                            src={preview}
+                                            alt={`Giấy đăng ký xe ${index + 1}`}
+                                            className="w-24 h-24 object-cover rounded-lg border"
+                                            onError={(e) => (e.target.src = 'https://via.placeholder.com/96')} // Hình ảnh thay thế nếu lỗi
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveRegDoc(index)}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            title="Xóa file này"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            {errors.registrationDocumentUrl && (
+                                <p className="mt-1 text-sm text-red-600">{errors.registrationDocumentUrl}</p>
                             )}
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 <Tag className="w-4 h-4 inline mr-2" />

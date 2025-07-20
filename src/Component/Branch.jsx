@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Search, Plus, Edit, Trash2, X } from 'lucide-react';
+import {RefreshCw, Search, Plus, Edit, Trash2, X, Factory} from 'lucide-react';
 import CRMLayout from './Crm.jsx';
 import { getBrands, createBrand, updateBrand, deleteBrand } from '../service/authentication.js';
 
@@ -84,6 +84,8 @@ const BrandList = () => {
             setLoading(false);
         }
     };
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [brandToDelete, setBrandToDelete] = useState(null);
 
     useEffect(() => {
         fetchBrands();
@@ -125,20 +127,28 @@ const BrandList = () => {
         }
     };
 
-    const handleDelete = async (brandId) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa hãng xe này không?')) {
-            const originalBrands = [...brands];
-            setBrands(brands.filter(b => b.id !== brandId));
-            setMessage('');
-            try {
-                await deleteBrand(brandId);
-            } catch (err) {
-                setBrands(originalBrands); // Revert on error
-                setMessage(err.response?.data?.message || 'Không thể xóa hãng xe.');
-            }
-        }
+    const handleDelete = (brandId) => {
+        const brand = brands.find(b => b.id === brandId);
+        setBrandToDelete(brand);
+        setShowDeleteModal(true);
     };
 
+    const confirmDelete = async () => {
+        if (!brandToDelete) return;
+
+        const originalBrands = [...brands];
+        setBrands(brands.filter(b => b.id !== brandToDelete.id));
+        setMessage('');
+        try {
+            await deleteBrand(brandToDelete.id);
+        } catch (err) {
+            setBrands(originalBrands); // Revert on error
+            setMessage(err.response?.data?.message || 'Không thể xóa hãng xe.');
+        } finally {
+            setShowDeleteModal(false);
+            setBrandToDelete(null);
+        }
+    };
     const filteredBrands = brands.filter(brand =>
         brand.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -150,7 +160,7 @@ const BrandList = () => {
                     <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6 flex justify-between items-center">
                             <h2 className="text-xl font-semibold text-white flex items-center gap-3">
-                                <Search className="w-6 h-6" />
+                                <Factory className="w-6 h-6" />
                                 Danh sách hãng xe
                             </h2>
                             <button onClick={() => handleOpenModal('create')} className="flex items-center gap-2 px-4 py-2 bg-white text-blue-600 rounded-lg shadow font-semibold hover:bg-gray-100 transition-colors">
@@ -162,13 +172,18 @@ const BrandList = () => {
                         <div className="p-6 md:p-8">
                             <div className="mb-6 flex justify-between items-center gap-4">
                                 <div className="relative flex-grow">
-                                    <input type="text" placeholder="Tìm kiếm hãng xe..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 pl-10"/>
+                                    <input
+                                        type="text"
+                                        placeholder="Tìm kiếm loại xe..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 pl-10"
+                                    />
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                 </div>
-                                <button onClick={fetchBrands} className="text-gray-500 hover:text-blue-600 focus:outline-none flex items-center gap-2 p-3 rounded-lg hover:bg-gray-100 transition-colors" title="Làm mới danh sách">
-                                    <RefreshCw className="w-5 h-5" />
-                                </button>
+
                             </div>
+
 
                             {message && <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg text-center mb-4">{message}</div>}
 
@@ -208,7 +223,44 @@ const BrandList = () => {
                     </div>
                 </div>
             </div>
-
+            {showDeleteModal && brandToDelete && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 transition-opacity">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all animate-fade-in-up">
+                        <div className="flex justify-between items-center mb-4 border-b pb-3">
+                            <h3 className="text-xl font-bold text-gray-800">Xác nhận xóa</h3>
+                            <button
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setBrandToDelete(null);
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <p className="text-gray-600 mb-6">
+                            Bạn có chắc chắn muốn xóa hãng xe <span className="font-semibold">{brandToDelete.name}</span> không?
+                        </p>
+                        <div className="flex justify-end gap-3 pt-4 border-t">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setBrandToDelete(null);
+                                }}
+                                className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-semibold text-sm"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold text-sm"
+                            >
+                                Xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <BrandModal
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}

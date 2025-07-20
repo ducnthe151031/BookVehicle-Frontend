@@ -514,8 +514,13 @@ const CarDetail = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Nhiên liệu:</p>
-                                        <p className="font-medium">{car.fuelType || 'N/A'}</p>
-                                    </div>
+                                        <p className="font-medium">
+                                            {car.fuelType === 'Gasoline' ? 'Xăng' :
+                                                car.fuelType === 'Diesel' ? 'Dầu' :
+                                                    car.fuelType === 'Electric' ? 'Điện' :
+                                                        car.fuelType === 'Hybrid' ? 'Hybrid' :
+                                                            car.fuelType || 'N/A'}
+                                        </p></div>
                                     <div>
                                         <p className="text-sm text-gray-600">Hộp số:</p>
                                         <p className="font-medium">{car.gearBox || 'N/A'}</p>
@@ -595,45 +600,6 @@ const CarDetail = () => {
 
                     {/* --- CỘT BÊN PHẢI (THANH TOÁN) --- */}
                     <div className="lg:col-span-1 space-y-6">
-                        {/* ... (Phần upload file) ... */}
-                        <div className="bg-white rounded-lg shadow p-6">
-                            <div className="mb-4">
-                                <label htmlFor="cccdUpload" className="block text-sm font-medium text-gray-700 mb-2">CCCD:</label>
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="file"
-                                        id="cccdUpload"
-                                        className="hidden"
-                                        onChange={(e) => handleFileChange(e, setCccdFile)}
-                                    />
-                                    <button
-                                        onClick={() => document.getElementById('cccdUpload').click()}
-                                        className="flex-grow flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                    >
-                                        <Upload className="w-5 h-5 mr-2" />
-                                        {cccdFile ? cccdFile.name : 'choose the file upload'}
-                                    </button>
-                                </div>
-                            </div>
-                            <div>
-                                <label htmlFor="licenseUpload" className="block text-sm font-medium text-gray-700 mb-2">Giấy phép lái xe:</label>
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="file"
-                                        id="licenseUpload"
-                                        className="hidden"
-                                        onChange={(e) => handleFileChange(e, setLicenseFile)}
-                                    />
-                                    <button
-                                        onClick={() => document.getElementById('licenseUpload').click()}
-                                        className="flex-grow flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                    >
-                                        <Upload className="w-5 h-5 mr-2" />
-                                        {licenseFile ? licenseFile.name : 'choose the file upload'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
 
                         {/* ... (Phần thời gian thuê) ... */}
                         <div className="bg-white rounded-lg shadow p-6">
