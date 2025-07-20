@@ -741,7 +741,7 @@ const Home = () => {
                                         <div className="flex items-center">
                                             <Fuel className="w-4 h-4 mr-1 text-gray-500" />
                                             <span>
-                {vehicle.fuelType === 'Gasoline' ? 'Xăng' :
+                {vehicle.fuelType === 'Gasoine' ? 'Xăng' :
                     vehicle.fuelType === 'Diesel' ? 'Dầu' :
                         vehicle.fuelType === 'Electric' ? 'Điện' :
                             vehicle.fuelType === 'Hybrid' ? 'Hybrid' :
