@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createUser, updateUser } from '../service/authentication.js';
+import { createUser } from '../service/authentication.js';
 import { toast } from 'react-toastify';
 import { Eye, EyeOff } from 'lucide-react';
 

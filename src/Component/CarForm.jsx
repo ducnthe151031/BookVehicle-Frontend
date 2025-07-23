@@ -615,6 +615,8 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                             >
                                 <option value="AUTOMATIC">Tự động</option>
                                 <option value="MANUAL">Số sàn</option>
+                                <option value="MANUAL CLUTCH">Côn tay</option>
+                                <option value="SCOOTER">Tay ga</option>
                             </select>
                         </div>
 

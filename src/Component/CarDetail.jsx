@@ -568,7 +568,9 @@ const CarDetail = () => {
                                                 <p className="font-medium text-gray-800">
                                                     {car.gearBox === 'AUTOMATIC' ? 'Tự động' :
                                                         car.gearBox === 'MANUAL' ? 'Số sàn' :
-                                                            car.gearBox || 'N/A'}
+                                                            car.gearBox === 'MANUAL CLUTCH' ? 'Côn tay' :
+                                                                car.gearBox === 'SCOOTER' ? 'Tay ga' :
+                                                                    car.gearBox || 'N/A'}
                                                 </p>
                                             </div>
                                         </div>
