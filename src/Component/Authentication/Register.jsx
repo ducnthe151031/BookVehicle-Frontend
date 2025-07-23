@@ -199,7 +199,7 @@ const RegisterForm = () => {
                 {/* Ảnh mô tô */}
                 <div className="mt-10 md:mt-0">
                     <img
-                        src="https://img1.xcarimg.com/PicLib/s/s13683_420.jpg"
+                        src="https://www.vinfastotohaichau.vn/uploads/images/Vinfast-lux-a2_0-trang-10.png"
                         alt="Motorbike"
                         className="w-[420px] h-auto object-contain"
                     />
