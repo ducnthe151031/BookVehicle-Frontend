@@ -255,6 +255,20 @@ export const approveBooking = async (bookingId) => {
     }
 };
 
+
+export const deliveredBooking = async (bookingId) => {
+    try {
+        const response = await axios.put(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/approve-delivered-booking/${bookingId}`,
+            {},
+            getAuthConfig()
+        );
+        return response.data;
+    } catch (e) {
+        throw e;
+    }
+};
+
 export const rejectBooking = async (bookingId) => {
     try {
         const response = await axios.put(
@@ -529,3 +543,15 @@ export const deleteBrand = async (id) => {
     }
 };
 
+export const payLateFee = async (id) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/user/payLateFee/${id}`,
+            {},
+            getAuthConfig()
+        );
+        return response.data;
+    } catch (e) {
+        throw e;
+    }
+};
