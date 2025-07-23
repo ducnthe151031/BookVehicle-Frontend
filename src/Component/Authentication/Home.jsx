@@ -373,7 +373,7 @@ const Home = () => {
                     const data = await response.json();
 
                     // Lấy tên thành phố từ kết quả trả về
-                    const city = data.address?.city || data.address?.state || data.address?.county;
+                    const city = data.address?.road || data.address?.state || data.address?.county;
 
                     if (city) {
                         // Cập nhật vào bộ lọc
@@ -741,7 +741,7 @@ const Home = () => {
                                         <div className="flex items-center">
                                             <Fuel className="w-4 h-4 mr-1 text-gray-500" />
                                             <span>
-                {vehicle.fuelType === 'Gasoine' ? 'Xăng' :
+                {vehicle.fuelType === 'Gasoline' ? 'Xăng' :
                     vehicle.fuelType === 'Diesel' ? 'Dầu' :
                         vehicle.fuelType === 'Electric' ? 'Điện' :
                             vehicle.fuelType === 'Hybrid' ? 'Hybrid' :
