@@ -49,6 +49,7 @@ const Header = ({ logOut, handleChangePassword, customer }) => {
                             :<a href="myPayment" className="hover:text-blue-600">Đơn thanh toán</a>
                         }
 
+
                         {/*<a href="#" className="font-semibold text-gray-900">Các loại xe</a> /!* Bold for "Các loại xe" *!/*/}
                         {/*<a href="#" className="hover:text-blue-600">Người cho thuê</a>*/}
                         {/*<a href="#" className="hover:text-blue-600">Liên lạc với chúng tôi</a>*/}
