@@ -543,7 +543,7 @@ const VehicleListForStaff = () => {
                                     onClick={handleAddFormClose}
                                     className="text-gray-600 hover:text-gray-800"
                                 >
-                                    >
+
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
