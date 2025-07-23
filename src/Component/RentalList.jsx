@@ -10,6 +10,7 @@ import {
     approveReturned
 } from '../service/authentication.js';
 import {FaListAlt as ClipboardList} from "react-icons/fa";
+import {useAuth} from "../context/AuthContext.jsx";
 
 const RentalList = () => {
     const [rentals, setRentals] = useState([]);
@@ -18,6 +19,7 @@ const RentalList = () => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState(''); // Thêm state cho tìm kiếm
+    const {customer} = useAuth();
 
     const fetchRentals = async (pageNumber) => {
         setLoading(true);
@@ -101,7 +103,6 @@ const RentalList = () => {
     };
 
 
-
     const formatDate = (dateString, isHourly) => {
         const date = new Date(dateString);
         if (isHourly) {
@@ -133,15 +134,7 @@ const RentalList = () => {
                 </div>
 
                 {/* Thêm bộ lọc tìm kiếm */}
-                <div className="mb-4">
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm theo khách hàng, xe, hoặc trạng thái..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                </div>
+
 
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
@@ -186,8 +179,15 @@ const RentalList = () => {
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại
                                             thuê
                                         </th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng
+                                            thái
 
+                                        </th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trễ
+                                            hạn
+                                        </th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phí
+                                            trả thêm
                                         </th>
 
 
@@ -195,7 +195,7 @@ const RentalList = () => {
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                     {rentals.map((rental) => {
-                                        const showApproveButton = rental.deliveryStatus === null;
+                                        const showApproveButton = rental.deliveryStatus === 'READY_TO_PICK';
                                         const isHourly = rental.rentType.includes('giờ');
                                         return (
                                             <tr key={rental.id} className="hover:bg-gray-50">
@@ -239,30 +239,30 @@ const RentalList = () => {
                                                     {rental.deliveryStatus === 'READY_TO_PICK' ? 'Chờ lấy xe'
                                                         : rental.deliveryStatus === 'TRANSIT' ? 'Đang giao xe'
                                                             : rental.deliveryStatus === 'DELIVERED' ? 'Đã nhận xe'
-                                                                : rental.deliveryStatus === 'RETURNED' ? 'Đã trả xe':
+                                                                : rental.deliveryStatus === 'RETURNED' ? 'Đã trả xe' :
                                                                     'N/A'
                                                     }
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm">
-                                                  <span
-                                                      className={`inline-flex items-center gap-1 py-0.5 px-2 text-xs font-medium rounded-full 
-                                                      ${rental.paymentStatus ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
-                                                  >
-                                                    {rental.paymentStatus ? (
+                                                    {rental?.late ? (
+                                                        <span className="text-red-600 font-semibold">Có</span>
+                                                    ) : (
+                                                        <span className="text-gray-500">Không</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                                                    {rental?.late && rental?.lateFee ? (
                                                         <>
-                                                            <CheckCircle size={14}/> Đã thanh toán
+                                                            {rental.lateFee.toLocaleString('vi-VN')} VNĐ
                                                         </>
                                                     ) : (
-                                                        <>
-                                                            <XCircle size={14}/> Chưa thanh toán
-                                                        </>
+                                                        "-"
                                                     )}
-                                                  </span>
                                                 </td>
 
 
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm">
-                                                    {showApproveButton && (
+                                                    {showApproveButton && customer?.role === 'ROLE_OPERATOR' && (
                                                         <>
                                                             <button
                                                                 onClick={() => handleApprove(rental.id)}
@@ -276,21 +276,23 @@ const RentalList = () => {
                                                             >
                                                                 Hủy đơn
                                                             </button>
-
                                                         </>
-
-
                                                     )}
-                                                    {
-                                                        rental.deliveryStatus === 'DELIVERED' && (
-                                                            <button
-                                                                onClick={() => handleReturned(rental.id)}
-                                                                className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-all duration-200"
-                                                            >
-                                                                Xác nhận đã trả xe
-                                                            </button>
-                                                        )
-                                                    }
+                                                    {rental.deliveryStatus === 'DELIVERED' && customer?.role === 'ROLE_OPERATOR' && rental?.lateFeePaid && (
+                                                        <button
+                                                            onClick={() => handleReturned(rental.id)}
+                                                            className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-all duration-200"
+                                                        >
+                                                            Xác nhận đã trả xe
+                                                        </button>
+                                                    )}
+                                                    {!rental?.lateFeePaid && rental.deliveryStatus === 'DELIVERED'&& (
+                                                        <span
+                                                            className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded font-medium"
+                                                        >
+      Chưa thanh toán phí muộn
+    </span>
+                                                    )}
                                                 </td>
                                             </tr>
                                         );

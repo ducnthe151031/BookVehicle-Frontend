@@ -166,7 +166,8 @@ const RegisterForm = () => {
                             >
                                 <option value="USER">Người dùng</option>
                                 <option value="OWNER">Chủ xe</option>
-                                <option value="ADMIN">Quản trị viên</option>
+                                <option value="OPERATOR">Người giao xe</option>
+                                {/*<option value="ADMIN">Quản trị viên</option>*/}
                             </select>
                         </div>
 
@@ -199,7 +200,7 @@ const RegisterForm = () => {
                 {/* Ảnh mô tô */}
                 <div className="mt-10 md:mt-0">
                     <img
-                        src="https://www.vinfastotohaichau.vn/uploads/images/Vinfast-lux-a2_0-trang-10.png"
+                        src="https://img1.xcarimg.com/PicLib/s/s13683_420.jpg"
                         alt="Motorbike"
                         className="w-[420px] h-auto object-contain"
                     />

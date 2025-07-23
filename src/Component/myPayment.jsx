@@ -7,10 +7,13 @@ import {
     getCarDetails,
     approveBooking,
     rejectBooking,
-    getMyRentals
+    getMyRentals, deliveredBooking, payLateFee
 } from '../service/authentication.js';
 import Header from "./Header.jsx";
 import {useAuth} from "../context/AuthContext.jsx";
+import {toast} from "react-toastify";
+import axios from "axios";
+import {useNavigate} from "react-router-dom";
 
 const MyPayment = () => {
     const [rentals, setRentals] = useState([]);
@@ -20,6 +23,7 @@ const MyPayment = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState(''); // Thêm state cho tìm kiếm
     const { customer, logOut } = useAuth();
+    const navigate = useNavigate();
 
     const fetchRentals = async (pageNumber) => {
         setLoading(true);
@@ -81,7 +85,7 @@ const MyPayment = () => {
 
     const handleApprove = async (bookingId) => {
         try {
-            await approveBooking(bookingId);
+            await deliveredBooking(bookingId);
             // Refresh the list after approval
             fetchRentals(page);
         } catch (err) {
@@ -101,11 +105,11 @@ const MyPayment = () => {
 
     const getStatusDisplay = (status) => {
         const statusMap = {
-            PENDING: {text: 'Chờ duyệt', color: 'bg-yellow-100 text-yellow-800'},
-            APPROVED: {text: 'Đã duyệt', color: 'bg-green-100 text-green-800'},
-            REJECTED: {text: 'Từ chối', color: 'bg-red-100 text-red-800'},
-            CANCELLED: {text: 'Đã hủy', color: 'bg-gray-100 text-gray-800'},
-            COMPLETED: {text: 'Hoàn thành', color: 'bg-blue-100 text-blue-800'},
+            READY_TO_PICK: {text: 'Chờ lấy xe', color: 'bg-yellow-100 text-yellow-800'},
+            TRANSIT: {text: 'Đang giao', color: 'bg-green-100 text-green-800'},
+            DELIVERED: {text: 'Đã giao', color: 'bg-red-100 text-red-800'},
+            RETURNED: {text: 'Đã trả', color: 'bg-gray-100 text-gray-800'},
+
         };
         return statusMap[status] || {text: status, color: 'bg-gray-100 text-gray-800'};
     };
@@ -120,6 +124,35 @@ const MyPayment = () => {
     const handleChangePassword = () => {
         navigate('/change-password');
     };
+
+    const handleLateFeePayment = async (id) => {
+        try {
+            const response = await axios.post(`http://localhost:8080/v1/user/payLateFee/${id}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+            });
+
+            const paymentUrl = response.data.data.url;
+            if (paymentUrl) {
+                window.location.href = paymentUrl;
+            } else {
+                toast.error('Không tìm thấy URL thanh toán!', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                navigate(-1);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            toast.error(error.response?.data?.message, {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             <Header logOut={logOut} handleChangePassword={handleChangePassword} customer={customer} />
@@ -134,15 +167,7 @@ const MyPayment = () => {
                 </div>
 
                 {/* Thêm bộ lọc tìm kiếm */}
-                <div className="mb-4">
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm theo khách hàng, xe, hoặc trạng thái..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                </div>
+
 
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
@@ -187,14 +212,15 @@ const MyPayment = () => {
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại
                                             thuê
                                         </th>
-
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trễ hạn</th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phí trả thêm</th>
 
                                     </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                     {rentals.map((rental) => {
-                                        const statusDisplay = getStatusDisplay(rental.status);
-                                        const showApproveButton = rental.status === 'PENDING';
+                                        const statusDisplay = getStatusDisplay(rental.deliveryStatus);
+                                        const showApproveButton = rental.deliveryStatus === 'TRANSIT';
                                         const isHourly = rental.rentType.includes('giờ');
                                         return (
                                             <tr key={rental.id} className="hover:bg-gray-50">
@@ -233,6 +259,60 @@ const MyPayment = () => {
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     {rental.rentType}
                                                 </td>
+
+                                                <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                    {rental?.late  ? (
+                                                        <span className="text-red-600 font-semibold">Có</span>
+                                                    ) : (
+                                                        <span className="text-gray-500">Không</span>
+                                                    )}
+                                                </td>
+
+                                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                                                    {rental?.late && rental?.lateFee ? (
+                                                        <>
+                                                            {rental.lateFee.toLocaleString('vi-VN')} VNĐ
+                                                        </>
+                                                    ) : (
+                                                        "-"
+                                                    )}
+                                                </td>
+
+                                                <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                    {rental?.late && rental?.lateFee > 0 && !rental?.lateFeePaid &&(
+                                                        <button
+                                                            onClick={() => handleLateFeePayment(rental.id)}
+                                                            className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-all duration-200"
+                                                        >
+                                                            Thanh toán
+                                                        </button>
+                                                    )}
+
+                                                    {rental?.lateFeePaid &&(
+
+                                                        <p>Đã thanh toán phí muộn</p>
+                                                    )}
+                                                </td>
+
+                                                <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                    {showApproveButton && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleApprove(rental.id)}
+                                                                className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-all duration-200"
+                                                            >
+                                                                Đã giao
+                                                            </button>
+
+
+                                                        </>
+
+
+                                                    )}
+
+                                                </td>
+
+
 
 
 
