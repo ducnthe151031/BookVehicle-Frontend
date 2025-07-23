@@ -15,7 +15,9 @@ import {
     Clock,
     Calendar,
     User,
-    XCircle
+    XCircle,
+    Tag,
+    FileText
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -489,59 +491,138 @@ const CarDetail = () => {
                     <div className="lg:col-span-2 space-y-6">
                         {/* ... (Phần thông tin xe) ... */}
                         <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Thông tin xe</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <img
-                                        src={getFullImageUrl(car.imageUrl) || 'https://via.placeholder.com/300x200?text=No+Image'}
-                                        alt={car.vehicleName}
-                                        className="w-full h-48 object-cover rounded-lg mb-4"
-                                    />
-                                    <p className="text-lg font-semibold text-gray-800">Tên xe: {car.vehicleName}</p>
-                                    <div className="flex items-center text-sm text-gray-600 mt-1">
-                                        <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
-                                        <span>Đánh giá trung bình: {ratingInfo || 'N/A'} / 5</span>
+                            <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 transition-all duration-200 hover:shadow-xl">
+                                <h2 className="text-2xl font-bold text-gray-900 mb-6 border-b pb-3 flex items-center gap-2">
+                                    <Car className="w-6 h-6 text-blue-600" />
+                                    Thông tin xe
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* Left: Image Gallery and Basic Info */}
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {car.imageUrl?.split(',').map((img, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="relative cursor-pointer group rounded-lg overflow-hidden"
+                                                    onClick={() => openImageGallery(index)}
+                                                    role="button"
+                                                    aria-label={`Xem ảnh xe ${index + 1}`}
+                                                >
+                                                    <img
+                                                        src={getFullImageUrl(img)}
+                                                        alt={`Ảnh xe ${index + 1}`}
+                                                        className="w-full h-40 object-cover transition-transform duration-300 group-hover:scale-110"
+                                                        onError={(e) => (e.target.src = 'https://via.placeholder.com/150')}
+                                                    />
+                                                    {index === 3 && car.imageUrl.split(',').length > 4 && (
+                                                        <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center rounded-lg transition-opacity duration-200">
+                <span className="text-white font-semibold text-sm">
+                  +{car.imageUrl.split(',').length - 4}
+                </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )).slice(0, 4)}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <h3 className="text-xl font-semibold text-gray-800">{car.vehicleName || 'N/A'}</h3>
+                                            <div className="flex items-center text-sm text-gray-600">
+                                                <Star className="w-5 h-5 text-yellow-500 mr-1 fill-current" />
+                                                <span className="font-medium">Đánh giá: {ratingInfo ? `${ratingInfo} / 5` : 'Chưa có đánh giá'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Right: Detailed Information */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-start gap-3">
+                                            <MapPin className="w-5 h-5 text-blue-600 mt-1" />
+                                            <div>
+                                                <p className="text-sm text-gray-500">Địa điểm xe</p>
+                                                <p className="font-medium text-gray-800">{car.location || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <Users className="w-5 h-5 text-blue-600 mt-1" />
+                                            <div>
+                                                <p className="text-sm text-gray-500">Số chỗ</p>
+                                                <p className="font-medium text-gray-800">{car.seatCount || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <Fuel className="w-5 h-5 text-blue-600 mt-1" />
+                                            <div>
+                                                <p className="text-sm text-gray-500">Nhiên liệu</p>
+                                                <p className="font-medium text-gray-800">
+                                                    {car.fuelType === 'Gasoline' ? 'Xăng' :
+                                                        car.fuelType === 'Diesel' ? 'Dầu' :
+                                                            car.fuelType === 'Electric' ? 'Điện' :
+                                                                car.fuelType === 'Hybrid' ? 'Hybrid' :
+                                                                    car.fuelType || 'N/A'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <Settings className="w-5 h-5 text-blue-600 mt-1" />
+                                            <div>
+                                                <p className="text-sm text-gray-500">Hộp số</p>
+                                                <p className="font-medium text-gray-800">
+                                                    {car.gearBox === 'AUTOMATIC' ? 'Tự động' :
+                                                        car.gearBox === 'MANUAL' ? 'Số sàn' :
+                                                            car.gearBox || 'N/A'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <Tag className="w-5 h-5 text-blue-600 mt-1" />
+                                            <div>
+                                                <p className="text-sm text-gray-500">Biển số xe</p>
+                                                <p className="font-medium text-gray-800">{car.liecensePlate || 'N/A'}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="space-y-3">
-                                    <div>
-                                        <p className="text-sm text-gray-600">Địa điểm xe:</p>
-                                        <p className="font-medium">{car.location || 'N/A'}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-600">Số chỗ:</p>
-                                        <p className="font-medium">{car.seatCount || 'N/A'}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-600">Nhiên liệu:</p>
-                                        <p className="font-medium">
-                                            {car.fuelType === 'Gasoline' ? 'Xăng' :
-                                                car.fuelType === 'Diesel' ? 'Dầu' :
-                                                    car.fuelType === 'Electric' ? 'Điện' :
-                                                        car.fuelType === 'Hybrid' ? 'Hybrid' :
-                                                            car.fuelType || 'N/A'}
-                                        </p></div>
-                                    <div>
-                                        <p className="text-sm text-gray-600">Hộp số:</p>
-                                        <p className="font-medium">{car.gearBox || 'N/A'}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-600">Biển số xe:</p>
-                                        <p className="font-medium">{car.liecensePlate || 'N/A'}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                            </div>                        </div>
 
 
                         {/* ... (Phần điều khoản) ... */}
-                        <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Điều khoản khi thuê xe</h2>
-                            <ul className="list-disc list-inside text-gray-600 space-y-2">
-                                <li>Sử dụng xe đúng mục đích.</li>
-                                <li>Không sử dụng xe thuê vào mục đích phi pháp, trái pháp luật.</li>
-                                <li>Không sử dụng xe thuê để cầm cố, thế chấp.</li>
-                                <li>Không hút thuốc, nhả kẹo cao su, xả rác trong xe.</li>
+                        <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 transition-all duration-200 hover:shadow-xl">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6 border-b pb-3 flex items-center gap-2">
+                                <FileText className="w-6 h-6 text-blue-600" />
+                                Điều khoản khi thuê xe
+                            </h2>
+                            <ul className="space-y-3 text-gray-700">
+                                <li className="flex items-start gap-3">
+                                    <span className="text-blue-600 mt-1">•</span>
+                                    <span>Sử dụng xe đúng mục đích đã đăng ký khi thuê.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-blue-600 mt-1">•</span>
+                                    <span>Không sử dụng xe vào các hoạt động phi pháp hoặc trái với quy định pháp luật.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-blue-600 mt-1">•</span>
+                                    <span>Không cầm cố, thế chấp, hoặc chuyển nhượng xe thuê dưới bất kỳ hình thức nào.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-blue-600 mt-1">•</span>
+                                    <span>Không hút thuốc, nhả kẹo cao su, xả rác, hoặc làm bẩn nội thất xe.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-blue-600 mt-1">•</span>
+                                    <span>Trả xe đúng thời hạn theo hợp đồng; phí trễ hạn sẽ được áp dụng nếu trả muộn.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-blue-600 mt-1">•</span>
+                                    <span>Đảm bảo xe được sử dụng trong tình trạng kỹ thuật tốt; báo cáo ngay mọi hư hỏng cho công ty.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-blue-600 mt-1">•</span>
+                                    <span>Chỉ người đăng ký thuê hoặc tài xế được chỉ định mới được phép lái xe.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-blue-600 mt-1">•</span>
+                                    <span>Tuân thủ luật giao thông và chịu trách nhiệm với mọi vi phạm trong thời gian thuê.</span>
+                                </li>
                             </ul>
                         </div>
 

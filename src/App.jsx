@@ -25,6 +25,7 @@ import CouponListPage from "./Component/CouponList.jsx";
 import VehicleListForStaff from "./Component/VehicleListForStaff.jsx";
 import ProfileForAdmin from "./Component/ProfileForAdmin.jsx";
 import ChanPasswordForAdmin from "./Component/ChangePassWordForAdmin.jsx";
+import UserListPage from "./Component/User.jsx";
 
 function App() {
         return (
@@ -37,6 +38,7 @@ function App() {
                             <Route path="/list" element={<ProtectedRoute><VehicleListForStaff/></ProtectedRoute>} />
                             <Route path="/prfAdmin" element={<ProtectedRoute><ProfileForAdmin/></ProtectedRoute>} />
                             <Route path="/passwordAdmin" element={<ProtectedRoute><ChanPasswordForAdmin/></ProtectedRoute>} />
+                            <Route path="/user" element={<ProtectedRoute><UserListPage/></ProtectedRoute>} />
 
                             <Route path="/password" element={<ProtectedRoute><ChangePassword/></ProtectedRoute>} />
                             <Route path="/coupon" element={<ProtectedRoute><CouponListPage/></ProtectedRoute>} />
