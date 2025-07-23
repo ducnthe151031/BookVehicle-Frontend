@@ -53,7 +53,7 @@ const CRMLayout = ({ children }) => {
         { name: 'Hãng xe', icon: Factory, path: '/vehicle/brands', roles: ['ROLE_ADMIN'] },
         { name: 'Loại xe', icon: FaCar, path: '/vehicle/categories', roles: ['ROLE_ADMIN'] },
         { name: 'Danh sách xe', icon: Car, path: '/vehicle', roles: ['ROLE_ADMIN','ROLE_OWNER'] },
-        { name: 'Danh sách thuê xe', icon: ClipboardList, path: '/rentals', roles: ['ROLE_ADMIN'] },
+        { name: 'Danh sách thuê xe', icon: ClipboardList, path: '/rentals', roles: ['ROLE_ADMIN','ROLE_OPERATOR'] },
         { name: 'Mã coupon', icon: TicketPercent, path: '/coupon', roles: ['ROLE_ADMIN'] },
         { name: 'Hồ sơ cá nhân', icon: UserCircle, path: '/prfAdmin', roles: ['ROLE_ADMIN'] },
         { name: 'Đổi mật khẩu', icon: KeyRound, path: '/passwordAdmin', roles: ['ROLE_ADMIN'] }
@@ -91,7 +91,7 @@ const CRMLayout = ({ children }) => {
                                 <Car className="h-5 w-5 text-gray-800" />
                             </div>
                             <div className="ml-3">
-                                <h2 className="font-bold text-lg text-white">ADMIN</h2>
+                                <h2 className="font-bold text-lg text-white">Management</h2>
                             </div>
                         </div>
                     )}
@@ -138,7 +138,6 @@ const CRMLayout = ({ children }) => {
                                 <>
                                     <div className="ml-3 text-left flex-1">
                                         <p className="text-sm font-semibold text-white">{customer?.username || 'Admin'}</p>
-                                        <p className="text-xs text-gray-400">Admin</p>
                                     </div>
                                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                                 </>

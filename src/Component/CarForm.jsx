@@ -291,7 +291,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                         draggable: true,
                     });
                     setFormData({
-                        id: '', name: '', brand: '', category: '', type: 'GASOLINE', seats: '',
+                        id: '', name: '', brand: '', category: '', type: 'Gasoline', seats: '',
                         dailyPrice: '', hourlyPrice: '', licensePlate: '', description: '',
                         gearbox: 'AUTOMATIC', location: '', vehicleTypeId: '', imageUrl: '', registrationDocumentUrl: ''
                     });

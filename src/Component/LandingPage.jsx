@@ -39,7 +39,7 @@ const LandingPage = () => {
     const [showOwnershipDropdown, setShowOwnershipDropdown] = useState(false); // New: for "Sở hữu"
 
     // Hardcoded values for dropdowns and display
-    const fuelTypes = ["DIESEL", "GASOLINE", "Điện", "Hybrid"];
+    const fuelTypes = ["DIESEL", "Gasoline", "Điện", "Hybrid"];
     const locations = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Huế", "Nha Trang"];
     const ownershipStatuses = ["Cá nhân", "Doanh nghiệp"]; // For "Sở hữu" filter
 
