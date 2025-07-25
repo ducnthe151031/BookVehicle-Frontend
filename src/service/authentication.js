@@ -555,3 +555,46 @@ export const payLateFee = async (id) => {
         throw e;
     }
 };
+
+
+// Get list of users
+export const getUserList = async () => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/user-list`,
+            getAuthConfig()
+        );
+        return response;
+    } catch (e) {
+        throw e;
+    }
+};
+
+// Create a new user
+export const createUser = async (userData) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/user-list`,
+            userData,
+            getAuthConfig()
+        );
+        return response;
+    } catch (e) {
+        throw e;
+    }
+};
+
+export const updateUser = async (userId, userData) => {
+    try {
+        const response = await axios.put(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/user-list/${userId}`,
+            userData,
+            getAuthConfig()
+        );
+        return response;
+    } catch (e) {
+        throw e;
+    }
+};
+
+
