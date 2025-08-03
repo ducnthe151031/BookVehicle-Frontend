@@ -1,37 +1,16 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-// Thêm icon User để làm avatar
 import {
-    Car,
-    Users,
-    Fuel,
-    ArrowLeft,
-    MapPin,
-    Star,
-    CheckCircle,
-    Info,
-    Settings,
-    Upload,
-    Clock,
-    Calendar,
-    User,
-    XCircle,
-    Tag,
-    FileText
+    Car, Users, Fuel, ArrowLeft, MapPin, Star, CheckCircle, Info,
+    Settings, Upload, Clock, Calendar, User, XCircle, Tag, FileText
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    createReview,
-    getCarDetails,
-    getRating,
-    getReviewsByVehicle,
-    validateCoupon
+    createReview, getCarDetails, getRating, getReviewsByVehicle, validateCoupon
 } from '../service/authentication.js';
 import Header from "./Header.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { toast } from "react-toastify";
-
-
 
 const CarDetail = () => {
     const { carId } = useParams();
@@ -41,10 +20,8 @@ const CarDetail = () => {
     const [error, setError] = useState(null);
     const { customer, logOut } = useAuth();
     const [reviewsPage, setReviewsPage] = useState(0);
-    const [bookingIdForReview, setBookingIdForReview] = useState(''); // State cho ô nhập bookingId
-    const [hasMoreReviews, setHasMoreReviews] = useState(true); // Để biết còn review để tải thêm không
-
-    // ... (các state cũ giữ nguyên)
+    const [bookingIdForReview, setBookingIdForReview] = useState('');
+    const [hasMoreReviews, setHasMoreReviews] = useState(true);
     const [rentalType, setRentalType] = useState('day');
     const [pickupDate, setPickupDate] = useState('');
     const [returnDate, setReturnDate] = useState('');
@@ -55,23 +32,22 @@ const CarDetail = () => {
     const [couponCode, setCouponCode] = useState('');
     const [discountCode, setDiscountCode] = useState('');
     const [applyDiscount, setApplyDiscount] = useState(false);
-
-    // --- STATE MỚI CHO COUPON ---
-    const [couponCodeInput, setCouponCodeInput] = useState(''); // State cho ô input
-    const [appliedCoupon, setAppliedCoupon] = useState(null); // Lưu thông tin coupon đã áp dụng
+    const [couponCodeInput, setCouponCodeInput] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [couponLoading, setCouponLoading] = useState(false);
     const [couponError, setCouponError] = useState('');
-
-    // --- STATE MỚI CHO PHẦN ĐÁNH GIÁ ---
     const [reviews, setReviews] = useState([]);
     const [reviewsLoading, setReviewsLoading] = useState(true);
     const [newRating, setNewRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [newComment, setNewComment] = useState('');
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-
     const [ratingInfo, setRatingInfo] = useState(null);
     const [ratingLoading, setRatingLoading] = useState(true);
+    // New state for terms modal
+    const [showTermsModal, setShowTermsModal] = useState(false);
+    const [termsAgreed, setTermsAgreed] = useState(false);
+
     const SURCHARGE_AMOUNT = 0;
     const OVERTIME_FEE_PER_HOUR = 50000;
     const COUPON_DISCOUNT = 200000;
@@ -81,7 +57,6 @@ const CarDetail = () => {
         return `http://localhost:8080/v1/user/images/${filename}`;
     };
 
-    // ... (hàm calculateDurationAndTotal giữ nguyên)
     const calculateDurationAndTotal = () => {
         let duration = 0;
         let totalPrice = 0;
@@ -102,16 +77,16 @@ const CarDetail = () => {
                 const diffTime = Math.abs(endDateTime - startDateTime);
                 const diffHours = diffTime / (1000 * 60 * 60);
                 if (diffHours <= 24) {
-                    return { days: 0, hours: 0, duration: 0, totalPrice: 0 }; // Thời gian thuê phải > 24 giờ
+                    return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
                 }
-                days = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // Tính số ngày
-                hours = Math.ceil((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); // Tính số giờ lẻ
+                days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                hours = Math.ceil((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 totalPrice = car.pricePerDay * days;
                 if (hours > 0) {
-                    totalPrice += car.pricePerHour * hours; // Tính thêm giá giờ lẻ
+                    totalPrice += car.pricePerHour * hours;
                 }
             }
-        } else { // 'hour' rental
+        } else {
             if (!car.pricePerHour) return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
 
             const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
@@ -124,10 +99,10 @@ const CarDetail = () => {
             const diffTime = endDateTime - startDateTime;
 
             if (diffTime <= 0) {
-                return { days: 0, hours: 0, duration: 0, totalPrice: 0 }; // Invalid if end is before start
+                return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
             }
 
-            hours = Math.ceil(diffTime / (1000 * 60 * 60)); // Convert to hours, round up
+            hours = Math.ceil(diffTime / (1000 * 60 * 60));
             if (hours > 24) {
                 hours = 24;
                 const limitedEndTime = new Date(startDateTime.getTime() + 24 * 60 * 60 * 1000);
@@ -137,7 +112,6 @@ const CarDetail = () => {
             totalPrice = car.pricePerHour * hours;
         }
 
-        // Áp dụng giảm giá từ coupon đã xác thực
         if (appliedCoupon) {
             totalPrice = Math.max(0, totalPrice - appliedCoupon.discountAmount);
         }
@@ -148,7 +122,6 @@ const CarDetail = () => {
     const { days, hours, totalPrice } = calculateDurationAndTotal();
     const calculatedSubtotal = totalPrice + SURCHARGE_AMOUNT;
 
-    // --- HÀM MỚI ĐỂ XỬ LÝ COUPON ---
     const handleApplyCoupon = async () => {
         if (!couponCodeInput.trim()) {
             setCouponError('Vui lòng nhập mã coupon.');
@@ -162,8 +135,6 @@ const CarDetail = () => {
             if (data.httpStatus === 200) {
                 setAppliedCoupon(data.data);
                 toast.success(`Áp dụng mã giảm giá ${data.data.discountAmount.toLocaleString('vi-VN')} VNĐ thành công!`);
-
-
             } else {
                 setCouponError(response.message || 'Mã giảm giá không hợp lệ.');
                 setAppliedCoupon(null);
@@ -176,13 +147,11 @@ const CarDetail = () => {
         }
     };
 
-
-
     useEffect(() => {
         const currentDate = new Date();
         const defaultPickup = new Date(currentDate);
         const defaultReturn = new Date(currentDate);
-        defaultReturn.setDate(currentDate.getDate() + 2); // Mặc định trả sau 2 ngày để > 24h
+        defaultReturn.setDate(currentDate.getDate() + 2);
         setPickupDate(defaultPickup.toISOString().split('T')[0]);
         setReturnDate(defaultReturn.toISOString().split('T')[0]);
     }, []);
@@ -195,7 +164,6 @@ const CarDetail = () => {
                 const response = await getCarDetails(carId);
                 if (response.httpStatus === 200) {
                     setCar(response.data);
-                    // Lấy reviews sau khi có thông tin xe
                     fetchReviews(true);
                 } else {
                     setError('Không thể tải thông tin xe.');
@@ -210,8 +178,20 @@ const CarDetail = () => {
         fetchCarDetails();
     }, [carId]);
 
-    // ... (các hàm xử lý cũ giữ nguyên)
-    const handleBookNow = async () => {
+    const handleBookNow = () => {
+        // Show terms modal instead of immediate booking
+        setShowTermsModal(true);
+    };
+
+    const handleConfirmBooking = async () => {
+        if (!termsAgreed) {
+            toast.error('Vui lòng đồng ý với điều khoản hợp đồng trước khi đặt xe.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
         const startDateTime = new Date(`${pickupDate}T${pickupTime}:00`);
         const endDateTime = rentalType === 'day' ? new Date(`${returnDate}T${returnTime}:00`) : new Date(`${pickupDate}T${returnTime}:00`);
 
@@ -310,25 +290,24 @@ const CarDetail = () => {
                 position: 'top-right',
                 autoClose: 3000,
             });
+        } finally {
+            setShowTermsModal(false);
+            setTermsAgreed(false);
         }
     };
 
     useEffect(() => {
-        // Không chạy nếu không có carId
         if (!carId) return;
 
         const fetchRatingData = async () => {
             try {
                 setRatingLoading(true);
                 const response = await getRating(carId);
-
-                // Dữ liệu xe nằm trong response.data
                 if (response.code === 'MSG000000') {
                     setRatingInfo(response.data);
                 }
             } catch (error) {
                 console.error("Lỗi khi tải rating:", error);
-                // Có thể không cần báo lỗi, chỉ cần không hiển thị
                 setRatingInfo(null);
             } finally {
                 setRatingLoading(false);
@@ -336,7 +315,6 @@ const CarDetail = () => {
         };
 
         fetchRatingData();
-
     }, [carId]);
 
     const fetchReviews = useCallback(async (reset = false) => {
@@ -344,8 +322,7 @@ const CarDetail = () => {
         setReviewsLoading(true);
         try {
             const pageToFetch = reset ? 0 : reviewsPage;
-            const response = await getReviewsByVehicle(carId, pageToFetch, 5); // Lấy 5 review mỗi lần
-
+            const response = await getReviewsByVehicle(carId, pageToFetch, 5);
             if (response.code === "MSG000000" && response.data) {
                 const newReviews = response.data.content;
                 setReviews(prev => reset ? newReviews : [...prev, ...newReviews]);
@@ -379,12 +356,11 @@ const CarDetail = () => {
             const response = await createReview(reviewData);
             if (response.code === 'MSG000000') {
                 toast.success('Cảm ơn bạn đã gửi đánh giá!');
-                // Reset form và tải lại trang đầu tiên của review
                 setNewRating(0);
                 setNewComment('');
                 setBookingIdForReview('');
-                setReviewsPage(0); // Reset page để fetchReviews(true) gọi đúng trang
-                fetchReviews(true); // reset = true
+                setReviewsPage(0);
+                fetchReviews(true);
             } else {
                 toast.error(response.message || 'Có lỗi xảy ra khi gửi đánh giá.');
             }
@@ -410,9 +386,12 @@ const CarDetail = () => {
         }
     };
 
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponCodeInput('');
+        setCouponError('');
+    };
 
-
-    // Các hàm render loading, error, ... giữ nguyên
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -462,18 +441,6 @@ const CarDetail = () => {
         );
     }
 
-
-    const handleRemoveCoupon = () => {
-        // 1. Xóa thông tin coupon đã áp dụng khỏi state
-        setAppliedCoupon(null);
-
-        // 2. Xóa mã coupon trong ô nhập liệu
-        setCouponCodeInput('');
-
-        // 3. Xóa bất kỳ thông báo lỗi nào liên quan đến coupon
-        setCouponError('');
-    };
-
     return (
         <div className="min-h-screen bg-gray-100">
             <Header logOut={logOut} handleChangePassword={handleChangePassword} customer={customer} />
@@ -489,7 +456,6 @@ const CarDetail = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-6">
-                        {/* ... (Phần thông tin xe) ... */}
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 transition-all duration-200 hover:shadow-xl">
                                 <h2 className="text-2xl font-bold text-gray-900 mb-6 border-b pb-3 flex items-center gap-2">
@@ -497,7 +463,6 @@ const CarDetail = () => {
                                     Thông tin xe
                                 </h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {/* Left: Image Gallery and Basic Info */}
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-2 gap-3">
                                             {car.imageUrl?.split(',').map((img, index) => (
@@ -516,9 +481,9 @@ const CarDetail = () => {
                                                     />
                                                     {index === 3 && car.imageUrl.split(',').length > 4 && (
                                                         <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center rounded-lg transition-opacity duration-200">
-                <span className="text-white font-semibold text-sm">
-                  +{car.imageUrl.split(',').length - 4}
-                </span>
+                                                            <span className="text-white font-semibold text-sm">
+                                                                +{car.imageUrl.split(',').length - 4}
+                                                            </span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -532,7 +497,6 @@ const CarDetail = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    {/* Right: Detailed Information */}
                                     <div className="space-y-4">
                                         <div className="flex items-start gap-3">
                                             <MapPin className="w-5 h-5 text-blue-600 mt-1" />
@@ -568,9 +532,7 @@ const CarDetail = () => {
                                                 <p className="font-medium text-gray-800">
                                                     {car.gearBox === 'AUTOMATIC' ? 'Tự động' :
                                                         car.gearBox === 'MANUAL' ? 'Số sàn' :
-                                                            car.gearBox === 'MANUAL CLUTCH' ? 'Côn tay' :
-                                                                car.gearBox === 'SCOOTER' ? 'Tay ga' :
-                                                                    car.gearBox || 'N/A'}
+                                                            car.gearBox || 'N/A'}
                                                 </p>
                                             </div>
                                         </div>
@@ -583,10 +545,9 @@ const CarDetail = () => {
                                         </div>
                                     </div>
                                 </div>
-                            </div>                        </div>
+                            </div>
+                        </div>
 
-
-                        {/* ... (Phần điều khoản) ... */}
                         <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 transition-all duration-200 hover:shadow-xl">
                             <h2 className="text-2xl font-bold text-gray-900 mb-6 border-b pb-3 flex items-center gap-2">
                                 <FileText className="w-6 h-6 text-blue-600" />
@@ -628,24 +589,41 @@ const CarDetail = () => {
                             </ul>
                         </div>
 
-                        {/* --- PHẦN ĐÁNH GIÁ MỚI --- */}
                         <div className="bg-white rounded-lg shadow p-6">
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Đánh giá từ khách hàng</h2>
                             {customer && (
                                 <form onSubmit={handleSubmitReview} className="mb-8 p-4 border rounded-lg">
                                     <h3 className="font-semibold text-lg mb-3">Để lại đánh giá của bạn</h3>
-
                                     <div className="flex items-center mb-4">
                                         <span className="mr-4 text-gray-700">Đánh giá:</span>
                                         <div className="flex">
                                             {[...Array(5)].map((_, index) => {
                                                 const ratingValue = index + 1;
-                                                return <Star key={ratingValue} className={`w-6 h-6 cursor-pointer transition-colors ${ratingValue <= (hoverRating || newRating) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" onClick={() => setNewRating(ratingValue)} onMouseEnter={() => setHoverRating(ratingValue)} onMouseLeave={() => setHoverRating(0)} />;
+                                                return (
+                                                    <Star
+                                                        key={ratingValue}
+                                                        className={`w-6 h-6 cursor-pointer transition-colors ${ratingValue <= (hoverRating || newRating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                        fill="currentColor"
+                                                        onClick={() => setNewRating(ratingValue)}
+                                                        onMouseEnter={() => setHoverRating(ratingValue)}
+                                                        onMouseLeave={() => setHoverRating(0)}
+                                                    />
+                                                );
                                             })}
                                         </div>
                                     </div>
-                                    <textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Hãy chia sẻ cảm nhận của bạn..." className="w-full p-2 border border-gray-300 rounded-md" rows="3" />
-                                    <button type="submit" disabled={isSubmittingReview} className="mt-4 px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 disabled:bg-gray-400">
+                                    <textarea
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        placeholder="Hãy chia sẻ cảm nhận của bạn..."
+                                        className="w-full p-2 border border-gray-300 rounded-md"
+                                        rows="3"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmittingReview}
+                                        className="mt-4 px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+                                    >
                                         {isSubmittingReview ? 'Đang gửi...' : 'Gửi đánh giá'}
                                     </button>
                                 </form>
@@ -654,14 +632,22 @@ const CarDetail = () => {
                             <div className="space-y-6">
                                 {reviews.map(review => (
                                     <div key={review.id} className="flex items-start space-x-4 border-b pb-4 last:border-b-0">
-                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0"><User className="w-6 h-6 text-gray-500" /></div>
+                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+                                            <User className="w-6 h-6 text-gray-500" />
+                                        </div>
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between">
                                                 <p className="font-semibold text-gray-800">Người dùng ẩn danh</p>
                                                 <p className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString('vi-VN')}</p>
                                             </div>
                                             <div className="flex items-center my-1">
-                                                {[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor"/>)}
+                                                {[...Array(5)].map((_, i) => (
+                                                    <Star
+                                                        key={i}
+                                                        className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                        fill="currentColor"
+                                                    />
+                                                ))}
                                             </div>
                                             <p className="text-gray-600 text-sm">{review.comment}</p>
                                         </div>
@@ -671,7 +657,11 @@ const CarDetail = () => {
                                 {!reviewsLoading && reviews.length === 0 && <p className="text-center text-gray-500">Chưa có đánh giá nào cho xe này.</p>}
                                 {hasMoreReviews && !reviewsLoading && (
                                     <div className="text-center mt-6">
-                                        <button onClick={() => fetchReviews(false)} className="text-red-600 font-semibold hover:underline disabled:text-gray-400" disabled={reviewsLoading}>
+                                        <button
+                                            onClick={() => fetchReviews(false)}
+                                            className="text-red-600 font-semibold hover:underline disabled:text-gray-400"
+                                            disabled={reviewsLoading}
+                                        >
                                             Tải thêm bình luận
                                         </button>
                                     </div>
@@ -680,11 +670,7 @@ const CarDetail = () => {
                         </div>
                     </div>
 
-
-                    {/* --- CỘT BÊN PHẢI (THANH TOÁN) --- */}
                     <div className="lg:col-span-1 space-y-6">
-
-                        {/* ... (Phần thời gian thuê) ... */}
                         <div className="bg-white rounded-lg shadow p-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">Thời gian thuê</h2>
                             <div className="space-y-4">
@@ -918,7 +904,6 @@ const CarDetail = () => {
                             </div>
                         </div>
 
-                        {/* ... (Phần thanh toán) ... */}
                         <div className="bg-white rounded-lg shadow p-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">Thanh toán đơn thuê xe</h2>
                             <div className="space-y-3 text-sm text-gray-700">
@@ -987,10 +972,8 @@ const CarDetail = () => {
                                     <span>Thành tiền</span>
                                     <span>{calculatedSubtotal.toLocaleString()}đ</span>
                                 </div>
-
                             </div>
                         </div>
-
 
                         <button
                             onClick={handleBookNow}
@@ -1001,6 +984,113 @@ const CarDetail = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Terms Agreement Modal */}
+            {showTermsModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b">
+                            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                                <FileText className="w-6 h-6 text-blue-600" />
+                                Hợp đồng thuê xe
+                            </h2>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div className="space-y-2">
+                                <h3 className="text-lg font-semibold text-gray-800">Thông tin hợp đồng</h3>
+                                <p className="text-sm text-gray-600">
+                                    Hợp đồng này được lập giữa <span className="font-medium">Công ty Cho thuê xe ABC</span> (Bên cho thuê) và
+                                    <span className="font-medium"> {customer?.username || 'Khách hàng'}</span> (Bên thuê) cho việc thuê xe dưới đây:
+                                </p>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <p className="text-gray-500">Loại xe</p>
+                                        <p className="font-medium">{car.vehicleName || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Biển số</p>
+                                        <p className="font-medium">{car.liecensePlate || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Thời gian thuê</p>
+                                        <p className="font-medium">
+                                            Từ {pickupDate} {pickupTime} đến {rentalType === 'day' ? returnDate : pickupDate} {returnTime}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500">Tổng chi phí</p>
+                                        <p className="font-medium">{calculatedSubtotal.toLocaleString()} VNĐ</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h3 className="text-lg font-semibold text-gray-800">Điều khoản hợp đồng</h3>
+                                <ul className="space-y-2 text-sm text-gray-700">
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                                        <span>Bên thuê cam kết sử dụng xe đúng mục đích và tuân thủ mọi quy định giao thông.</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                                        <span>Bên thuê chịu trách nhiệm bồi thường thiệt hại nếu xe bị hư hỏng do lỗi sử dụng.</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                                        <span>Phí phạt trả xe muộn: {OVERTIME_FEE_PER_HOUR.toLocaleString()} VNĐ/giờ.</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                                        <span>Bên cho thuê có quyền thu hồi xe nếu phát hiện vi phạm hợp đồng.</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                                        <span>Đặt cọc 30% tổng chi phí thuê, hoàn trả khi trả xe đúng quy định.</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h3 className="text-lg font-semibold text-gray-800">Cam kết của các bên</h3>
+                                <p className="text-sm text-gray-600">
+                                    Cả hai bên cam kết thực hiện đúng các điều khoản trong hợp đồng này. Mọi tranh chấp sẽ được giải quyết thông qua thương lượng hoặc tại tòa án có thẩm quyền.
+                                </p>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="termsAgree"
+                                    checked={termsAgreed}
+                                    onChange={() => setTermsAgreed(!termsAgreed)}
+                                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                                />
+                                <label htmlFor="termsAgree" className="text-sm text-gray-700">
+                                    Tôi đã đọc và đồng ý với các điều khoản của hợp đồng thuê xe.
+                                </label>
+                            </div>
+                        </div>
+                        <div className="p-6 border-t flex justify-end gap-4">
+                            <button
+                                onClick={() => {
+                                    setShowTermsModal(false);
+                                    setTermsAgreed(false);
+                                }}
+                                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handleConfirmBooking}
+                                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                disabled={!termsAgreed}
+                            >
+                                Xác nhận đặt xe
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
