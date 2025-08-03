@@ -7,7 +7,7 @@ import {
     getBrands,
     getCategories,
     approveVehicle,
-    rejectVehicle
+    rejectVehicle, getVehiclesByUser
 } from '../service/authentication.js';
 import {
     Car,
@@ -162,7 +162,7 @@ const VehicleListForStaff = () => {
         setLoading(true);
         setError('');
         try {
-            const response = await getVehicles(pageNumber, pageSize, filterParams);
+            const response = await getVehiclesByUser(pageNumber, pageSize, filterParams);
             const data = response.data;
             if (data.httpStatus === 200) {
                 setVehicles(data.data.content || []);
