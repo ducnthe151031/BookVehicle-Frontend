@@ -65,6 +65,32 @@ export const getVehicles = async (page, size, filters = {}) => {
     }
 };
 
+export const getVehiclesByUser = async (page, size, filters = {}) => {
+    try {
+        const params = {
+            page,
+            size,
+            brands: filters.brands || undefined,
+            categories: filters.categories || undefined,
+            vehicleName: filters.vehicleName || undefined,
+            startDate: filters.startDate || undefined,
+            endDate: filters.endDate || undefined,
+            status: filters.status || undefined,
+            fuelType: filters.fuelType || undefined,
+
+        };
+        return await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/listByUser`,
+            {
+                ...getAuthConfig(),
+                params: params,
+            }
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
 export const getVehiclesIsApproved = async (page, size, filters = {}) => {
     try {
         const params = {
@@ -555,3 +581,32 @@ export const payLateFee = async (id) => {
         throw e;
     }
 };
+
+
+// Get list of users
+export const getUserList = async () => {
+    try {
+        const response = await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/user-list`,
+            getAuthConfig()
+        );
+        return response;
+    } catch (e) {
+        throw e;
+    }
+};
+
+// Create a new user
+export const createUser = async (userData) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/user-list`,
+            userData,
+            getAuthConfig()
+        );
+        return response;
+    } catch (e) {
+        throw e;
+    }
+};
+
