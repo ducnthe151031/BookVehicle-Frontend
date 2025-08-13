@@ -27,6 +27,8 @@ import Header from "../Header.jsx";
 import { toast } from "react-toastify";
 import { FaCar, FaMotorcycle } from "react-icons/fa";
 
+import Chatbot from "./Test/ChatBot.jsx";
+
 const Home = () => {
     const { customer, logOut } = useAuth();
     const navigate = useNavigate();
@@ -407,6 +409,7 @@ const Home = () => {
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             <Header logOut={logOut} handleChangePassword={handleChangePassword} customer={customer} />
+            <Chatbot/>
             <div className="max-w-7xl mx-auto px-4 pt-24 pb-12">
                 {/* Search and Filter Section */}
                 <div className="bg-white rounded-xl shadow-lg p-6 mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
