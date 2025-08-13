@@ -21,11 +21,13 @@ const Profile = () => {
         phoneNumber: '',
         address: '',
         fullName: '',
+        avartarUrl: '', // Add avatar field
         citizenIdCardUrl: '', // Will hold Base64 for new file, or filename for existing
         driverLicenseUrl: '', // Will hold Base64 for new file, or filename for existing
     });
 
     // State for temporary image preview URLs (for newly selected files)
+    const [tempAvatarPreviewUrl, setTempAvatarPreviewUrl] = useState(null);
     const [tempCccdPreviewUrl, setTempCccdPreviewUrl] = useState(null);
     const [tempLicensePreviewUrl, setTempLicensePreviewUrl] = useState(null);
 
@@ -65,6 +67,7 @@ const Profile = () => {
                         phoneNumber: data.data.phoneNumber || '',
                         address: data.data.address || '',
                         fullName: data.data.fullName || '',
+                        avartarUrl: data.data.avartarUrl || '', // Load avatar filename
                         citizenIdCardUrl: data.data.citizenIdCardUrl || '', // Will be a filename (e.g., "abc.png")
                         driverLicenseUrl: data.data.driverLicenseUrl || '', // Will be a filename (e.g., "xyz.png")
                     });
@@ -91,11 +94,14 @@ const Profile = () => {
                 phoneNumber: profile.phoneNumber || '',
                 address: profile.address || '',
                 fullName: profile.fullName || '',
+                avartarUrl: profile.avartarUrl || '', // Load avatar filename
                 citizenIdCardUrl: profile.citizenIdCardUrl || '', // Load existing filename
                 driverLicenseUrl: profile.driverLicenseUrl || '', // Load existing filename
             });
         }
         // Clear any temporary preview URLs when entering edit mode, to show current saved files
+        if (tempAvatarPreviewUrl) URL.revokeObjectURL(tempAvatarPreviewUrl);
+        setTempAvatarPreviewUrl(null);
         if (tempCccdPreviewUrl) URL.revokeObjectURL(tempCccdPreviewUrl);
         setTempCccdPreviewUrl(null);
         if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
@@ -120,7 +126,10 @@ const Profile = () => {
             reader.readAsDataURL(file); // Read the file as a Data URL (Base64)
 
             // Create a temporary URL for image preview
-            if (fieldName === 'citizenIdCardUrl') {
+            if (fieldName === 'avartarUrl') {
+                if (tempAvatarPreviewUrl) URL.revokeObjectURL(tempAvatarPreviewUrl); // Clean up old preview URL
+                setTempAvatarPreviewUrl(URL.createObjectURL(file));
+            } else if (fieldName === 'citizenIdCardUrl') {
                 if (tempCccdPreviewUrl) URL.revokeObjectURL(tempCccdPreviewUrl); // Clean up old preview URL
                 setTempCccdPreviewUrl(URL.createObjectURL(file));
             } else if (fieldName === 'driverLicenseUrl') {
@@ -130,7 +139,10 @@ const Profile = () => {
         } else {
             // If file input is cleared
             setFormData(prev => ({ ...prev, [fieldName]: '' }));
-            if (fieldName === 'citizenIdCardUrl' && tempCccdPreviewUrl) {
+            if (fieldName === 'avartarUrl' && tempAvatarPreviewUrl) {
+                URL.revokeObjectURL(tempAvatarPreviewUrl);
+                setTempAvatarPreviewUrl(null);
+            } else if (fieldName === 'citizenIdCardUrl' && tempCccdPreviewUrl) {
                 URL.revokeObjectURL(tempCccdPreviewUrl);
                 setTempCccdPreviewUrl(null);
             } else if (fieldName === 'driverLicenseUrl' && tempLicensePreviewUrl) {
@@ -156,10 +168,13 @@ const Profile = () => {
                     phoneNumber: response.data.phoneNumber || '',
                     address: response.data.address || '',
                     fullName: response.data.fullName || '',
+                    avartarUrl: response.data.avartarUrl || '', // Update avatar
                     citizenIdCardUrl: response.data.citizenIdCardUrl || '',
                     driverLicenseUrl: response.data.driverLicenseUrl || '',
                 });
                 setIsEditing(false);
+                if (tempAvatarPreviewUrl) URL.revokeObjectURL(tempAvatarPreviewUrl);
+                setTempAvatarPreviewUrl(null);
                 if (tempCccdPreviewUrl) URL.revokeObjectURL(tempCccdPreviewUrl);
                 setTempCccdPreviewUrl(null);
                 if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
@@ -198,11 +213,14 @@ const Profile = () => {
                 phoneNumber: profile.phoneNumber || '',
                 address: profile.address || '',
                 fullName: profile.fullName || '',
+                avartarUrl: profile.avartarUrl || '', // Reset avatar
                 citizenIdCardUrl: profile.citizenIdCardUrl || '',
                 driverLicenseUrl: profile.driverLicenseUrl || '',
             });
         }
         // Clean up any unsaved temporary preview URLs
+        if (tempAvatarPreviewUrl) URL.revokeObjectURL(tempAvatarPreviewUrl);
+        setTempAvatarPreviewUrl(null);
         if (tempCccdPreviewUrl) URL.revokeObjectURL(tempCccdPreviewUrl);
         setTempCccdPreviewUrl(null);
         if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
@@ -249,10 +267,20 @@ const Profile = () => {
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center space-x-4">
                             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                                {profile.avatarUrl ? (
-                                    <img src={profile.avatarUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                                {isEditing ? (
+                                    tempAvatarPreviewUrl ? (
+                                        <img src={tempAvatarPreviewUrl} alt="Avatar Preview" className="w-full h-full rounded-full object-cover" />
+                                    ) : profile.avartarUrl ? (
+                                        <img src={getFullImageUrl(profile.avartarUrl)} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                                    ) : (
+                                        <User className="w-8 h-8 text-gray-400" />
+                                    )
                                 ) : (
-                                    <User className="w-8 h-8 text-gray-400" />
+                                    profile.avartarUrl ? (
+                                        <img src={getFullImageUrl(profile.avartarUrl)} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                                    ) : (
+                                        <User className="w-8 h-8 text-gray-400" />
+                                    )
                                 )}
                             </div>
                             <div>
