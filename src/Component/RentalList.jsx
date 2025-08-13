@@ -286,13 +286,7 @@ const RentalList = () => {
                                                             Xác nhận đã trả xe
                                                         </button>
                                                     )}
-                                                    {!rental?.lateFeePaid && rental.deliveryStatus === 'DELIVERED'&& (
-                                                        <span
-                                                            className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded font-medium"
-                                                        >
-      Chưa thanh toán phí muộn
-    </span>
-                                                    )}
+                                                   
                                                 </td>
                                             </tr>
                                         );
