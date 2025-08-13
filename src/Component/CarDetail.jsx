@@ -999,7 +999,7 @@ const CarDetail = () => {
                             <div className="space-y-2">
                                 <h3 className="text-lg font-semibold text-gray-800">Thông tin hợp đồng</h3>
                                 <p className="text-sm text-gray-600">
-                                    Hợp đồng này được lập giữa <span className="font-medium">Công ty Cho thuê xe ABC</span> (Bên cho thuê) và
+                                    Hợp đồng này được lập giữa <span className="font-medium">Công ty Cho thuê xe PVRS</span> (Bên cho thuê) và
                                     <span className="font-medium"> {customer?.username || 'Khách hàng'}</span> (Bên thuê) cho việc thuê xe dưới đây:
                                 </p>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
