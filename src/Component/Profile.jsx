@@ -13,6 +13,7 @@ const Profile = () => {
     const [error, setError] = useState(null);
     const { customer, logOut } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
+    const [tempAvatarPreviewUrl, setTempAvatarPreviewUrl] = useState(null);
 
     // State for form data, including Base64 strings for new files or existing filenames
     const [formData, setFormData] = useState({
@@ -21,7 +22,8 @@ const Profile = () => {
         address: '',
         fullName: '',
         citizenIdCardUrl: '', // Will hold Base64 for new file, or filename for existing
-        driverLicenseUrl: '', // Will hold Base64 for new file, or filename for existing
+        driverLicenseUrl: '',
+        avartarUrl: '',// Will hold Base64 for new file, or filename for existing
     });
 
     // State for temporary image preview URLs (for newly selected files)
@@ -64,8 +66,9 @@ const Profile = () => {
                         phoneNumber: data.data.phoneNumber || '',
                         address: data.data.address || '',
                         fullName: data.data.fullName || '',
-                        citizenIdCardUrl: data.data.citizenIdCardUrl || '', // Will be a filename (e.g., "abc.png")
-                        driverLicenseUrl: data.data.driverLicenseUrl || '', // Will be a filename (e.g., "xyz.png")
+                        avartarUrl: data.data.avartarUrl || '', // Load avatar filename
+                        citizenIdCardUrl: data.data.citizenIdCardUrl || '',
+                        driverLicenseUrl: data.data.driverLicenseUrl || '',
                     });
                 } else {
                     setError('Không thể tải thông tin hồ sơ.');
@@ -90,20 +93,54 @@ const Profile = () => {
                 phoneNumber: profile.phoneNumber || '',
                 address: profile.address || '',
                 fullName: profile.fullName || '',
-                citizenIdCardUrl: profile.citizenIdCardUrl || '', // Load existing filename
-                driverLicenseUrl: profile.driverLicenseUrl || '', // Load existing filename
+                avartarUrl: profile.avartarUrl || '', // Load avatar filename
+                citizenIdCardUrl: profile.citizenIdCardUrl || '',
+                driverLicenseUrl: profile.driverLicenseUrl || '',
             });
         }
         // Clear any temporary preview URLs when entering edit mode, to show current saved files
+        if (tempAvatarPreviewUrl) URL.revokeObjectURL(tempAvatarPreviewUrl);
+        setTempAvatarPreviewUrl(null);
         if (tempCccdPreviewUrl) URL.revokeObjectURL(tempCccdPreviewUrl);
         setTempCccdPreviewUrl(null);
         if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
         setTempLicensePreviewUrl(null);
     };
 
+    const handleAvatarChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64String = reader.result.split(',')[1];
+                setFormData(prev => ({ ...prev, avartarUrl: base64String }));
+            };
+            reader.readAsDataURL(file);
+            if (tempAvatarPreviewUrl) URL.revokeObjectURL(tempAvatarPreviewUrl);
+            setTempAvatarPreviewUrl(URL.createObjectURL(file));
+        } else {
+            setFormData(prev => ({ ...prev, avartarUrl: '' }));
+            if (tempAvatarPreviewUrl) {
+                URL.revokeObjectURL(tempAvatarPreviewUrl);
+                setTempAvatarPreviewUrl(null);
+            }
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+
+        if (name === "phoneNumber") {
+            // Chỉ cho phép số, giới hạn 10 ký tự
+            if (/^\d*$/.test(value) && value.length <= 10) {
+                // Validate bắt đầu bằng 0 và có 9 hoặc 10 số
+                if (value === "" || /^0\d{0,9}$/.test(value)) {
+                    setFormData(prev => ({ ...prev, [name]: value }));
+                }
+            }
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     // Handler for file input changes (reads file as Base64 and creates preview URL)
@@ -142,12 +179,18 @@ const Profile = () => {
     // Update the handleSubmit function in Profile.jsx
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // Validate số điện thoại trước khi gửi
+        if (!/^0\d{8,9}$/.test(formData.phoneNumber)) {
+            toast.error("Số điện thoại phải bắt đầu bằng 0 và có 9 hoặc 10 số!", {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
         setLoading(true);
         setError(null);
-
         try {
             const response = await updateProfile(formData);
-
             if (response.httpStatus === 200) {
                 setProfile(response.data);
                 setFormData({
@@ -155,15 +198,17 @@ const Profile = () => {
                     phoneNumber: response.data.phoneNumber || '',
                     address: response.data.address || '',
                     fullName: response.data.fullName || '',
+                    avartarUrl: response.data.avartarUrl || '',
                     citizenIdCardUrl: response.data.citizenIdCardUrl || '',
                     driverLicenseUrl: response.data.driverLicenseUrl || '',
                 });
                 setIsEditing(false);
+                if (tempAvatarPreviewUrl) URL.revokeObjectURL(tempAvatarPreviewUrl);
+                setTempAvatarPreviewUrl(null);
                 if (tempCccdPreviewUrl) URL.revokeObjectURL(tempCccdPreviewUrl);
                 setTempCccdPreviewUrl(null);
                 if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
                 setTempLicensePreviewUrl(null);
-                // Replace alert with toast notification
                 toast.success('Cập nhật hồ sơ thành công!', {
                     position: "top-right",
                     autoClose: 3000,
@@ -197,11 +242,14 @@ const Profile = () => {
                 phoneNumber: profile.phoneNumber || '',
                 address: profile.address || '',
                 fullName: profile.fullName || '',
+                avartarUrl: profile.avartarUrl || '', // Reset avatar
                 citizenIdCardUrl: profile.citizenIdCardUrl || '',
                 driverLicenseUrl: profile.driverLicenseUrl || '',
             });
         }
         // Clean up any unsaved temporary preview URLs
+        if (tempAvatarPreviewUrl) URL.revokeObjectURL(tempAvatarPreviewUrl);
+        setTempAvatarPreviewUrl(null);
         if (tempCccdPreviewUrl) URL.revokeObjectURL(tempCccdPreviewUrl);
         setTempCccdPreviewUrl(null);
         if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
@@ -248,11 +296,40 @@ const Profile = () => {
                     {/* Profile Header */}
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center space-x-4">
-                            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                                {profile.avatarUrl ? (
-                                    <img src={profile.avatarUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                            <div className="relative w-20 h-20 bg-gray-200 rounded-full overflow-hidden">
+                                {isEditing ? (
+                                    tempAvatarPreviewUrl ? (
+                                        <img src={tempAvatarPreviewUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
+                                    ) : formData.avartarUrl && formData.avartarUrl.length > 50 ? (
+                                        <img src={"data:image/*;base64," + formData.avartarUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
+                                    ) : profile.avartarUrl ? (
+                                        <img src={`http://localhost:8080/v1/user/images/${profile.avartarUrl}`} alt="Avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <img src="/default-avatar.png" alt="Avatar" className="w-full h-full object-cover" />
+                                    )
                                 ) : (
-                                    <User className="w-8 h-8 text-gray-400" />
+                                    profile.avartarUrl ? (
+                                        <img src={`http://localhost:8080/v1/user/images/${profile.avartarUrl}`} alt="Avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <img src="/default-avatar.png" alt="Avatar" className="w-full h-full object-cover" />
+                                    )
+                                )}
+                                {isEditing && (
+                                    <>
+                                        <input
+                                            type="file"
+                                            id="avatarFile"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={handleAvatarChange}
+                                        />
+                                        <label
+                                            htmlFor="avatarFile"
+                                            className="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white text-xs text-center py-1 cursor-pointer"
+                                        >
+                                            Thay đổi
+                                        </label>
+                                    </>
                                 )}
                             </div>
                             <div>
@@ -294,6 +371,7 @@ const Profile = () => {
                             <div className="space-y-2 text-sm text-gray-600">
                                 {isEditing ? (
                                     <>
+                                        {/* Họ và tên */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700">Họ và tên</label>
                                             <input
@@ -304,16 +382,20 @@ const Profile = () => {
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             />
                                         </div>
+
+                                        {/* Email - readonly */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700">Email</label>
                                             <input
                                                 type="email"
                                                 name="email"
                                                 value={formData.email}
-                                                onChange={handleChange}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                readOnly // <-- Không cho chỉnh sửa
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
                                             />
                                         </div>
+
+                                        {/* Số điện thoại */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
                                             <input
@@ -324,6 +406,8 @@ const Profile = () => {
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             />
                                         </div>
+
+                                        {/* Địa chỉ */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
                                             <input
