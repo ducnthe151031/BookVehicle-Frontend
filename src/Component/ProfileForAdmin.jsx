@@ -110,7 +110,40 @@ const Profile = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        if (name === "phoneNumber") {
+            // Only allow digits, max 10 chars
+            if (/^\d*$/.test(value) && value.length <= 10) {
+                // Validate starts with 0 and 9 or 10 digits
+                if (value === "" || /^0\d{0,9}$/.test(value)) {
+                    setFormData(prev => ({ ...prev, [name]: value }));
+                }
+            }
+        } else if (name === "email") {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    // Avatar change handler (identical to Profile.jsx)
+    const handleAvatarChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64String = reader.result.split(',')[1];
+                setFormData(prev => ({ ...prev, avartarUrl: base64String }));
+            };
+            reader.readAsDataURL(file);
+            if (tempAvatarPreviewUrl) URL.revokeObjectURL(tempAvatarPreviewUrl);
+            setTempAvatarPreviewUrl(URL.createObjectURL(file));
+        } else {
+            setFormData(prev => ({ ...prev, avartarUrl: '' }));
+            if (tempAvatarPreviewUrl) {
+                URL.revokeObjectURL(tempAvatarPreviewUrl);
+                setTempAvatarPreviewUrl(null);
+            }
+        }
     };
 
     // Handler for file input changes (reads file as Base64 and creates preview URL)
@@ -155,12 +188,26 @@ const Profile = () => {
     // Update the handleSubmit function in Profile.jsx
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // Validate phone number
+        if (!/^0\d{8,9}$/.test(formData.phoneNumber)) {
+            toast.error("Số điện thoại phải bắt đầu bằng 0 và có 9 hoặc 10 số!", {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
+        // Validate email
+        if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+            toast.error("Email không hợp lệ!", {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
         setLoading(true);
         setError(null);
-
         try {
             const response = await updateProfile(formData);
-
             if (response.httpStatus === 200) {
                 setProfile(response.data);
                 setFormData({
@@ -168,7 +215,7 @@ const Profile = () => {
                     phoneNumber: response.data.phoneNumber || '',
                     address: response.data.address || '',
                     fullName: response.data.fullName || '',
-                    avartarUrl: response.data.avartarUrl || '', // Update avatar
+                    avartarUrl: response.data.avartarUrl || '',
                     citizenIdCardUrl: response.data.citizenIdCardUrl || '',
                     driverLicenseUrl: response.data.driverLicenseUrl || '',
                 });
@@ -179,7 +226,6 @@ const Profile = () => {
                 setTempCccdPreviewUrl(null);
                 if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
                 setTempLicensePreviewUrl(null);
-                // Replace alert with toast notification
                 toast.success('Cập nhật hồ sơ thành công!', {
                     position: "top-right",
                     autoClose: 3000,
@@ -260,16 +306,17 @@ const Profile = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="bg-white rounded-lg shadow-lg p-6">
                     {/* Profile Header */}
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center space-x-4">
-                            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden relative">
                                 {isEditing ? (
                                     tempAvatarPreviewUrl ? (
                                         <img src={tempAvatarPreviewUrl} alt="Avatar Preview" className="w-full h-full rounded-full object-cover" />
+                                    ) : formData.avartarUrl && formData.avartarUrl.length > 50 ? (
+                                        <img src={"data:image/*;base64," + formData.avartarUrl} alt="Avatar Preview" className="w-full h-full rounded-full object-cover" />
                                     ) : profile.avartarUrl ? (
                                         <img src={getFullImageUrl(profile.avartarUrl)} alt="Avatar" className="w-full h-full rounded-full object-cover" />
                                     ) : (
@@ -281,6 +328,23 @@ const Profile = () => {
                                     ) : (
                                         <User className="w-8 h-8 text-gray-400" />
                                     )
+                                )}
+                                {isEditing && (
+                                    <>
+                                        <input
+                                            type="file"
+                                            id="avatarFile"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={handleAvatarChange}
+                                        />
+                                        <label
+                                            htmlFor="avatarFile"
+                                            className="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white text-xs text-center py-1 cursor-pointer"
+                                        >
+                                            Thay đổi
+                                        </label>
+                                    </>
                                 )}
                             </div>
                             <div>
@@ -314,7 +378,6 @@ const Profile = () => {
                             </button>
                         )}
                     </div>
-
                     {/* Personal Info */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
@@ -338,8 +401,8 @@ const Profile = () => {
                                                 type="email"
                                                 name="email"
                                                 value={formData.email}
-                                                onChange={handleChange}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                readOnly
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
                                             />
                                         </div>
                                         <div>
@@ -506,3 +569,4 @@ const ProfileForAdmin = () => (
 );
 
 export default ProfileForAdmin;
+

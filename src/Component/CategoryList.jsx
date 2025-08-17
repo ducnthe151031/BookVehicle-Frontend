@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tag, Plus, Edit, Trash2, X, Search, RefreshCw } from 'lucide-react';
+import { Tag, Plus, Edit, Trash2, X, Search, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import CRMLayout from './Crm.jsx';
 import { getCategories, createCategory, updateCategory, deleteCategory } from "../service/authentication.js";
 import {FaCar} from "react-icons/fa";
@@ -70,14 +70,21 @@ const CategoryList = () => {
     const [currentCategory, setCurrentCategory] = useState(null);
     const [categoryName, setCategoryName] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-
-    const fetchCategories = async () => {
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [pageSize] = useState(5); // Số lượng loại xe mỗi trang
+    const fetchCategories = async (page = 1) => {
         setLoading(true);
         setError('');
         try {
             const data = await getCategories();
             if (data.httpStatus === 200) {
-                setCategories(data.data);
+                const uniqueCategories = [...new Map(data.data.map(item => [item.name, item])).values()];
+                const start = (page - 1) * pageSize;
+                const paginatedCategories = uniqueCategories.slice(start, start + pageSize);
+                setCategories(paginatedCategories);
+                setTotalPages(Math.ceil(uniqueCategories.length / pageSize) || 1);
+                setCurrentPage(page);
             } else {
                 setError(data.message || 'Lỗi khi tải danh sách loại xe');
             }
@@ -89,8 +96,8 @@ const CategoryList = () => {
     };
 
     useEffect(() => {
-        fetchCategories();
-    }, []);
+        fetchCategories(currentPage);
+    }, [currentPage]);
 
     // Modal Handlers
     const handleOpenModal = (mode, category = null) => {
@@ -122,7 +129,7 @@ const CategoryList = () => {
                 await createCategory({ name: categoryName });
             }
             handleCloseModal();
-            await fetchCategories();
+            await fetchCategories(currentPage);
         } catch (err) {
             setActionError(err.response?.data?.message || `Không thể ${modalMode === 'edit' ? 'cập nhật' : 'tạo'} loại xe.`);
         } finally {
@@ -144,6 +151,7 @@ const CategoryList = () => {
         setError('');
         try {
             await deleteCategory(categoryToDelete.id);
+            await fetchCategories(currentPage);
         } catch (err) {
             setCategories(originalCategories);
             setError(err.response?.data?.message || 'Không thể xóa loại xe.');
@@ -156,6 +164,12 @@ const CategoryList = () => {
     const filteredCategories = categories.filter(category =>
         category.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8 px-4">
@@ -233,6 +247,27 @@ const CategoryList = () => {
                                     ))}
                                     </tbody>
                                 </table>
+                                <div className="flex justify-between items-center mt-4 px-6 py-3 bg-gray-50">
+                                    <button
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                        className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:bg-gray-100 disabled:text-gray-400 hover:bg-gray-300"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                        Trước
+                                    </button>
+                                    <span className="text-sm text-gray-700">
+                                        Trang {currentPage} / {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                        className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:bg-gray-100 disabled:text-gray-400 hover:bg-gray-300"
+                                    >
+                                        Sau
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
                         ) : (
                             !error && <p className="text-center text-gray-500 py-10">Không tìm thấy loại xe nào.</p>

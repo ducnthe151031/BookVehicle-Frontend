@@ -25,8 +25,8 @@ const CarDetail = () => {
     const [rentalType, setRentalType] = useState('day');
     const [pickupDate, setPickupDate] = useState('');
     const [returnDate, setReturnDate] = useState('');
-    const [pickupTime, setPickupTime] = useState('09:00');
-    const [returnTime, setReturnTime] = useState('09:00');
+    const [pickupTime, setPickupTime] = useState('');
+    const [returnTime, setReturnTime] = useState('17:00'); // Default to 5:00 PM
     const [cccdFile, setCccdFile] = useState(null);
     const [licenseFile, setLicenseFile] = useState(null);
     const [couponCode, setCouponCode] = useState('');
@@ -44,13 +44,204 @@ const CarDetail = () => {
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [ratingInfo, setRatingInfo] = useState(null);
     const [ratingLoading, setRatingLoading] = useState(true);
-    // New state for terms modal
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [termsAgreed, setTermsAgreed] = useState(false);
 
     const SURCHARGE_AMOUNT = 0;
     const OVERTIME_FEE_PER_HOUR = 50000;
     const COUPON_DISCOUNT = 200000;
+
+    useEffect(() => {
+        const currentDateTime = new Date();
+        const currentHours = currentDateTime.getHours();
+        const currentMinutes = currentDateTime.getMinutes();
+        const isWithinOperatingHours = currentHours >= 9 && currentHours < 17;
+
+        let defaultPickupDate, defaultPickupTime, defaultReturnDate;
+
+        if (isWithinOperatingHours) {
+            // Current time is within 9:00 AM to 5:00 PM
+            defaultPickupDate = currentDateTime;
+            defaultPickupTime = `${currentHours.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
+        } else {
+            // Current time is outside 9:00 AM to 5:00 PM, set to next day at 9:00 AM
+            defaultPickupDate = new Date(currentDateTime);
+            defaultPickupDate.setDate(currentDateTime.getDate() + 1);
+            defaultPickupTime = '09:00';
+        }
+
+        defaultReturnDate = new Date(defaultPickupDate);
+        if (rentalType === 'day') {
+            defaultReturnDate.setDate(defaultPickupDate.getDate() + 2);
+        }
+
+        setPickupDate(defaultPickupDate.toISOString().split('T')[0]);
+        setPickupTime(defaultPickupTime);
+        setReturnDate(defaultReturnDate.toISOString().split('T')[0]);
+    }, [rentalType]);
+
+    // Validate time to ensure it's within 9:00 AM to 5:00 PM
+    const isValidTime = (time) => {
+        const [hours, minutes] = time.split(':').map(Number);
+        return hours >= 9 && hours <= 17 && minutes >= 0;
+    };
+
+    // Update pickup time input
+    const handlePickupTimeChange = (e) => {
+        const newPickupTime = e.target.value;
+        const currentDateTime = new Date();
+        const currentDate = currentDateTime.toISOString().split('T')[0];
+        const currentTime = currentDateTime.toTimeString().slice(0, 5);
+
+        // Check if time is within 9:00 AM to 5:00 PM
+        if (!isValidTime(newPickupTime)) {
+            toast.error('Giờ nhận xe phải từ 9:00 sáng đến 5:00 chiều.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        // If pickup date is today, ensure time is not before current time
+        if (pickupDate === currentDate && newPickupTime < currentTime) {
+            toast.error('Giờ nhận xe phải từ thời điểm hiện tại trở đi.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        setPickupTime(newPickupTime);
+        const startDateTime = new Date(`${pickupDate}T${newPickupTime}`);
+        const endDateTime = new Date(`${returnDate}T${returnTime}`);
+
+        if (rentalType === 'day') {
+            if (endDateTime <= startDateTime || (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
+                const nextDay = new Date(startDateTime);
+                nextDay.setDate(startDateTime.getDate() + 2);
+                setReturnDate(nextDay.toISOString().split('T')[0]);
+                setReturnTime(newPickupTime <= '17:00' ? newPickupTime : '17:00');
+            }
+        } else {
+            if (endDateTime <= startDateTime || !isValidTime(returnTime)) {
+                const nextHour = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5);
+                setReturnTime(nextHour <= '17:00' ? nextHour : '17:00');
+            }
+        }
+    };
+
+    // Update return time input
+    const handleReturnTimeChange = (e) => {
+        const newReturnTime = e.target.value;
+        const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
+        const endDateTime = new Date(`${rentalType === 'day' ? returnDate : pickupDate}T${newReturnTime}`);
+
+        // Check if time is within 9:00 AM to 5:00 PM
+        if (!isValidTime(newReturnTime)) {
+            toast.error('Giờ trả xe phải từ 9:00 sáng đến 5:00 chiều.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        if (endDateTime <= startDateTime) {
+            toast.error('Giờ trả phải sau giờ nhận.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        if (rentalType === 'day' && (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
+            toast.error('Thời gian thuê theo ngày phải lớn hơn 24 giờ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        if (rentalType === 'hour') {
+            const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
+            if (diffHours < 3) {
+                toast.error('Thời gian thuê tối thiểu là 3 giờ.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+            if (diffHours > 24) {
+                toast.error('Thời gian thuê theo giờ không được vượt quá 24 giờ.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+        }
+
+        setReturnTime(newReturnTime);
+    };
+
+    // Update pickup date input
+    const handlePickupDateChange = (e) => {
+        const newDate = e.target.value;
+        const currentDateTime = new Date();
+        const currentDate = currentDateTime.toISOString().split('T')[0];
+        const currentTime = currentDateTime.toTimeString().slice(0, 5);
+        const currentHours = currentDateTime.getHours();
+        const isWithinOperatingHours = currentHours >= 9 && currentHours < 17;
+
+        // Prevent selecting past dates
+        if (newDate < currentDate) {
+            toast.error('Ngày nhận xe phải từ hôm nay trở đi.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        // If selecting current date, check if within operating hours
+        if (newDate === currentDate && !isWithinOperatingHours) {
+            toast.error('Không thể chọn ngày hiện tại vì hiện tại ngoài giờ hoạt động (9:00 sáng - 5:00 chiều). Chọn ngày mai.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            const nextDay = new Date(currentDateTime);
+            nextDay.setDate(currentDateTime.getDate() + 1);
+            setPickupDate(nextDay.toISOString().split('T')[0]);
+            setPickupTime('09:00');
+            const defaultReturnDate = new Date(nextDay);
+            if (rentalType === 'day') {
+                defaultReturnDate.setDate(nextDay.getDate() + 2);
+            }
+            setReturnDate(defaultReturnDate.toISOString().split('T')[0]);
+            setReturnTime('17:00');
+            return;
+        }
+
+        setPickupDate(newDate);
+        const startDateTime = new Date(`${newDate}T${pickupTime}`);
+        const endDateTime = new Date(`${returnDate}T${returnTime}`);
+
+        if (rentalType === 'day') {
+            if (endDateTime <= startDateTime || (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
+                const nextDay = new Date(startDateTime);
+                nextDay.setDate(startDateTime.getDate() + 2);
+                setReturnDate(nextDay.toISOString().split('T')[0]);
+                setReturnTime(pickupTime <= '17:00' ? pickupTime : '17:00');
+            }
+        } else {
+            if (endDateTime <= startDateTime || !isValidTime(returnTime)) {
+                const nextHour = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5);
+                setReturnTime(nextHour <= '17:00' ? nextHour : '17:00');
+            }
+        }
+
+        // If selecting current date, adjust pickup time if before current time
+        if (newDate === currentDate && pickupTime < currentTime) {
+            setPickupTime(currentTime);
+        }
+    };
 
     const getFullImageUrl = (filename) => {
         if (!filename) return null;
@@ -105,8 +296,8 @@ const CarDetail = () => {
             hours = Math.ceil(diffTime / (1000 * 60 * 60));
             if (hours > 24) {
                 hours = 24;
-                const limitedEndTime = new Date(startDateTime.getTime() + 24 * 60 * 60 * 1000);
-                setReturnTime(limitedEndTime.toTimeString().slice(0, 5));
+                const limitedEndTime = new Date(startDateTime.getTime() + 24 * 60 * 60 * 1000).toTimeString().slice(0, 5);
+                setReturnTime(limitedEndTime <= '17:00' ? limitedEndTime : '17:00');
             }
 
             totalPrice = car.pricePerHour * hours;
@@ -146,15 +337,6 @@ const CarDetail = () => {
             setCouponLoading(false);
         }
     };
-
-    useEffect(() => {
-        const currentDate = new Date();
-        const defaultPickup = new Date(currentDate);
-        const defaultReturn = new Date(currentDate);
-        defaultReturn.setDate(currentDate.getDate() + 2);
-        setPickupDate(defaultPickup.toISOString().split('T')[0]);
-        setReturnDate(defaultReturn.toISOString().split('T')[0]);
-    }, []);
 
     useEffect(() => {
         const fetchCarDetails = async () => {
@@ -197,6 +379,14 @@ const CarDetail = () => {
 
         if (startDateTime.toString() === 'Invalid Date' || endDateTime.toString() === 'Invalid Date') {
             toast.error('Ngày hoặc giờ không hợp lệ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        if (!isValidTime(pickupTime) || !isValidTime(returnTime)) {
+            toast.error('Giờ nhận và trả xe phải từ 9:00 sáng đến 5:00 chiều.', {
                 position: 'top-right',
                 autoClose: 3000,
             });
@@ -689,7 +879,7 @@ const CarDetail = () => {
                                                 const nextDay = new Date(startDateTime);
                                                 nextDay.setDate(startDateTime.getDate() + 2);
                                                 setReturnDate(nextDay.toISOString().split('T')[0]);
-                                                setReturnTime(pickupTime);
+                                                setReturnTime(pickupTime <= '17:00' ? pickupTime : '17:00');
                                             }
                                         }}
                                         className="mr-2 text-red-600 focus:ring-red-500"
@@ -703,18 +893,7 @@ const CarDetail = () => {
                                             type="date"
                                             id="pickupDate"
                                             value={pickupDate}
-                                            onChange={(e) => {
-                                                const newDate = e.target.value;
-                                                setPickupDate(newDate);
-                                                const startDateTime = new Date(`${newDate}T${pickupTime}`);
-                                                const endDateTime = new Date(`${returnDate}T${returnTime}`);
-                                                if (endDateTime <= startDateTime || (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
-                                                    const nextDay = new Date(startDateTime);
-                                                    nextDay.setDate(startDateTime.getDate() + 2);
-                                                    setReturnDate(nextDay.toISOString().split('T')[0]);
-                                                    setReturnTime(pickupTime);
-                                                }
-                                            }}
+                                            onChange={handlePickupDateChange}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
                                             disabled={rentalType === 'hour'}
                                             min={new Date().toISOString().split('T')[0]}
@@ -750,21 +929,11 @@ const CarDetail = () => {
                                             type="time"
                                             id="pickupTimeDay"
                                             value={pickupTime}
-                                            onChange={(e) => {
-                                                const newPickupTime = e.target.value;
-                                                setPickupTime(newPickupTime);
-                                                const startDateTime = new Date(`${pickupDate}T${newPickupTime}`);
-                                                const endDateTime = new Date(`${returnDate}T${returnTime}`);
-                                                if (endDateTime <= startDateTime || (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
-                                                    const nextHour = new Date(startDateTime.getTime() + 25 * 60 * 60 * 1000).toTimeString().slice(0, 5);
-                                                    setReturnTime(nextHour);
-                                                    const nextDay = new Date(startDateTime);
-                                                    nextDay.setDate(startDateTime.getDate() + 2);
-                                                    setReturnDate(nextDay.toISOString().split('T')[0]);
-                                                }
-                                            }}
+                                            onChange={handlePickupTimeChange}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
                                             disabled={rentalType === 'hour'}
+                                            min={pickupDate === new Date().toISOString().split('T')[0] ? new Date().toTimeString().slice(0, 5) : '09:00'}
+                                            max="17:00"
                                         />
                                     </div>
                                     <div>
@@ -773,28 +942,11 @@ const CarDetail = () => {
                                             type="time"
                                             id="returnTimeDay"
                                             value={returnTime}
-                                            onChange={(e) => {
-                                                const newReturnTime = e.target.value;
-                                                const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
-                                                const endDateTime = new Date(`${returnDate}T${newReturnTime}`);
-                                                if (endDateTime <= startDateTime) {
-                                                    toast.error('Giờ trả phải sau giờ nhận.', {
-                                                        position: "top-right",
-                                                        autoClose: 3000,
-                                                    });
-                                                    return;
-                                                }
-                                                if ((endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
-                                                    toast.error('Thời gian thuê theo ngày phải lớn hơn 24 giờ.', {
-                                                        position: "top-right",
-                                                        autoClose: 3000,
-                                                    });
-                                                    return;
-                                                }
-                                                setReturnTime(newReturnTime);
-                                            }}
+                                            onChange={handleReturnTimeChange}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
                                             disabled={rentalType === 'hour'}
+                                            min="09:00"
+                                            max="17:00"
                                         />
                                     </div>
                                 </div>
@@ -810,9 +962,9 @@ const CarDetail = () => {
                                             setRentalType('hour');
                                             const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
                                             const endDateTime = new Date(`${pickupDate}T${returnTime}`);
-                                            if (endDateTime <= startDateTime) {
+                                            if (endDateTime <= startDateTime || !isValidTime(returnTime)) {
                                                 const nextHour = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5);
-                                                setReturnTime(nextHour);
+                                                setReturnTime(nextHour <= '17:00' ? nextHour : '17:00');
                                             }
                                         }}
                                         className="mr-2 text-red-600 focus:ring-red-500"
@@ -826,16 +978,7 @@ const CarDetail = () => {
                                             type="date"
                                             id="pickupDateHour"
                                             value={pickupDate}
-                                            onChange={(e) => {
-                                                const newDate = e.target.value;
-                                                setPickupDate(newDate);
-                                                const startDateTime = new Date(`${newDate}T${pickupTime}`);
-                                                const endDateTime = new Date(`${newDate}T${returnTime}`);
-                                                if (endDateTime <= startDateTime) {
-                                                    const nextHour = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5);
-                                                    setReturnTime(nextHour);
-                                                }
-                                            }}
+                                            onChange={handlePickupDateChange}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
                                             disabled={rentalType === 'day'}
                                             min={new Date().toISOString().split('T')[0]}
@@ -848,18 +991,11 @@ const CarDetail = () => {
                                             type="time"
                                             id="pickupTimeHour"
                                             value={pickupTime}
-                                            onChange={(e) => {
-                                                const newPickupTime = e.target.value;
-                                                setPickupTime(newPickupTime);
-                                                const startDateTime = new Date(`${pickupDate}T${newPickupTime}`);
-                                                const endDateTime = new Date(`${pickupDate}T${returnTime}`);
-                                                if (endDateTime <= startDateTime) {
-                                                    const nextHour = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5);
-                                                    setReturnTime(nextHour);
-                                                }
-                                            }}
+                                            onChange={handlePickupTimeChange}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
                                             disabled={rentalType === 'day'}
+                                            min={pickupDate === new Date().toISOString().split('T')[0] ? new Date().toTimeString().slice(0, 5) : '09:00'}
+                                            max="17:00"
                                         />
                                     </div>
                                     <div>
@@ -868,36 +1004,11 @@ const CarDetail = () => {
                                             type="time"
                                             id="returnTimeHour"
                                             value={returnTime}
-                                            onChange={(e) => {
-                                                const newReturnTime = e.target.value;
-                                                const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
-                                                const endDateTime = new Date(`${pickupDate}T${newReturnTime}`);
-                                                if (endDateTime <= startDateTime) {
-                                                    toast.error('Giờ kết thúc phải sau giờ bắt đầu.', {
-                                                        position: "top-right",
-                                                        autoClose: 3000,
-                                                    });
-                                                    return;
-                                                }
-                                                const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
-                                                if (diffHours < 3) {
-                                                    toast.error('Thời gian thuê tối thiểu là 3 giờ.', {
-                                                        position: "top-right",
-                                                        autoClose: 3000,
-                                                    });
-                                                    return;
-                                                }
-                                                if (diffHours > 24) {
-                                                    toast.error('Thời gian thuê theo giờ không được vượt quá 24 giờ.', {
-                                                        position: "top-right",
-                                                        autoClose: 3000,
-                                                    });
-                                                    return;
-                                                }
-                                                setReturnTime(newReturnTime);
-                                            }}
+                                            onChange={handleReturnTimeChange}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
                                             disabled={rentalType === 'day'}
+                                            min="09:00"
+                                            max="17:00"
                                         />
                                     </div>
                                 </div>
@@ -919,7 +1030,7 @@ const CarDetail = () => {
                                     <span>
                                         {totalPrice.toLocaleString()}đ
                                         {days > 0 && ` x ${days} ngày`}
-                                        {hours > 0 && ` ${days > 0 ? '+' : ''} ${hours} giờ`}
+                                        {hours > 0 && ` ${days > 0 ? '+' : ''} / ${hours} giờ`}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
@@ -1037,15 +1148,11 @@ const CarDetail = () => {
                                     </li>
                                     <li className="flex items-start gap-2">
                                         <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
-                                        <span>Phí phạt trả xe muộn: {OVERTIME_FEE_PER_HOUR.toLocaleString()} VNĐ/giờ.</span>
+                                        <span>Nếu bạn trả xe muộn, phí phạt sẽ được tính theo công thức: (giá thuê theo giờ) × (số giờ muộn)</span>
                                     </li>
                                     <li className="flex items-start gap-2">
                                         <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
                                         <span>Bên cho thuê có quyền thu hồi xe nếu phát hiện vi phạm hợp đồng.</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
-                                        <span>Đặt cọc 30% tổng chi phí thuê, hoàn trả khi trả xe đúng quy định.</span>
                                     </li>
                                 </ul>
                             </div>
@@ -1093,7 +1200,6 @@ const CarDetail = () => {
             )}
         </div>
     );
-
 };
 
 export default CarDetail;

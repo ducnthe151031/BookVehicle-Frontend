@@ -180,6 +180,9 @@ const Home = () => {
     useEffect(() => {
         let currentFiltered = [...vehicles];
 
+        // Filter out vehicles with status MAINTENANCE
+        currentFiltered = currentFiltered.filter(vehicle => vehicle.status !== 'MAINTENANCE');
+
         // Frontend filter: Vehicle Type (Ô tô / Xe máy)
         if (filters.vehicleTypeId) {
             currentFiltered = currentFiltered.filter(vehicle =>

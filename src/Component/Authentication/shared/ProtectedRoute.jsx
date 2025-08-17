@@ -9,7 +9,7 @@ const ProtectedRoute = ({ children }) => {
 
     useEffect(() => {
         if (!isCustomerAuthenticated()) {
-            navigate("/login")
+            navigate("/landing")
         }
         // else{
         // //     navigate("/home")

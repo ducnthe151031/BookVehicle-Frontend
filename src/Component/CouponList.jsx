@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CouponForm from './CouponForm.jsx';
 import { getCoupons, deleteCoupon } from '../service/authentication.js';
-import { Tag, DollarSign, X, Plus, Edit, Trash2 } from 'lucide-react';
+import { Tag, DollarSign, X, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import Drawer from 'react-modern-drawer';
 import 'react-modern-drawer/dist/index.css';
 import { toast } from "react-toastify";
@@ -14,14 +14,14 @@ const CouponList = () => {
     const [error, setError] = useState('');
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
-    const pageSize = 10;
+    const [pageSize] = useState(5);
     const [showAddForm, setShowAddForm] = useState(false);
     const [selectedCoupon, setSelectedCoupon] = useState(null);
     const [editMode, setEditMode] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [couponToDelete, setCouponToDelete] = useState(null);
 
-    const fetchCoupons = async (pageNumber) => {
+    const fetchCoupons = async (pageNumber = 0) => {
         setLoading(true);
         setError('');
         try {
@@ -29,9 +29,11 @@ const CouponList = () => {
             const data = response.data;
             if (data.httpStatus === 200) {
                 const allCoupons = data.data || [];
-                setTotalPages(Math.ceil(allCoupons.length / pageSize));
-                const paginatedCoupons = allCoupons.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize);
+                const start = pageNumber * pageSize;
+                const paginatedCoupons = allCoupons.slice(start, start + pageSize);
                 setCoupons(paginatedCoupons);
+                setTotalPages(Math.ceil(allCoupons.length / pageSize) || 1);
+                setPage(pageNumber);
             } else {
                 setError(data.message || 'Lỗi khi tải danh sách coupon');
             }
@@ -70,7 +72,7 @@ const CouponList = () => {
         setLoading(true);
         try {
             await deleteCoupon(couponToDelete.id);
-            fetchCoupons(page);
+            await fetchCoupons(page);
             toast.success('Xóa coupon thành công!');
         } catch (err) {
             const errorMessage = err.response?.data?.message || 'Không thể xóa coupon';
@@ -172,18 +174,27 @@ const CouponList = () => {
                                     ))}
                                     </tbody>
                                 </table>
-                            </div>
-                        )}
-
-                        {totalPages > 1 && (
-                            <div className="mt-4 flex justify-center items-center gap-2">
-                                <button onClick={() => handlePageChange(page - 1)} disabled={page === 0} className="px-3 py-1 bg-blue-600 text-white text-sm rounded disabled:bg-gray-300 hover:bg-blue-700 transition-all">
-                                    Trang trước
-                                </button>
-                                <span className="text-sm text-gray-600">Trang {page + 1} / {totalPages}</span>
-                                <button onClick={() => handlePageChange(page + 1)} disabled={page === totalPages - 1} className="px-3 py-1 bg-blue-600 text-white text-sm rounded disabled:bg-gray-300 hover:bg-blue-700 transition-all">
-                                    Trang sau
-                                </button>
+                                <div className="flex justify-between items-center mt-4 px-4 py-3 bg-gray-50">
+                                    <button
+                                        onClick={() => handlePageChange(page - 1)}
+                                        disabled={page === 0}
+                                        className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:bg-gray-100 disabled:text-gray-400 hover:bg-gray-300"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                        Trước
+                                    </button>
+                                    <span className="text-sm text-gray-700">
+                                        Trang {page + 1} / {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => handlePageChange(page + 1)}
+                                        disabled={page === totalPages - 1}
+                                        className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:bg-gray-100 disabled:text-gray-400 hover:bg-gray-300"
+                                    >
+                                        Sau
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>

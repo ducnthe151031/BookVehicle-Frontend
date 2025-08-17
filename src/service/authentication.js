@@ -108,7 +108,6 @@ export const getVehiclesIsApproved = async (page, size, filters = {}) => {
         return await axios.get(
             `${import.meta.env.VITE_API_BASE_URL}/v1/admin/list/approved`,
             {
-                ...getAuthConfig(),
                 params: params,
             }
         );
@@ -122,7 +121,6 @@ export const getBrands = async () => {
     try {
         const response = await axios.get(
             'http://localhost:8080/v1/admin/brand-list', // Replace with VITE_API_BASE_URL if applicable
-            getAuthConfig()
         );
         return response.data;
     } catch (e) {
@@ -205,7 +203,6 @@ export const getCategories = async () => {
     try {
         const response = await axios.get(
             'http://localhost:8080/v1/admin/category-list',
-            getAuthConfig()
         );
         return response.data;
     } catch (e) {
@@ -605,6 +602,19 @@ export const createUser = async (userData) => {
             getAuthConfig()
         );
         return response;
+    } catch (e) {
+        throw e;
+    }
+};
+
+export const updateUser = async (id,userData) => {
+    try {
+        return await axios.put(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/user-list/${id}`,
+            userData,
+            getAuthConfig()
+        );
+
     } catch (e) {
         throw e;
     }
