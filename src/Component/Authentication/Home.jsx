@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
-import '../../css/Home.css';
 import {
     Search,
     Lock,
@@ -22,166 +21,15 @@ import {
     Crosshair,
     CarFront,
     Factory,
-    MessageSquare,
-    ChevronRight,
-    ChevronUp
+    MessageCircle
 } from 'lucide-react';
 import { getBrands, getCategories, getVehicles, getVehiclesIsApproved } from "../../service/authentication.js";
 import Header from "../Header.jsx";
 import { toast } from "react-toastify";
 import { FaCar, FaMotorcycle } from "react-icons/fa";
-
+import Test from "../Test.jsx";
 import Chatbot from "./Test/ChatBot.jsx";
 // FAQ data
-const faqData = [
-    {
-        question: "Làm thế nào để đặt xe?",
-        answer: "Bạn có thể đặt xe bằng cách chọn ngày nhận và trả xe, sau đó nhấn nút 'Tìm kiếm xe'. Khi danh sách xe hiển thị, nhấn vào nút 'Xem chi tiết' để xem thông tin và tiến hành đặt xe."
-    },
-    {
-        question: "Tôi cần những giấy tờ gì để thuê xe?",
-        answer: "Bạn cần có CMND/CCCD hiệu lực, bằng lái xe phù hợp với loại xe thuê, và thẻ tín dụng hoặc tài khoản ngân hàng để thanh toán."
-    },
-    {
-        question: "Chính sách hủy đặt xe như thế nào?",
-        answer: "Bạn có thể hủy đặt xe miễn phí trước 24 giờ so với thời điểm nhận xe. Nếu hủy trong vòng 24 giờ, có thể áp dụng phí hủy tùy theo chính sách của chủ xe."
-    },
-
-    {
-        question: "Tôi có thể gia hạn thời gian thuê xe không?",
-        answer: "Có, bạn có thể gia hạn thời gian thuê xe bằng cách liên hệ với chúng tôi qua hotline hoặc trong ứng dụng trước khi thời gian thuê xe kết thúc. Phí gia hạn sẽ được tính theo giá hiện tại của xe."
-    },
-    {
-        question: "Có những hãng xe nào trên nền tảng?",
-        answer: "Chúng tôi hợp tác với nhiều hãng xe uy tín như Toyota, Honda, Ford, Hyundai, Kia, Mercedes-Benz, BMW, VinFast và nhiều hãng xe khác. Bạn có thể lọc theo hãng xe trong phần tìm kiếm."
-    },
-    {
-        question: "Làm sao để lọc xe theo hãng?",
-        answer: "Bạn nhấn vào nút 'Hãng xe' trên thanh công cụ tìm kiếm, sau đó chọn hãng xe bạn quan tâm. Hệ thống sẽ tự động lọc và hiển thị các xe thuộc hãng đó."
-    },
-    {
-        question: "Có những loại xe nào trên nền tảng?",
-        answer: "Chúng tôi có đa dạng các loại xe bao gồm: xe sedan, xe SUV, xe bán tải, xe thể thao, xe gia đình, xe máy và xe tải nhỏ. Mỗi loại xe phù hợp với nhu cầu sử dụng khác nhau."
-    },
-    {
-        question: "Làm sao để tìm xe theo loại?",
-        answer: "Bạn nhấn vào nút 'Loại xe' trên thanh công cụ tìm kiếm, sau đó chọn loại xe bạn cần (ví dụ: ô tô, xe máy). Hệ thống sẽ lọc và hiển thị các xe thuộc loại bạn đã chọn."
-    },
-    {
-        question: "Tôi có thể thuê xe máy không?",
-        answer: "Có, chúng tôi cung cấp cả dịch vụ thuê xe máy. Bạn có thể lọc loại xe là 'Xe máy' để xem các phương tiện có sẵn. Lưu ý bạn cần có bằng lái xe máy hợp lệ để thuê."
-    },
-    {
-        question: "Xe đời mới nhất trên nền tảng là năm bao nhiêu?",
-        answer: "Chúng tôi thường xuyên cập nhật các dòng xe mới nhất từ các hãng xe. Hiện có những xe đời 2023-2024 tùy theo hãng và model. Bạn có thể kiểm tra năm sản xuất trong thông tin chi tiết của từng xe."
-    },
-
-    {
-        question: "Có những loại nhiên liệu nào cho các xe?",
-        answer: "Các xe trên nền tảng sử dụng đa dạng nhiên liệu: xăng, dầu diesel, điện và hybrid. Bạn có thể lọc xe theo loại nhiên liệu trong phần tìm kiếm nếu có yêu cầu cụ thể."
-    }
-];
-
-const FAQItem = ({ question, answer, isOpen, onClick }) => {
-    return (
-        <div className="mb-3 border-b border-gray-200 pb-3 last:border-b-0 last:pb-0">
-            <button
-                onClick={onClick}
-                className="w-full text-left flex justify-between items-center focus:outline-none"
-                aria-expanded={isOpen}
-            >
-                <span className="font-medium text-gray-800">{question}</span>
-                {isOpen ? (
-                    <ChevronUp className="w-5 h-5 text-gray-500" />
-                ) : (
-                    <ChevronRight className="w-5 h-5 text-gray-500" />
-                )}
-            </button>
-            {isOpen && (
-                <div className="mt-2 text-gray-600 pl-2 animate-fadeIn">
-                    {answer}
-                </div>
-            )}
-        </div>
-    );
-};
-
-const FAQChatbox = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [activeIndex, setActiveIndex] = useState(null);
-    const [isLoadingAnswer, setIsLoadingAnswer] = useState(false);
-
-    const toggleChatbox = () => {
-        setIsOpen(!isOpen);
-        if (isOpen) {
-            setActiveIndex(null);
-        }
-    };
-
-    const handleQuestionClick = (index) => {
-        if (activeIndex === index) {
-            setActiveIndex(null);
-            return;
-        }
-
-        setIsLoadingAnswer(true);
-        setActiveIndex(index);
-
-        // Simulate loading delay
-        setTimeout(() => {
-            setIsLoadingAnswer(false);
-        }, 800);
-    };
-
-    return (
-        <div className="fixed bottom-6 right-6 z-50">
-            {isOpen ? (
-                <div className="w-80 bg-white rounded-t-xl shadow-xl border border-gray-200 overflow-hidden">
-                    <div className="bg-blue-600 text-white p-4 flex justify-between items-center">
-                        <h3 className="font-semibold text-lg">Hỗ trợ & FAQ</h3>
-                        <button
-                            onClick={toggleChatbox}
-                            className="text-white hover:text-gray-200 focus:outline-none"
-                            aria-label="Đóng chatbox"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-                    <div className="p-4 max-h-96 overflow-y-auto">
-                        {faqData.map((item, index) => (
-                            <FAQItem
-                                key={index}
-                                question={item.question}
-                                answer={
-                                    activeIndex === index && isLoadingAnswer ? (
-                                        <div className="flex space-x-1 py-2">
-                                            <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></div>
-                                            <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                                            <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-                                        </div>
-                                    ) : (
-                                        item.answer
-                                    )
-                                }
-                                isOpen={activeIndex === index && !isLoadingAnswer}
-                                onClick={() => handleQuestionClick(index)}
-                            />
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <button
-                    onClick={toggleChatbox}
-                    className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center"
-                    aria-label="Mở chatbox hỗ trợ"
-                >
-                    <MessageSquare className="w-6 h-6" />
-                </button>
-            )}
-        </div>
-    );
-};
-
 const Home = () => {
     const { customer, logOut } = useAuth();
     const navigate = useNavigate();
@@ -195,7 +43,7 @@ const Home = () => {
     const [error, setError] = useState(null);
     const [isSearching, setIsSearching] = useState(false);
     const [isLocating, setIsLocating] = useState(false);
-
+    const [isChatOpen, setIsChatOpen] = useState(false);
     // Filter states
     const [filters, setFilters] = useState({
         vehicleName: '',
@@ -560,7 +408,7 @@ const Home = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans">
+        <div className="min-h-screen bg-gray-50 font-sans relative">
             <Header logOut={logOut} handleChangePassword={handleChangePassword} customer={customer} />
             <Chatbot/>
             <div className="max-w-7xl mx-auto px-4 pt-24 pb-12">
@@ -677,8 +525,8 @@ const Home = () => {
                         >
                             <Factory className="w-5 h-5" />
                             <span>
-                Hãng xe{filters.brands && `: ${brands.find(b => b.id === filters.brands)?.name || filters.brands}`}
-              </span>
+                                Hãng xe{filters.brands && `: ${brands.find(b => b.id === filters.brands)?.name || filters.brands}`}
+                            </span>
                             <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${showBrandDropdown ? 'rotate-180' : ''}`} />
                         </button>
                         {showBrandDropdown && (
@@ -709,8 +557,8 @@ const Home = () => {
                         >
                             <FaCar className="w-5 h-5" />
                             <span>
-                Loại xe{filters.categories && `: ${categories.find(c => c.id === filters.categories)?.name || filters.categories}`}
-              </span>
+                                Loại xe{filters.categories && `: ${categories.find(c => c.id === filters.categories)?.name || filters.categories}`}
+                            </span>
                             <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
                         </button>
                         {showCategoryDropdown && (
@@ -741,8 +589,8 @@ const Home = () => {
                         >
                             <Fuel className="w-5 h-5" />
                             <span>
-                Nhiên liệu{filters.fuelType && `: ${fuelTypes.find(f => f.value === filters.fuelType)?.label || filters.fuelType}`}
-              </span>
+                                Nhiên liệu{filters.fuelType && `: ${fuelTypes.find(f => f.value === filters.fuelType)?.label || filters.fuelType}`}
+                            </span>
                             <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${showFuelDropdown ? 'rotate-180' : ''}`} />
                         </button>
                         {showFuelDropdown && (
@@ -773,8 +621,8 @@ const Home = () => {
                         >
                             <MapPin className="w-5 h-5" />
                             <span>
-                Khu vực{filters.location && `: ${filters.location}`}
-              </span>
+                                Khu vực{filters.location && `: ${filters.location}`}
+                            </span>
                             <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${showLocationDropdown ? 'rotate-180' : ''}`} />
                         </button>
                         {showLocationDropdown && (
@@ -839,12 +687,12 @@ const Home = () => {
                                         <div className="flex items-center">
                                             <Fuel className="w-4 h-4 mr-1 text-blue-500" />
                                             <span>
-                        {vehicle.fuelType === 'Gasoline' ? 'Xăng' :
-                            vehicle.fuelType === 'Diesel' ? 'Dầu' :
-                                vehicle.fuelType === 'Electric' ? 'Điện' :
-                                    vehicle.fuelType === 'Hybrid' ? 'Hybrid' :
-                                        vehicle.fuelType || 'N/A'}
-                      </span>
+                                                {vehicle.fuelType === 'Gasoline' ? 'Xăng' :
+                                                    vehicle.fuelType === 'Diesel' ? 'Dầu' :
+                                                        vehicle.fuelType === 'Electric' ? 'Điện' :
+                                                            vehicle.fuelType === 'Hybrid' ? 'Hybrid' :
+                                                                vehicle.fuelType || 'N/A'}
+                                            </span>
                                         </div>
                                         <div className="flex items-center">
                                             <Factory className="w-4 h-4 mr-1 text-blue-500" />
@@ -939,7 +787,22 @@ const Home = () => {
                     </div>
                 )}
             </div>
-            <FAQChatbox />
+
+            {/* Chat Toggle Button */}
+            <button
+                onClick={() => setIsChatOpen(!isChatOpen)}
+                className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-200 z-50"
+                aria-label={isChatOpen ? "Đóng chat" : "Mở chat"}
+            >
+                <MessageCircle className="w-6 h-6" />
+            </button>
+
+            {/* Chat Box */}
+            {isChatOpen && (
+                <div className="fixed bottom-20 right-6 w-full max-w-sm bg-white rounded-xl shadow-xl border border-gray-200 z-50">
+                    <Test />
+                </div>
+            )}
         </div>
     )
 };
