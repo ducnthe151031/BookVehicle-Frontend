@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {RefreshCw, Search, Plus, Edit, Trash2, X, Factory} from 'lucide-react';
 import CRMLayout from './Crm.jsx';
+import { RefreshCw, Search, Plus, Edit, Trash2, X, Factory, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getBrands, createBrand, updateBrand, deleteBrand } from '../service/authentication.js';
 
 // Reusable Modal Component for Brands
@@ -66,15 +66,24 @@ const BrandList = () => {
     const [brandName, setBrandName] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
     const [actionError, setActionError] = useState('');
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [brandToDelete, setBrandToDelete] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [pageSize] = useState(5); // Số lượng hãng xe mỗi trang
 
-    const fetchBrands = async () => {
+    const fetchBrands = async (page = 1) => {
         setLoading(true);
         setMessage('');
         try {
             const data = await getBrands();
             if (data.httpStatus === 200) {
                 const uniqueBrands = [...new Map(data.data.map(item => [item.name, item])).values()];
-                setBrands(uniqueBrands);
+                const start = (page - 1) * pageSize;
+                const paginatedBrands = uniqueBrands.slice(start, start + pageSize);
+                setBrands(paginatedBrands);
+                setTotalPages(Math.ceil(uniqueBrands.length / pageSize) || 1);
+                setCurrentPage(page);
             } else {
                 setMessage('Lỗi khi tải danh sách hãng xe.');
             }
@@ -84,12 +93,11 @@ const BrandList = () => {
             setLoading(false);
         }
     };
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [brandToDelete, setBrandToDelete] = useState(null);
+
 
     useEffect(() => {
-        fetchBrands();
-    }, []);
+        fetchBrands(currentPage);
+    }, [currentPage]);
 
     // Modal Handlers
     const handleOpenModal = (mode, brand = null) => {
@@ -119,7 +127,7 @@ const BrandList = () => {
                 await createBrand({ name: brandName });
             }
             handleCloseModal();
-            await fetchBrands();
+            await fetchBrands(currentPage);
         } catch (err) {
             setActionError(err.response?.data?.message || `Không thể ${modalMode === 'edit' ? 'cập nhật' : 'tạo'} hãng xe.`);
         } finally {
@@ -141,6 +149,7 @@ const BrandList = () => {
         setMessage('');
         try {
             await deleteBrand(brandToDelete.id);
+            await fetchBrands(currentPage);
         } catch (err) {
             setBrands(originalBrands); // Revert on error
             setMessage(err.response?.data?.message || 'Không thể xóa hãng xe.');
@@ -152,6 +161,15 @@ const BrandList = () => {
     const filteredBrands = brands.filter(brand =>
         brand.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    // ... (rest of the component remains unchanged)
+
 
     return (
         <CRMLayout>
@@ -181,7 +199,6 @@ const BrandList = () => {
                                     />
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                 </div>
-
                             </div>
 
 
@@ -215,6 +232,27 @@ const BrandList = () => {
                                             ))}
                                             </tbody>
                                         </table>
+                                        <div className="flex justify-between items-center mt-4 px-6 py-3 bg-gray-50">
+                                            <button
+                                                onClick={() => handlePageChange(currentPage - 1)}
+                                                disabled={currentPage === 1}
+                                                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:bg-gray-100 disabled:text-gray-400 hover:bg-gray-300"
+                                            >
+                                                <ChevronLeft className="w-5 h-5" />
+                                                Trước
+                                            </button>
+                                            <span className="text-sm text-gray-700">
+                                                Trang {currentPage} / {totalPages}
+                                            </span>
+                                            <button
+                                                onClick={() => handlePageChange(currentPage + 1)}
+                                                disabled={currentPage === totalPages}
+                                                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:bg-gray-100 disabled:text-gray-400 hover:bg-gray-300"
+                                            >
+                                                Sau
+                                                <ChevronRight className="w-5 h-5" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ) : (
                                     !message && <p className="text-center text-gray-500 py-10">Không tìm thấy hãng xe nào.</p>
