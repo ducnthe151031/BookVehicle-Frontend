@@ -177,10 +177,7 @@ const Home = () => {
     // Apply ALL filters (both frontend and backend-related) to the 'vehicles' data
     useEffect(() => {
         let currentFiltered = [...vehicles];
-
-        // Filter out vehicles with status MAINTENANCE
         currentFiltered = currentFiltered.filter(vehicle => vehicle.status !== 'MAINTENANCE');
-
         // Frontend filter: Vehicle Type (Ô tô / Xe máy)
         if (filters.vehicleTypeId) {
             currentFiltered = currentFiltered.filter(vehicle =>
@@ -787,8 +784,7 @@ const Home = () => {
                 )}
             </div>
         </div>
-
-    );
+    )
 };
 
 export default Home;
