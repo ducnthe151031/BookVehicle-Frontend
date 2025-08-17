@@ -26,11 +26,13 @@ import VehicleListForStaff from "./Component/VehicleListForStaff.jsx";
 import ProfileForAdmin from "./Component/ProfileForAdmin.jsx";
 import ChanPasswordForAdmin from "./Component/ChangePassWordForAdmin.jsx";
 import UserListPage from "./Component/User.jsx";
+import Test from "./Component/Test.jsx";
 
 function App() {
         return (
             <>
                     <Routes>
+                            <Route path="/test" element={<Test />} />
                             <Route path="/login" element={<LoginForm />} />
                             <Route path="/register" element={<RegisterForm />} />
                             <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
