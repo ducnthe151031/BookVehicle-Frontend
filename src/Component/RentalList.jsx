@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, DollarSign, User, Car, Check, X, CheckCircle, XCircle, Search, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import CRMLayout from './Crm.jsx';
 import {
@@ -18,7 +18,7 @@ const RentalList = () => {
     const [error, setError] = useState('');
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
-    const [pageSize] = useState(5); // Số lượng đơn thuê mỗi trang
+    const [pageSize] = useState(5);
     const [filters, setFilters] = useState({
         customerUsername: '',
         vehicleName: '',
@@ -33,35 +33,28 @@ const RentalList = () => {
         setLoading(true);
         setError('');
         try {
-            const data = await getRentals(pageNumber);
+            // Bước 1: Gọi API để lấy toàn bộ dữ liệu (hoặc dữ liệu đã lọc từ API nếu server hỗ trợ)
+            const data = await getRentals(); // Gọi API không kèm theo tham số page
+
             if (data.httpStatus === 200) {
                 const rentalsWithDetails = await Promise.all(data.data.content.map(async (rental) => {
                     const userResponse = await getUserProfile();
                     const carResponse = await getCarDetails(rental.vehicleId);
-                    // Tính toán rentType dựa trên chênh lệch thời gian
                     const startDate = new Date(rental.startDate);
                     const endDate = new Date(rental.endDate);
-                    const timeDiffMs = endDate - startDate; // Chênh lệch thời gian tính bằng mili giây
-                    const hoursDiff = timeDiffMs / (1000 * 60 * 60); // Chuyển sang giờ
-
-                    let rentType;
-                    const days = Math.floor(hoursDiff / 24); // Số ngày tròn
-                    const remainingHours = hoursDiff % 24; // Số giờ dư
-
-                    if (remainingHours === 0) {
-                        rentType = 'Thuê theo ngày';
-                    } else {
-                        rentType = `Thuê theo giờ`; // Tùy chỉnh với số giờ dư
-                    }
+                    const hoursDiff = (endDate - startDate) / (1000 * 60 * 60);
+                    const remainingHours = hoursDiff % 24;
+                    const rentType = remainingHours === 0 ? 'Thuê theo ngày' : `Thuê theo giờ`;
 
                     return {
                         ...rental,
                         customerUsername: userResponse.data?.username || rental.customerId,
                         vehicleName: carResponse.data?.vehicleName || rental.vehicleId,
-                        rentType: rentType, // Thêm rentType tính toán
+                        rentType: rentType,
                     };
                 }));
-                // Lọc danh sách dựa trên searchTerm
+
+                // Bước 2: Lọc danh sách đã lấy được từ API
                 const filteredRentals = rentalsWithDetails.filter(rental => {
                     return (
                         (filters.customerUsername === '' || rental.customerUsername.toLowerCase().includes(filters.customerUsername.toLowerCase())) &&
@@ -72,10 +65,21 @@ const RentalList = () => {
                     );
                 });
 
-                const start = pageNumber * pageSize;
-                const paginatedRentals = filteredRentals.slice(start, start + pageSize);
+                // Bước 3: Phân trang danh sách đã lọc
+                const newTotalPages = Math.ceil(filteredRentals.length / pageSize) || 1;
+                setTotalPages(newTotalPages);
+
+                // Kiểm tra nếu page hiện tại vượt quá tổng số trang mới, đặt lại về trang cuối cùng hợp lệ
+                const newPage = pageNumber >= newTotalPages ? newTotalPages - 1 : pageNumber;
+                if (newPage !== pageNumber) {
+                    setPage(newPage);
+                }
+
+                const start = newPage * pageSize;
+                const end = start + pageSize;
+                const paginatedRentals = filteredRentals.slice(start, end);
                 setRentals(paginatedRentals);
-                setTotalPages(Math.ceil(filteredRentals.length / pageSize) || 1);
+
             } else {
                 setError(data.message || 'Lỗi khi tải danh sách thuê xe');
             }
@@ -88,12 +92,11 @@ const RentalList = () => {
 
     useEffect(() => {
         fetchRentals(page);
-    }, [page, filters]); // Thêm searchTerm vào dependency để refetch khi thay đổi
+    }, [page, filters]);
 
     const handlePageChange = (newPage) => {
         if (newPage >= 0 && newPage < totalPages) {
             setPage(newPage);
-            fetchRentals(newPage);
         }
     };
 
@@ -106,7 +109,6 @@ const RentalList = () => {
     const handleApprove = async (bookingId) => {
         try {
             await approveBooking(bookingId);
-            // Refresh the list after approval
             fetchRentals(page);
         } catch (err) {
             setError(err.response?.data?.message || 'Không thể phê duyệt đơn');
@@ -116,20 +118,9 @@ const RentalList = () => {
     const handleReject = async (bookingId) => {
         try {
             await rejectBooking(bookingId);
-            // Refresh the list after approval
             fetchRentals(page);
         } catch (err) {
             setError(err.response?.data?.message || 'Không thể hủy đơn');
-        }
-    };
-
-
-    const formatDate = (dateString, isHourly) => {
-        const date = new Date(dateString);
-        if (isHourly) {
-            return date.toLocaleString('vi-VN', {dateStyle: 'short', timeStyle: 'short'});
-        } else {
-            return date.toLocaleString('vi-VN', {dateStyle: 'short'});
         }
     };
 
@@ -142,19 +133,25 @@ const RentalList = () => {
         }
     };
 
+    const formatDate = (dateString, isHourly) => {
+        const date = new Date(dateString);
+        if (isHourly) {
+            return date.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
+        } else {
+            return date.toLocaleString('vi-VN', { dateStyle: 'short' });
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-6 px-4">
             <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-6">
                     <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-full mb-3">
-                        <ClipboardList className="w-7 h-7 text-white"/>
+                        <ClipboardList className="w-7 h-7 text-white" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-1">Danh Sách Thuê Xe</h1>
                     <p className="text-gray-600 text-sm">Quản lý các đơn thuê xe</p>
                 </div>
-
-                {/* Thêm bộ lọc tìm kiếm */}
-
 
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
@@ -172,6 +169,7 @@ const RentalList = () => {
                             </button>
                         </div>
                     </div>
+
                     {showFilterForm && (
                         <div className="p-4 bg-gray-50 border-b">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -223,8 +221,7 @@ const RentalList = () => {
                             <div className="text-center text-gray-600 text-sm">Đang tải...</div>
                         )}
                         {error && (
-                            <div
-                                className="mb-3 p-2 rounded-lg text-center font-medium bg-red-50 border border-red-200 text-red-600 text-sm">
+                            <div className="mb-3 p-2 rounded-lg text-center font-medium bg-red-50 border border-red-200 text-red-600 text-sm">
                                 {error}
                             </div>
                         )}
@@ -256,40 +253,37 @@ const RentalList = () => {
                                             <tr key={rental.id} className="hover:bg-gray-50">
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     <div className="flex items-center gap-1">
-                                                        <User className="w-3 h-3 text-gray-500"/>
+                                                        <User className="w-3 h-3 text-gray-500" />
                                                         {rental.createdBy}
                                                     </div>
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     <div className="flex items-center gap-1">
-                                                        <Car className="w-3 h-3 text-gray-500"/>
+                                                        <Car className="w-3 h-3 text-gray-500" />
                                                         {rental.vehicleName}
                                                     </div>
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     <div className="flex items-center gap-1">
-                                                        <Calendar className="w-3 h-3 text-gray-500"/>
+                                                        <Calendar className="w-3 h-3 text-gray-500" />
                                                         {formatDate(rental.startDate, isHourly)}
                                                     </div>
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     <div className="flex items-center gap-1">
-                                                        <Calendar className="w-3 h-3 text-gray-500"/>
+                                                        <Calendar className="w-3 h-3 text-gray-500" />
                                                         {formatDate(rental.endDate, isHourly)}
                                                     </div>
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     <div className="flex items-center gap-1">
-                                                        <DollarSign className="w-3 h-3 text-gray-500"/>
+                                                        <DollarSign className="w-3 h-3 text-gray-500" />
                                                         {rental.totalPrice ? rental.totalPrice.toLocaleString('vi-VN') : 'N/A'} VNĐ
                                                     </div>
                                                 </td>
-
-
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     {rental.rentType}
                                                 </td>
-
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     {rental.deliveryStatus === 'READY_TO_PICK' ? 'Chờ lấy xe'
                                                         : rental.deliveryStatus === 'TRANSIT' ? 'Đang giao xe'
@@ -305,15 +299,11 @@ const RentalList = () => {
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     {rental?.late && rental?.lateFee ? (
-                                                        <>
-                                                            {rental.lateFee.toLocaleString('vi-VN')} VNĐ
-                                                        </>
+                                                        <>{rental.lateFee.toLocaleString('vi-VN')} VNĐ</>
                                                     ) : (
                                                         "-"
                                                     )}
                                                 </td>
-
-
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                     {showApproveButton && customer?.role === 'ROLE_OPERATOR' && (
                                                         <div className="flex gap-2">
@@ -339,7 +329,6 @@ const RentalList = () => {
                                                             Xác nhận đã trả xe
                                                         </button>
                                                     )}
-                                                   
                                                 </td>
                                             </tr>
                                         );
