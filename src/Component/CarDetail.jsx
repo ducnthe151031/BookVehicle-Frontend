@@ -57,17 +57,20 @@ const CarDetail = () => {
         const currentMinutes = currentDateTime.getMinutes();
         const isWithinOperatingHours = currentHours >= 9 && currentHours < 17;
 
-        let defaultPickupDate, defaultPickupTime, defaultReturnDate;
+        let defaultPickupDate, defaultPickupTime,defaultReturnTime, defaultReturnDate;
 
         if (isWithinOperatingHours) {
             // Current time is within 9:00 AM to 5:00 PM
             defaultPickupDate = currentDateTime;
             defaultPickupTime = `${currentHours.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
+            defaultReturnTime = `${currentHours.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
         } else {
             // Current time is outside 9:00 AM to 5:00 PM, set to next day at 9:00 AM
             defaultPickupDate = new Date(currentDateTime);
             defaultPickupDate.setDate(currentDateTime.getDate() + 1);
             defaultPickupTime = '09:00';
+            defaultReturnTime = "09:00";
+
         }
 
         defaultReturnDate = new Date(defaultPickupDate);
@@ -77,6 +80,7 @@ const CarDetail = () => {
 
         setPickupDate(defaultPickupDate.toISOString().split('T')[0]);
         setPickupTime(defaultPickupTime);
+        setReturnTime(defaultReturnTime);
         setReturnDate(defaultReturnDate.toISOString().split('T')[0]);
     }, [rentalType]);
 
