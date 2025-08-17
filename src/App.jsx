@@ -54,8 +54,8 @@ function App() {
                             <Route path="/vehicle/categories" element={<ProtectedRoute><CategoryList /></ProtectedRoute>} />
                             <Route path="/rentals" element={<ProtectedRoute><RentalList /></ProtectedRoute>} />
                             <Route path="/crm" element={<ProtectedRoute><CRMLayout /></ProtectedRoute>} />
-                            <Route path="/" element={<Navigate to="/login" replace />} />
-                            <Route path="*" element={<Navigate to="/login" replace />} />
+                            <Route path="/" element={<Navigate to="/landing" replace />} />
+                            <Route path="*" element={<Navigate to="/landing" replace />} />
                     </Routes>
 
                     {/* Global ToastContainer - Add this for all components to use */}
