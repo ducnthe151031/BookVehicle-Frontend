@@ -7,7 +7,8 @@ import {
     getBrands,
     getCategories,
     approveVehicle,
-    rejectVehicle
+    rejectVehicle,
+    updateVehicle
 } from '../service/authentication.js';
 import {
     Car,
@@ -43,7 +44,7 @@ const VehicleList = () => {
     const [error, setError] = useState('');
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
-    const pageSize = 10;
+    const pageSize = 100;
     const [brands, setBrands] = useState([]);
     const [categories, setCategories] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -1096,7 +1097,7 @@ const VehicleList = () => {
                                                 />
                                                 <DetailItem
                                                     icon={<Car className="w-5 h-5 text-blue-600" />}
-                                                    label="Lý do không phê duyệt"
+                                                    label="Lý do từ chối"
                                                     value={selectedDetail.reason || 'Không có lý do'}
                                                 />
                                                 <DetailItem
@@ -1235,7 +1236,7 @@ const VehicleList = () => {
                                                 />
                                                 <DetailItem
                                                     icon={<Car className="w-5 h-5 text-blue-600" />}
-                                                    label="Lý do không phê duyệt"
+                                                    label="Lý do từ chối"
                                                     value={selectedDetail.reason || 'Không có lý do'}
                                                 />
                                                 <DetailItem
