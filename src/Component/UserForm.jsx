@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createUser } from '../service/authentication.js';
+import {createUser, updateUser} from '../service/authentication.js';
 import { toast } from 'react-toastify';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -71,6 +71,7 @@ const UserForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                     onChange={handleChange}
                     className="w-full mt-1 p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
                     required
+                    disabled={isEditMode}
                     aria-label="Email"
                 />
             </div>
@@ -150,7 +151,7 @@ const UserForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                 >
                     <option value="USER">Người dùng</option>
                     <option value="OWNER">Chủ sở hữu</option>
-                    <option value="OPERATOR">Nhân viên</option>
+                    <option value="OPERATOR">Nhân viên giao xe</option>
                     <option value="ADMIN">Quản trị viên</option>
                 </select>
             </div>
