@@ -273,7 +273,14 @@ const Home = () => {
     };
 
     const handleBookVehicle = (vehicleId) => {
-        navigate(`/${vehicleId}`);
+        // Pass search filter date/time and rentalType to CarDetail
+        navigate(`/${vehicleId}`, {
+            state: {
+                pickupDate: filters.startDate,
+                returnDate: filters.endDate,
+                rentalType: 'day', // Default, since not present in filters
+            }
+        });
     };
 
     const getBrandName = (brandId) => {
@@ -808,3 +815,4 @@ const Home = () => {
 };
 
 export default Home;
+
