@@ -4,7 +4,7 @@ import {
     Car, Users, Fuel, ArrowLeft, MapPin, Star, CheckCircle, Info,
     Settings, Upload, Clock, Calendar, User, XCircle, Tag, FileText
 } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
     createReview, getCarDetails, getRating, getReviewsByVehicle, validateCoupon
 } from '../service/authentication.js';
@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 const CarDetail = () => {
     const { carId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [car, setCar] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -57,20 +58,17 @@ const CarDetail = () => {
         const currentMinutes = currentDateTime.getMinutes();
         const isWithinOperatingHours = currentHours >= 9 && currentHours < 17;
 
-        let defaultPickupDate, defaultPickupTime,defaultReturnTime, defaultReturnDate;
+        let defaultPickupDate, defaultPickupTime, defaultReturnDate;
 
         if (isWithinOperatingHours) {
             // Current time is within 9:00 AM to 5:00 PM
             defaultPickupDate = currentDateTime;
             defaultPickupTime = `${currentHours.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
-            defaultReturnTime = `${currentHours.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
         } else {
             // Current time is outside 9:00 AM to 5:00 PM, set to next day at 9:00 AM
             defaultPickupDate = new Date(currentDateTime);
             defaultPickupDate.setDate(currentDateTime.getDate() + 1);
             defaultPickupTime = '09:00';
-            defaultReturnTime = "09:00";
-
         }
 
         defaultReturnDate = new Date(defaultPickupDate);
@@ -80,7 +78,6 @@ const CarDetail = () => {
 
         setPickupDate(defaultPickupDate.toISOString().split('T')[0]);
         setPickupTime(defaultPickupTime);
-        setReturnTime(defaultReturnTime);
         setReturnDate(defaultReturnDate.toISOString().split('T')[0]);
     }, [rentalType]);
 
@@ -363,6 +360,35 @@ const CarDetail = () => {
         };
         fetchCarDetails();
     }, [carId]);
+
+    // Read initial date/time/rentalType from location.state if available
+    useEffect(() => {
+        let initialPickupDate = '';
+        let initialPickupTime = '';
+        let initialReturnDate = '';
+        let initialReturnTime = '';
+        let initialRentalType = 'day';
+        if (location.state) {
+            if (location.state.pickupDate) {
+                const pickup = new Date(location.state.pickupDate);
+                initialPickupDate = pickup.toISOString().split('T')[0];
+                initialPickupTime = pickup.toTimeString().slice(0, 5);
+            }
+            if (location.state.returnDate) {
+                const ret = new Date(location.state.returnDate);
+                initialReturnDate = ret.toISOString().split('T')[0];
+                initialReturnTime = ret.toTimeString().slice(0, 5);
+            }
+            if (location.state.rentalType) {
+                initialRentalType = location.state.rentalType;
+            }
+        }
+        setRentalType(initialRentalType);
+        if (initialPickupDate) setPickupDate(initialPickupDate);
+        if (initialPickupTime) setPickupTime(initialPickupTime);
+        if (initialReturnDate) setReturnDate(initialReturnDate);
+        if (initialReturnTime) setReturnTime(initialReturnTime);
+    }, []);
 
     const handleBookNow = () => {
         // Show terms modal instead of immediate booking
@@ -1034,7 +1060,7 @@ const CarDetail = () => {
                                     <span>
                                         {totalPrice.toLocaleString()}đ
                                         {days > 0 && ` x ${days} ngày`}
-                                        {hours > 0 && ` ${days > 0 ? '+' : ''} / ${hours} giờ`}
+                                        {hours > 0 && ` ${days > 0 ? '+' : ''} ${hours} giờ`}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
@@ -1114,7 +1140,7 @@ const CarDetail = () => {
                             <div className="space-y-2">
                                 <h3 className="text-lg font-semibold text-gray-800">Thông tin hợp đồng</h3>
                                 <p className="text-sm text-gray-600">
-                                    Hợp đồng này được lập giữa <span className="font-medium">Công ty Cho thuê xe PVRS</span> (Bên cho thuê) và
+                                    Hợp đồng này được lập giữa <span className="font-medium">Công ty Cho thuê xe ABC</span> (Bên cho thuê) và
                                     <span className="font-medium"> {customer?.username || 'Khách hàng'}</span> (Bên thuê) cho việc thuê xe dưới đây:
                                 </p>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -1207,3 +1233,4 @@ const CarDetail = () => {
 };
 
 export default CarDetail;
+
