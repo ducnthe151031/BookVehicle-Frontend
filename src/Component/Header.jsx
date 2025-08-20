@@ -50,8 +50,8 @@ const Header = ({ logOut, handleChangePassword, customer }) => {
                         onClick={handleNavigateHome}
                         className="flex items-center space-x-2 text-black hover:text-gray-700 transition-colors duration-200 focus:outline-none"
                     >
-                        <Car className="w-6 h-6" /> {/* Car icon */}
-                        <span className="text-base font-semibold">Thuê Xe</span>
+                        <Car className="w-10 h-10" /> {/* Car icon */}
+                        <span className="text-base font-semibold">PVRS</span>
                     </button>
                     <nav className="flex space-x-6 text-gray-700 text-sm">
                         <a href="home" className="hover:text-blue-600">Trang chủ</a>
