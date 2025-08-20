@@ -27,7 +27,7 @@ const CarDetail = () => {
     const [pickupDate, setPickupDate] = useState('');
     const [returnDate, setReturnDate] = useState('');
     const [pickupTime, setPickupTime] = useState('');
-    const [returnTime, setReturnTime] = useState('17:00'); // Default to 5:00 PM
+    const [returnTime, setReturnTime] = useState('14:00'); // Default to 5:00 PM
     const [cccdFile, setCccdFile] = useState(null);
     const [licenseFile, setLicenseFile] = useState(null);
     const [couponCode, setCouponCode] = useState('');
@@ -84,7 +84,7 @@ const CarDetail = () => {
     // Validate time to ensure it's within 9:00 AM to 5:00 PM
     const isValidTime = (time) => {
         const [hours, minutes] = time.split(':').map(Number);
-        return hours >= 9 && hours <= 17 && minutes >= 0;
+        return hours >= 7 && hours <= 17 && minutes >= 0;
     };
 
     // Update pickup time input
@@ -139,7 +139,7 @@ const CarDetail = () => {
 
         // Check if time is within 9:00 AM to 5:00 PM
         if (!isValidTime(newReturnTime)) {
-            toast.error('Giờ trả xe phải từ 9:00 sáng đến 5:00 chiều.', {
+            toast.error('Giờ trả xe phải từ 7:00 sáng đến 5:00 chiều.', {
                 position: 'top-right',
                 autoClose: 3000,
             });
@@ -190,7 +190,7 @@ const CarDetail = () => {
         const currentDate = currentDateTime.toISOString().split('T')[0];
         const currentTime = currentDateTime.toTimeString().slice(0, 5);
         const currentHours = currentDateTime.getHours();
-        const isWithinOperatingHours = currentHours >= 9 && currentHours < 17;
+        const isWithinOperatingHours = currentHours >= 7 && currentHours < 17;
 
         // Prevent selecting past dates
         if (newDate < currentDate) {
@@ -203,14 +203,14 @@ const CarDetail = () => {
 
         // If selecting current date, check if within operating hours
         if (newDate === currentDate && !isWithinOperatingHours) {
-            toast.error('Không thể chọn ngày hiện tại vì hiện tại ngoài giờ hoạt động (9:00 sáng - 5:00 chiều). Chọn ngày mai.', {
+            toast.error('Không thể chọn ngày hiện tại vì hiện tại ngoài giờ hoạt động (7:00 sáng - 5:00 chiều). Chọn ngày mai.', {
                 position: 'top-right',
                 autoClose: 3000,
             });
             const nextDay = new Date(currentDateTime);
             nextDay.setDate(currentDateTime.getDate() + 1);
             setPickupDate(nextDay.toISOString().split('T')[0]);
-            setPickupTime('09:00');
+            setPickupTime('07:00');
             const defaultReturnDate = new Date(nextDay);
             if (rentalType === 'day') {
                 defaultReturnDate.setDate(nextDay.getDate() + 2);
@@ -962,7 +962,7 @@ const CarDetail = () => {
                                             onChange={handlePickupTimeChange}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
                                             disabled={rentalType === 'hour'}
-                                            min={pickupDate === new Date().toISOString().split('T')[0] ? new Date().toTimeString().slice(0, 5) : '09:00'}
+                                            min={pickupDate === new Date().toISOString().split('T')[0] ? new Date().toTimeString().slice(0, 5) : '07:00'}
                                             max="17:00"
                                         />
                                     </div>

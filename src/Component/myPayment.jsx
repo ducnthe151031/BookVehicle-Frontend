@@ -9,7 +9,8 @@ import {
     rejectBooking,
     getMyRentals,
     deliveredBooking,
-    payLateFee
+    payLateFee,
+    returnBooking
 } from '../service/authentication.js';
 import Header from "./Header.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -108,6 +109,17 @@ const MyPayment = () => {
             // Refresh the list after approval
             fetchRentals(page);
             toast.success('Xác nhận nhận xe thành công!');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Không thể xác nhận nhận xe');
+            toast.error(err.response?.data?.message || 'Không thể xác nhận nhận xe');
+        }
+    };
+
+    const handleReturn = async (bookingId) => {
+        try {
+            await returnBooking(bookingId);
+            fetchRentals(page);
+            toast.success('Yêu cầu được gửi tới cho hệ thống!');
         } catch (err) {
             setError(err.response?.data?.message || 'Không thể xác nhận nhận xe');
             toast.error(err.response?.data?.message || 'Không thể xác nhận nhận xe');
@@ -299,6 +311,7 @@ const MyPayment = () => {
                                     {rentals.map((rental) => {
                                         const statusDisplay = getStatusDisplay(rental.deliveryStatus);
                                         const showApproveButton = rental.deliveryStatus === 'TRANSIT';
+                                        const showConfirmReturnedButton = rental.deliveryStatus === 'DELIVERED';
                                         const isHourly = rental.rentType.includes('giờ');
                                         return (
                                             <tr key={rental.id} className="hover:bg-gray-50">
@@ -367,6 +380,13 @@ const MyPayment = () => {
                                                         {rental?.lateFeePaid && (
                                                             <p className="text-green-600 text-xs">Đã thanh toán phí muộn</p>
                                                         )}
+                                                        {rental?.deliveryStatus === 'RETURNED' && (
+                                                            <p className="text-green-600 text-xs">Đạng đợi phản hồi từ hệ thống</p>
+                                                        )}
+                                                        {rental.deliveryStatus === 'CONFIRM_RETURNED' && customer?.role === 'ROLE_OPERATOR'  && (
+                                                            <p className="text-green-600 text-xs">Đơn hàng đã kết thúc</p>
+
+                                                        )}
                                                         {showApproveButton && (
                                                             <>
                                                                 <button
@@ -383,6 +403,18 @@ const MyPayment = () => {
                                                                 </button>
                                                             </>
                                                         )}
+                                                        {showConfirmReturnedButton && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleReturn(rental.id)}
+                                                                    className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-all duration-200"
+                                                                >
+                                                                    Trả xe
+                                                                </button>
+
+                                                            </>
+                                                        )}
+
                                                     </div>
                                                 </td>
                                             </tr>
