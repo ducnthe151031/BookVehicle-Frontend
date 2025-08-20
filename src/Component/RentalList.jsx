@@ -321,13 +321,17 @@ const RentalList = () => {
                                                             </button>
                                                         </div>
                                                     )}
-                                                    {rental.deliveryStatus === 'DELIVERED' && customer?.role === 'ROLE_OPERATOR' && rental?.lateFeePaid && (
+                                                    {rental.deliveryStatus === 'RETURNED' && customer?.role === 'ROLE_OPERATOR'  && (
                                                         <button
                                                             onClick={() => handleReturned(rental.id)}
                                                             className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-all duration-200"
                                                         >
                                                             Xác nhận đã trả xe
                                                         </button>
+                                                    )}
+                                                    {rental.deliveryStatus === 'CONFIRM_RETURNED' && customer?.role === 'ROLE_OPERATOR'  && (
+                                                        <p className="text-green-600 text-xs">Đơn hàng đã kết thúc</p>
+
                                                     )}
                                                 </td>
                                             </tr>
