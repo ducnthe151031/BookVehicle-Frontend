@@ -292,6 +292,19 @@ export const deliveredBooking = async (bookingId) => {
     }
 };
 
+export const returnBooking = async (bookingId) => {
+    try {
+        const response = await axios.put(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/returnBooking/${bookingId}`,
+            {},
+            getAuthConfig()
+        );
+        return response.data;
+    } catch (e) {
+        throw e;
+    }
+};
+
 export const rejectBooking = async (bookingId) => {
     try {
         const response = await axios.put(
