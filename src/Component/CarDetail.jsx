@@ -555,7 +555,68 @@ const CarDetail = () => {
         fetchRatingData();
     }, [carId]);
 
+    const fetchReviews = useCallback(async (reset = false) => {
+        if (!carId) return;
+        setReviewsLoading(true);
+        try {
+            const pageToFetch = reset ? 0 : reviewsPage;
+            const response = await getReviewsByVehicle(carId, pageToFetch, 5);
+            if (response.code === "MSG000000" && response.data) {
+                const newReviews = response.data.content;
+                setReviews(prev => reset ? newReviews : [...prev, ...newReviews]);
+                setHasMoreReviews(!response.data.last);
+                setReviewsPage(pageToFetch + 1);
+            } else {
+                setHasMoreReviews(false);
+            }
+        } catch (error) {
+            console.error("Lỗi khi tải đánh giá:", error);
+            toast.error(error.response?.data?.message || "Không thể tải danh sách đánh giá.");
+        } finally {
+            setReviewsLoading(false);
+        }
+    }, [carId, reviewsPage]);
 
+    const handleSubmitReview = async (e) => {
+        e.preventDefault();
+        if (newRating === 0) {
+            toast.error('Vui lòng chọn số sao để đánh giá.');
+            return;
+        }
+
+        setIsSubmittingReview(true);
+        try {
+            const reviewData = {
+                vehicleId: carId,
+                rating: newRating,
+                comment: newComment,
+            };
+            const response = await createReview(reviewData);
+            if (response.code === 'MSG000000') {
+                toast.success('Cảm ơn bạn đã gửi đánh giá!');
+                setNewRating(0);
+                setNewComment('');
+                setBookingIdForReview('');
+                setReviewsPage(0);
+                fetchReviews(true);
+            } else {
+                toast.error(response.message || 'Có lỗi xảy ra khi gửi đánh giá.');
+            }
+        } catch (error) {
+            console.error("Lỗi khi gửi đánh giá:", error);
+            toast.error(error.response?.data?.message || 'Không thể gửi đánh giá.');
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
+
+    const handleChangePassword = () => {
+        navigate('/change-password');
+    };
+
+    const handleBack = () => {
+        navigate(-1);
+    };
 
     const handleFileChange = (e, setFileState) => {
         if (e.target.files && e.target.files[0]) {
@@ -814,7 +875,9 @@ const CarDetail = () => {
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between">
-                                                <p className="font-semibold text-gray-800">{review.username || 'Người dùng ẩn danh'}</p>
+                                                <p className="font-semibold text-gray-800">
+                                                    {review.username ? review.username : 'Người dùng ẩn danh'}
+                                                </p>
                                                 <p className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString('vi-VN')}</p>
                                             </div>
                                             <div className="flex items-center my-1">
