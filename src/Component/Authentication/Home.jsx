@@ -226,17 +226,81 @@ const Home = () => {
         filters.fourPlusDoors
     ]);
 
+    // Helper to validate time (7:00–17:00)
+    const isValidTime = (dateTimeStr) => {
+        if (!dateTimeStr) return false;
+        const time = dateTimeStr.split('T')[1]?.slice(0,5);
+        if (!time) return false;
+        const [hours, minutes] = time.split(':').map(Number);
+        return hours >= 7 && hours <= 17 && minutes >= 0;
+    };
+
     const handleFilterChange = (key, value, isFrontendFilter = false) => {
         let newValue = value;
-
+        // Only validate for startDate/endDate
         if ((key === 'startDate' || key === 'endDate') && value) {
             newValue = value + ':00';
             const start = key === 'startDate' ? newValue : filters.startDate;
             const end = key === 'endDate' ? newValue : filters.endDate;
-
-            if (start && end && new Date(start) >= new Date(end)) {
-                toast.error('Ngày trả phải sau ngày nhận.', {
-                    position: "top-right",
+            const now = new Date();
+            const startDate = start ? new Date(start) : null;
+            const endDate = end ? new Date(end) : null;
+            // Prevent selecting past dates/times
+            if (startDate && startDate < now) {
+                toast.error('Ngày nhận xe phải từ thời điểm hiện tại trở đi.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+            // Prevent booking more than 3 months in advance
+            const maxAdvanceDate = new Date(now);
+            maxAdvanceDate.setMonth(maxAdvanceDate.getMonth() + 3);
+            if (startDate && startDate > maxAdvanceDate) {
+                toast.error('Ngày nhận xe chỉ được đặt trước tối đa 3 tháng.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+            if (endDate && endDate > maxAdvanceDate) {
+                toast.error('Ngày trả xe chỉ được đặt trước tối đa 3 tháng.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+            if (endDate && endDate < startDate) {
+                toast.error('Ngày trả xe phải sau từ thời điểm nhận xe.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+            // Validate: endDate must be at least 1 day after startDate
+            if (key === 'endDate' && startDate && endDate) {
+                const diffMs = endDate.getTime() - startDate.getTime();
+                const diffDays = diffMs / (1000 * 60 * 60 * 24);
+                if (diffDays < 1) {
+                    toast.error('Ngày trả xe phải lớn hơn ngày nhận xe ít nhất 1 ngày.', {
+                        position: 'top-right',
+                        autoClose: 3000,
+                    });
+                    return;
+                }
+            }
+            // Validate time range for startDate
+            if (key === 'startDate' && start && !isValidTime(start)) {
+                toast.error('Giờ nhận xe phải từ 7:00 sáng đến 5:00 chiều.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+            // Validate time range for endDate
+            if (key === 'endDate' && end && !isValidTime(end)) {
+                toast.error('Giờ trả xe phải từ 7:00 sáng đến 5:00 chiều.', {
+                    position: 'top-right',
                     autoClose: 3000,
                 });
                 return;
@@ -307,7 +371,7 @@ const Home = () => {
 
     const handleSearch = async () => {
         if (!filters.startDate || !filters.endDate) {
-            toast.error('Vui lòng chọn cả ngày nhận và ngày trả.', {
+            toast.error('Vui lòng chọn cả ngày nh���n và ngày trả.', {
                 position: "top-right",
                 autoClose: 3000,
             });
@@ -815,4 +879,5 @@ const Home = () => {
 };
 
 export default Home;
+
 

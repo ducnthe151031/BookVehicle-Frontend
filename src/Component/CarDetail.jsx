@@ -87,6 +87,16 @@ const CarDetail = () => {
         return hours >= 7 && hours <= 17 && minutes >= 0;
     };
 
+    // Helper: check if a date is within 3 months from now
+    const isWithin3Months = (dateStr) => {
+        if (!dateStr) return false;
+        const now = new Date();
+        const maxAdvanceDate = new Date(now);
+        maxAdvanceDate.setMonth(maxAdvanceDate.getMonth() + 3);
+        const date = new Date(dateStr);
+        return date <= maxAdvanceDate;
+    };
+
     // Update pickup time input
     const handlePickupTimeChange = (e) => {
         const newPickupTime = e.target.value;
@@ -195,6 +205,14 @@ const CarDetail = () => {
         // Prevent selecting past dates
         if (newDate < currentDate) {
             toast.error('Ngày nhận xe phải từ hôm nay trở đi.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+        // Prevent booking more than 3 months in advance
+        if (!isWithin3Months(newDate)) {
+            toast.error('Ngày nhận xe chỉ được đặt trước tối đa 3 tháng.', {
                 position: 'top-right',
                 autoClose: 3000,
             });
@@ -537,68 +555,7 @@ const CarDetail = () => {
         fetchRatingData();
     }, [carId]);
 
-    const fetchReviews = useCallback(async (reset = false) => {
-        if (!carId) return;
-        setReviewsLoading(true);
-        try {
-            const pageToFetch = reset ? 0 : reviewsPage;
-            const response = await getReviewsByVehicle(carId, pageToFetch, 5);
-            if (response.code === "MSG000000" && response.data) {
-                const newReviews = response.data.content;
-                setReviews(prev => reset ? newReviews : [...prev, ...newReviews]);
-                setHasMoreReviews(!response.data.last);
-                setReviewsPage(pageToFetch + 1);
-            } else {
-                setHasMoreReviews(false);
-            }
-        } catch (error) {
-            console.error("Lỗi khi tải đánh giá:", error);
-            toast.error(error.response?.data?.message || "Không thể tải danh sách đánh giá.");
-        } finally {
-            setReviewsLoading(false);
-        }
-    }, [carId, reviewsPage]);
 
-    const handleSubmitReview = async (e) => {
-        e.preventDefault();
-        if (newRating === 0) {
-            toast.error('Vui lòng chọn số sao để đánh giá.');
-            return;
-        }
-
-        setIsSubmittingReview(true);
-        try {
-            const reviewData = {
-                vehicleId: carId,
-                rating: newRating,
-                comment: newComment,
-            };
-            const response = await createReview(reviewData);
-            if (response.code === 'MSG000000') {
-                toast.success('Cảm ơn bạn đã gửi đánh giá!');
-                setNewRating(0);
-                setNewComment('');
-                setBookingIdForReview('');
-                setReviewsPage(0);
-                fetchReviews(true);
-            } else {
-                toast.error(response.message || 'Có lỗi xảy ra khi gửi đánh giá.');
-            }
-        } catch (error) {
-            console.error("Lỗi khi gửi đánh giá:", error);
-            toast.error(error.response?.data?.message || 'Không thể gửi đánh giá.');
-        } finally {
-            setIsSubmittingReview(false);
-        }
-    };
-
-    const handleChangePassword = () => {
-        navigate('/change-password');
-    };
-
-    const handleBack = () => {
-        navigate(-1);
-    };
 
     const handleFileChange = (e, setFileState) => {
         if (e.target.files && e.target.files[0]) {
@@ -857,7 +814,7 @@ const CarDetail = () => {
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between">
-                                                <p className="font-semibold text-gray-800">Người dùng ẩn danh</p>
+                                                <p className="font-semibold text-gray-800">{review.username || 'Người dùng ẩn danh'}</p>
                                                 <p className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString('vi-VN')}</p>
                                             </div>
                                             <div className="flex items-center my-1">
@@ -939,6 +896,14 @@ const CarDetail = () => {
                                                 const newReturnDate = e.target.value;
                                                 const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
                                                 const endDateTime = new Date(`${newReturnDate}T${returnTime}`);
+                                                // Prevent booking more than 3 months in advance
+                                                if (!isWithin3Months(newReturnDate)) {
+                                                    toast.error('Ngày trả xe chỉ được đặt trước tối đa 3 tháng.', {
+                                                        position: "top-right",
+                                                        autoClose: 3000,
+                                                    });
+                                                    return;
+                                                }
                                                 if ((endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
                                                     toast.error('Thời gian thuê theo ngày phải lớn hơn 24 giờ.', {
                                                         position: "top-right",

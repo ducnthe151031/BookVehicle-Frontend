@@ -34,8 +34,8 @@ const LoginForm = () => {
                 draggable: true,
             });
             const userRole = response.decodedToken?.role;
-            const redirectPath = userRole === 'ROLE_ADMIN' ? '/vehicle/brands' :
-                userRole === 'ROLE_OPERATOR' ? '/rentals' : '/home';
+            const redirectPath = userRole === 'ROLE_ADMIN' ? '/user' :
+                userRole === 'ROLE_OPERATOR' ? '/user' : '/home';
             setTimeout(() => navigate(redirectPath), 1000);
         } catch (error) {
             toast.error(error.response?.data?.message, {
