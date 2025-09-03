@@ -11,6 +11,7 @@ import {
 } from '../service/authentication.js';
 import { FaListAlt as ClipboardList } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext.jsx";
+import {toast} from "react-toastify";
 
 const RentalList = () => {
     const [rentals, setRentals] = useState([]);
@@ -28,6 +29,8 @@ const RentalList = () => {
     });
     const [showFilterForm, setShowFilterForm] = useState(false);
     const { customer } = useAuth();
+    const [mapUrl, setMapUrl] = useState('');
+    const [loadingLocationId, setLoadingLocationId] = useState(null);
 
     const fetchRentals = async (pageNumber = 0) => {
         setLoading(true);
@@ -87,6 +90,27 @@ const RentalList = () => {
             setError(err.response?.data?.message || 'Không thể kết nối đến server');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleShowMap = (rentalId) => {
+        if (navigator.geolocation) {
+            setLoadingLocationId(rentalId);
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const url = `https://www.google.com/maps?q=${lat},${lon}&hl=vi&z=15&output=embed`;
+                    setMapUrl(url);
+                    setLoadingLocationId(null); // reset
+                },
+                (error) => {
+                    toast.error("Không thể lấy vị trí: " + error.message);
+                    setLoadingLocationId(null); // reset khi lỗi
+                }
+            );
+        } else {
+            toast.error("Trình duyệt không hỗ trợ định vị.");
         }
     };
 
@@ -242,6 +266,9 @@ const RentalList = () => {
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trễ hạn</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phí trả thêm</th>
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Vị trí hiện tại
+                                        </th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                                     </tr>
                                     </thead>
@@ -305,6 +332,47 @@ const RentalList = () => {
                                                     )}
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm">
+                                                    {rental.deliveryStatus === 'DELIVERED' ? (
+                                                        loadingLocationId === rental.id ? (
+                                                            <button
+                                                                disabled
+                                                                className="px-2 py-1 bg-gray-400 text-white text-xs rounded flex items-center gap-1"
+                                                            >
+                                                                <svg
+                                                                    className="animate-spin h-4 w-4 text-white"
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <circle
+                                                                        className="opacity-25"
+                                                                        cx="12"
+                                                                        cy="12"
+                                                                        r="10"
+                                                                        stroke="currentColor"
+                                                                        strokeWidth="4"
+                                                                    ></circle>
+                                                                    <path
+                                                                        className="opacity-75"
+                                                                        fill="currentColor"
+                                                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                                                    ></path>
+                                                                </svg>
+                                                                Đang lấy vị trí...
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => handleShowMap(rental.id)}
+                                                                className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-all duration-200"
+                                                            >
+                                                                Xem vị trí
+                                                            </button>
+                                                        )
+                                                    ) : (
+                                                        <span className="text-gray-400 text-xs">-</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                     {showApproveButton && customer?.role === 'ROLE_OPERATOR' && (
                                                         <div className="flex gap-2">
                                                             <button
@@ -339,6 +407,18 @@ const RentalList = () => {
                                     })}
                                     </tbody>
                                 </table>
+                                {mapUrl && (
+                                    <div className="mt-4">
+                                        <iframe
+                                            src={mapUrl}
+                                            width="100%"
+                                            height="400"
+                                            allowFullScreen=""
+                                            loading="lazy"
+                                            className="rounded-lg shadow"
+                                        ></iframe>
+                                    </div>
+                                )}
                                 <div className="flex justify-between items-center mt-4 px-4 py-3 bg-gray-50">
                                     <button
                                         onClick={() => handlePageChange(page - 1)}
