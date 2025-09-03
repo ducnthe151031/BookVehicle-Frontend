@@ -155,22 +155,6 @@ const RegisterForm = () => {
                             </div>
                         </div>
 
-                        {/* Role Selection Dropdown */}
-                        <div>
-                            <label className="block text-sm text-gray-600 mb-1">Vai trò</label>
-                            <select
-                                name="role"
-                                value={formData.role}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                            >
-                                <option value="USER">Người dùng</option>
-                                <option value="OWNER">Chủ xe</option>
-                                <option value="OPERATOR">Người giao xe</option>
-                                {/*<option value="ADMIN">Quản trị viên</option>*/}
-                            </select>
-                        </div>
-
                         <button
                             type="submit"
                             disabled={loading}
