@@ -50,12 +50,12 @@ const CRMLayout = ({ children }) => {
     const navigate = useNavigate();
 
     const navigation = [
+        { name: 'Quản lí người dùng', icon: User, path: '/user', role: ['ROLE_ADMIN'] },
         { name: 'Hãng xe', icon: Factory, path: '/vehicle/brands', roles: ['ROLE_OPERATOR'] },
         { name: 'Loại xe', icon: FaCar, path: '/vehicle/categories', roles: ['ROLE_OPERATOR'] },
         { name: 'Danh sách xe', icon: Car, path: '/vehicle', roles: ['ROLE_OWNER','ROLE_OPERATOR'] },
         { name: 'Danh sách thuê xe', icon: ClipboardList, path: '/rentals', roles: ['ROLE_OPERATOR'] },
         { name: 'Mã coupon', icon: TicketPercent, path: '/coupon', roles: ['ROLE_OPERATOR'] },
-        { name: 'Quản lí người dùng', icon: User, path: '/user' },
         { name: 'Hồ sơ cá nhân', icon: UserCircle, path: '/prfAdmin', roles: ['ROLE_ADMIN','ROLE_OPERATOR'] },
         { name: 'Đổi mật khẩu', icon: KeyRound, path: '/passwordAdmin', roles: ['ROLE_ADMIN','ROLE_OPERATOR'] }
 
