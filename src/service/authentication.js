@@ -633,3 +633,15 @@ export const updateUser = async (id,userData) => {
     }
 };
 
+export const createTrackingLog = async (trackingData) => {
+    try {
+        return await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/tracking-log`,
+            trackingData,
+            getAuthConfig()
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
