@@ -35,7 +35,7 @@ const LoginForm = () => {
             });
             const userRole = response.decodedToken?.role;
             const redirectPath = userRole === 'ROLE_ADMIN' ? '/user' :
-                userRole === 'ROLE_OPERATOR' ? '/user' : '/home';
+                userRole === 'ROLE_OPERATOR' ? '/rentals' : '/home';
             setTimeout(() => navigate(redirectPath), 1000);
         } catch (error) {
             toast.error(error.response?.data?.message, {

@@ -119,6 +119,16 @@ const CRMLayout = ({ children }) => {
                         </button>
                     ))}
 
+                    {/* Add Home button for admin and operator */}
+                    {(customer?.role === 'ROLE_ADMIN' || customer?.role === 'ROLE_OPERATOR') && (
+                        <button
+                            onClick={() => navigate('/home')}
+                            className={`w-full flex items-center ${collapsedSidebar ? 'justify-center px-2' : 'justify-start px-4'} py-2 rounded transition-all duration-200 text-gray-300 hover:bg-gray-700 mt-4`}
+                        >
+                            <Home className="w-5 h-5 text-gray-300" />
+                            {!collapsedSidebar && <span className="ml-3 font-medium text-sm">Quay về trang chủ</span>}
+                        </button>
+                    )}
                 </nav>
 
                 {/* User Menu */}

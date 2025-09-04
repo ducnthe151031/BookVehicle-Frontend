@@ -54,18 +54,19 @@ const Header = ({ logOut, handleChangePassword, customer }) => {
                         <span className="text-base font-semibold">PVRS</span>
                     </button>
                     <nav className="flex space-x-6 text-gray-700 text-sm">
-                        <a href="home" className="hover:text-blue-600">Trang chủ</a>
+                        <button onClick={() => navigate('/home')} className="hover:text-blue-600 bg-transparent border-none cursor-pointer">Trang chủ</button>
                         {customer?.role === "ROLE_OWNER" ? (
                             <>
-                                <a href="list" className="hover:text-blue-600">Danh sách xe</a>
-                                <a href="myPayment" className="hover:text-blue-600">Đơn thanh toán</a>
+                                <button onClick={() => navigate('/list')} className="hover:text-blue-600 bg-transparent border-none cursor-pointer">Danh sách xe</button>
+                                <button onClick={() => navigate('/myPayment')} className="hover:text-blue-600 bg-transparent border-none cursor-pointer">Đơn thanh toán</button>
                             </>
+                        ) : customer?.role === "ROLE_ADMIN" ? (
+                            <button onClick={() => navigate('/user')} className="hover:text-blue-600 bg-transparent border-none cursor-pointer">Quản lý</button>
+                        ) : customer?.role === "ROLE_OPERATOR" ? (
+                            <button onClick={() => navigate('/rentals')} className="hover:text-blue-600 bg-transparent border-none cursor-pointer">Quản lý</button>
                         ) : (
-                            <a href="myPayment" className="hover:text-blue-600">Đơn thanh toán</a>
+                            <button onClick={() => navigate('/myPayment')} className="hover:text-blue-600 bg-transparent border-none cursor-pointer">Đơn thanh toán</button>
                         )}
-                        {/*<a href="#" className="font-semibold text-gray-900">Các loại xe</a> /!* Bold for "Các loại xe" *!/*/}
-                        {/*<a href="#" className="hover:text-blue-600">Người cho thuê</a>*/}
-                        {/*<a href="#" className="hover:text-blue-600">Liên lạc với chúng tôi</a>*/}
                     </nav>
                 </div>
                 <div className="flex items-center space-x-2">
