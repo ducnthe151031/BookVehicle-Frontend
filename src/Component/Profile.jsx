@@ -260,6 +260,27 @@ const Profile = () => {
         navigate('/change-password');
     };
 
+    // Avatar preview logic for display
+    const getAvatarPreview = () => {
+        if (isEditing) {
+            if (tempAvatarPreviewUrl) {
+                return tempAvatarPreviewUrl;
+            } else if (formData.avartarUrl && formData.avartarUrl.length > 50) {
+                return "data:image/*;base64," + formData.avartarUrl;
+            } else if (profile.avartarUrl) {
+                return `http://localhost:8080/v1/user/images/${profile.avartarUrl}`;
+            } else {
+                return "/default-avatar.png";
+            }
+        } else {
+            if (profile.avartarUrl) {
+                return `http://localhost:8080/v1/user/images/${profile.avartarUrl}`;
+            } else {
+                return "/default-avatar.png";
+            }
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -297,23 +318,7 @@ const Profile = () => {
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center space-x-4">
                             <div className="relative w-20 h-20 bg-gray-200 rounded-full overflow-hidden">
-                                {isEditing ? (
-                                    tempAvatarPreviewUrl ? (
-                                        <img src={tempAvatarPreviewUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
-                                    ) : formData.avartarUrl && formData.avartarUrl.length > 50 ? (
-                                        <img src={"data:image/*;base64," + formData.avartarUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
-                                    ) : profile.avartarUrl ? (
-                                        <img src={`http://localhost:8080/v1/user/images/${profile.avartarUrl}`} alt="Avatar" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <img src="/default-avatar.png" alt="Avatar" className="w-full h-full object-cover" />
-                                    )
-                                ) : (
-                                    profile.avartarUrl ? (
-                                        <img src={`http://localhost:8080/v1/user/images/${profile.avartarUrl}`} alt="Avatar" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <img src="/default-avatar.png" alt="Avatar" className="w-full h-full object-cover" />
-                                    )
-                                )}
+                                <img src={getAvatarPreview()} alt="Avatar" className="w-full h-full object-cover" />
                                 {isEditing && (
                                     <>
                                         <input
@@ -556,3 +561,4 @@ const Profile = () => {
 };
 
 export default Profile;
+
