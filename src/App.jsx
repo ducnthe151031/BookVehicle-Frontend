@@ -41,7 +41,6 @@ function App() {
                             <Route path="/prfAdmin" element={<ProtectedRoute><ProfileForAdmin/></ProtectedRoute>} />
                             <Route path="/passwordAdmin" element={<ProtectedRoute><ChanPasswordForAdmin/></ProtectedRoute>} />
                             <Route path="/user" element={<ProtectedRoute><UserListPage/></ProtectedRoute>} />
-
                             <Route path="/password" element={<ProtectedRoute><ChangePassword/></ProtectedRoute>} />
                             <Route path="/coupon" element={<ProtectedRoute><CouponListPage/></ProtectedRoute>} />
                             <Route path="/forgot-password" element={<ForgotPassword />} />
