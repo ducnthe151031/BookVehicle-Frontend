@@ -50,7 +50,7 @@ const CRMLayout = ({ children }) => {
     const navigate = useNavigate();
 
     const navigation = [
-        { name: 'Quản lí người dùng', icon: User, path: '/user', role: ['ROLE_ADMIN'] },
+        { name: 'Quản lí người dùng', icon: User, path: '/user', roles: ['ROLE_ADMIN'] },
         { name: 'Hãng xe', icon: Factory, path: '/vehicle/brands', roles: ['ROLE_OPERATOR'] },
         { name: 'Loại xe', icon: FaCar, path: '/vehicle/categories', roles: ['ROLE_OPERATOR'] },
         { name: 'Danh sách xe', icon: Car, path: '/vehicle', roles: ['ROLE_OWNER','ROLE_OPERATOR'] },
@@ -58,13 +58,10 @@ const CRMLayout = ({ children }) => {
         { name: 'Mã coupon', icon: TicketPercent, path: '/coupon', roles: ['ROLE_OPERATOR'] },
         { name: 'Hồ sơ cá nhân', icon: UserCircle, path: '/prfAdmin', roles: ['ROLE_ADMIN','ROLE_OPERATOR'] },
         { name: 'Đổi mật khẩu', icon: KeyRound, path: '/passwordAdmin', roles: ['ROLE_ADMIN','ROLE_OPERATOR'] }
-
-
-
     ];
 
     const filteredNavigation = navigation.filter(
-        (item) => !item.roles || item.roles.includes(customer?.role)
+        (item) => item.roles && item.roles.includes(customer?.role)
     );
 
     // Kiểm tra xem đường dẫn hiện tại có được phép không
