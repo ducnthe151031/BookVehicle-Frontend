@@ -160,32 +160,46 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
         if (!formData.seats || formData.seats < 2 || formData.seats > 50 || formData.seats < 0)
             newErrors.seats = 'Số ghế phải từ 2-50 và không âm';
         if (!formData.dailyPrice || formData.dailyPrice < 100000 || formData.dailyPrice < 0)
-            newErrors.dailyPrice = 'Giá ngày phải từ 100,000 VNĐ và không âm';
+            newErrors.dailyPrice = 'Giá ngày phải từ 500,000 VNĐ và không âm';
         if (formData.hourlyPrice && (formData.hourlyPrice < 10000 || formData.hourlyPrice < 0))
-            newErrors.hourlyPrice = 'Giá giờ phải từ 10,000 VNĐ và không âm';
+            newErrors.hourlyPrice = 'Giá giờ phải từ 100,000 VNĐ và không âm';
         if (formData.licensePlate && !/^\d{2}[A-Z]{1,2}-?\d{4,5}$/i.test(formData.licensePlate))
             newErrors.licensePlate = 'Biển số không đúng định dạng (VD: 30A-12345)';
         if (!formData.location.trim()) newErrors.location = 'Địa điểm không được để trống';
         if (!formData.vehicleTypeId.trim()) newErrors.vehicleTypeId = 'Loại xe không được để trống';
-        if (!isEditMode && !formData.imageUrl) newErrors.imageUrl = 'Ảnh đại diện không được để trống';
+        if (!isEditMode && !formData.imageUrl) newErrors.imageUrl = 'Ảnh đại diện của xe không được để trống';
         if (!isEditMode && !formData.registrationDocumentUrl)
             newErrors.registrationDocumentUrl = 'Giấy đăng ký xe không được để trống';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+    // Helper function to format number with commas
+    const formatNumberWithCommas = (value) => {
+        if (value === "" || value === null || value === undefined) return "";
+        const num = Number(value.toString().replace(/,/g, ""));
+        if (isNaN(num)) return "";
+        return num.toLocaleString('en-US');
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         let processedValue = value;
 
         if (name === 'seats' || name === 'dailyPrice' || name === 'hourlyPrice') {
-            processedValue = Math.max(0, Number(value) || 0);
+            // Remove commas for price fields before processing
+            let rawValue = value.replace(/,/g, "");
+            if (rawValue === "" && (name === 'dailyPrice' || name === 'hourlyPrice')) {
+                processedValue = "";
+            } else {
+                processedValue = Math.max(0, Number(rawValue) || 0);
+            }
             if (name === 'seats' && (processedValue < 2 || processedValue > 50)) {
                 setErrors({ ...errors, [name]: 'Số ghế phải từ 2-50 và không âm' });
-            } else if (name === 'dailyPrice' && processedValue < 100000) {
-                setErrors({ ...errors, [name]: 'Giá ngày phải từ 100,000 VNĐ và không âm' });
-            } else if (name === 'hourlyPrice' && processedValue < 10000) {
-                setErrors({ ...errors, [name]: 'Giá giờ phải từ 10,000 VNĐ và không âm' });
+            } else if (name === 'dailyPrice' && processedValue < 500000 && processedValue !== "") {
+                setErrors({ ...errors, [name]: 'Giá ngày phải từ 500,000 VNĐ và không âm' });
+            } else if (name === 'hourlyPrice' && processedValue < 100000 && processedValue !== "") {
+                setErrors({ ...errors, [name]: 'Giá giờ phải từ 100,000 VNĐ và không âm' });
             } else if (errors[name]) {
                 setErrors({ ...errors, [name]: '' });
             }
@@ -435,9 +449,9 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                                 Giá ngày (VNĐ)
                             </label>
                             <input
-                                type="number"
+                                type="text"
                                 name="dailyPrice"
-                                value={formData.dailyPrice}
+                                value={formatNumberWithCommas(formData.dailyPrice)}
                                 onChange={handleChange}
                                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
                                     errors.dailyPrice ? 'border-red-500 bg-red-50' : 'border-gray-300'
@@ -452,9 +466,9 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                                 Giá giờ (VNĐ)
                             </label>
                             <input
-                                type="number"
+                                type="text"
                                 name="hourlyPrice"
-                                value={formData.hourlyPrice}
+                                value={formatNumberWithCommas(formData.hourlyPrice)}
                                 onChange={handleChange}
                                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
                                     errors.hourlyPrice ? 'border-red-500 bg-red-50' : 'border-gray-300'
@@ -689,3 +703,4 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
 };
 
 export default CarForm;
+
