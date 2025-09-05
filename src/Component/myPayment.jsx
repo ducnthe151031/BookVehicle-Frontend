@@ -48,7 +48,7 @@ const MyPayment = () => {
         setLoading(true);
         setError('');
         try {
-            const data = await getMyRentals(pageNumber);
+            const data = await getMyRentals(0); // always fetch all, like RentalList
             if (data.httpStatus === 200) {
                 const rentalsWithDetails = await Promise.all(data.data.content.map(async (rental) => {
                     const carResponse = await getCarDetails(rental.vehicleId);
@@ -71,7 +71,7 @@ const MyPayment = () => {
                     return {
                         ...rental,
                         vehicleName: carResponse.data?.vehicleName || rental.vehicleId,
-                        rentType: rentType, // Thêm rentType tính toán
+                        rentType: rentType,
                     };
                 }));
                 // Lọc danh sách dựa trên searchTerm
@@ -81,10 +81,16 @@ const MyPayment = () => {
                     (filters.rentType === '' || rental.rentType.toLowerCase().includes(filters.rentType.toLowerCase())) &&
                     (filters.late === '' || (filters.late === 'Có' ? rental.late : !rental.late))
                 );
-                const start = pageNumber * pageSize;
+                const newTotalPages = Math.ceil(filteredRentals.length / pageSize) || 1;
+                setTotalPages(newTotalPages);
+                // Validate page
+                const newPage = page >= newTotalPages ? newTotalPages - 1 : page;
+                if (newPage !== page) {
+                    setPage(newPage);
+                }
+                const start = newPage * pageSize;
                 const paginatedRentals = filteredRentals.slice(start, start + pageSize);
                 setRentals(paginatedRentals);
-                setTotalPages(Math.ceil(filteredRentals.length / pageSize) || 1);
             } else {
                 setError(data.message || 'Lỗi khi tải danh sách thuê xe');
             }
@@ -118,12 +124,12 @@ const MyPayment = () => {
 
     useEffect(() => {
         fetchRentals(page);
-    }, [page, filters]); // Thêm searchTerm vào dependency để refetch khi thay đổi
+        // eslint-disable-next-line
+    }, [page, filters]);
 
     const handlePageChange = (newPage) => {
         if (newPage >= 0 && newPage < totalPages) {
             setPage(newPage);
-            fetchRentals(newPage);
         }
     };
 
@@ -544,3 +550,4 @@ const MyPayment = () => {
 };
 
 export default MyPayment;
+

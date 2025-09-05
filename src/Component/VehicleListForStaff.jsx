@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import CarForm from './CarForm.jsx';
 import {
@@ -46,7 +45,7 @@ const VehicleListForStaff = () => {
     const [error, setError] = useState('');
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
-    const pageSize = 100;
+    const pageSize = 8; // Changed from 100 to 8
     const [brands, setBrands] = useState([]);
     const [categories, setCategories] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -898,92 +897,120 @@ const VehicleListForStaff = () => {
                             <div className="text-center text-gray-600 text-sm">Không có xe nào để hiển thị</div>
                         )}
                         {filteredVehicles.length > 0 && (
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ảnh</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên xe</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hãng</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá/ngày</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá/giờ</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                    {filteredVehicles.map((vehicle) => (
-                                        <tr key={vehicle.id} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                {vehicle.imageUrl ? (
-                                                    <div className="relative">
-                                                        <img
-                                                            src={getFullImageUrl(vehicle.imageUrl)}
-                                                            alt={vehicle.vehicleName}
-                                                            className="w-12 h-12 object-cover rounded"
-                                                        />
-                                                        {vehicle.imageUrl.includes(',') && (
-                                                            <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                                                +{vehicle.imageUrl.split(',').length - 1}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
-                                                        <ImageIcon className="w-6 h-6 text-gray-400" />
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {vehicle.vehicleName}
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                                {getBrandName(vehicle.branchId)}
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                                {vehicle.pricePerDay?.toLocaleString('vi-VN')} VNĐ
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                                {vehicle.pricePerHour?.toLocaleString('vi-VN')} VNĐ
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                        vehicle.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' :
-                                                            vehicle.status === 'RENTED' ? 'bg-red-100 text-red-800' :
-                                                                'bg-yellow-100 text-yellow-800'
-                                                    }`}>
-                                                        {vehicle.status === 'AVAILABLE' ? 'Có sẵn' :
-                                                            vehicle.status === 'RENTED' ? 'Đã thuê' : 'Đang xử lý'}
-                                                    </span>
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => openDetailModal(vehicle)}
-                                                        className="px-3 py-1 bg-blue-100 text-blue-600 text-xs rounded hover:bg-blue-200 flex items-center gap-1"
-                                                    >
-                                                        <FileText className="w-3 h-3" />
-                                                        Chi tiết
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleEdit(vehicle)}
-                                                        className="px-2 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600"
-                                                    >
-                                                        <Edit className="w-3 h-3" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(vehicle.id)}
-                                                        className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-                                                    >
-                                                        <Trash2 className="w-3 h-3" />
-                                                    </button>
-                                                </div>
-                                            </td>
+                            <>
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ảnh</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên xe</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hãng</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá/ngày</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá/giờ</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                                         </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                        {filteredVehicles.map((vehicle) => (
+                                            <tr key={vehicle.id} className="hover:bg-gray-50">
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                    {vehicle.imageUrl ? (
+                                                        <div className="relative">
+                                                            <img
+                                                                src={getFullImageUrl(vehicle.imageUrl)}
+                                                                alt={vehicle.vehicleName}
+                                                                className="w-12 h-12 object-cover rounded"
+                                                            />
+                                                            {vehicle.imageUrl.includes(',') && (
+                                                                <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                                                    +{vehicle.imageUrl.split(',').length - 1}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                                                            <ImageIcon className="w-6 h-6 text-gray-400" />
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    {vehicle.vehicleName}
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                                    {getBrandName(vehicle.branchId)}
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                                    {vehicle.pricePerDay?.toLocaleString('vi-VN')} VNĐ
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                                    {vehicle.pricePerHour?.toLocaleString('vi-VN')} VNĐ
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                            vehicle.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' :
+                                                                vehicle.status === 'RENTED' ? 'bg-red-100 text-red-800' :
+                                                                    'bg-yellow-100 text-yellow-800'
+                                                        }`}>
+                                                            {vehicle.status === 'AVAILABLE' ? 'Có sẵn' :
+                                                                vehicle.status === 'RENTED' ? 'Đã thuê' : 'Đang xử lý'}
+                                                        </span>
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => openDetailModal(vehicle)}
+                                                            className="px-3 py-1 bg-blue-100 text-blue-600 text-xs rounded hover:bg-blue-200 flex items-center gap-1"
+                                                        >
+                                                            <FileText className="w-3 h-3" />
+                                                            Chi tiết
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleEdit(vehicle)}
+                                                            className="px-2 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600"
+                                                        >
+                                                            <Edit className="w-3 h-3" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(vehicle.id)}
+                                                            className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {/* Pagination Controls */}
+                                <div className="flex justify-center items-center mt-6 gap-2">
+                                    <button
+                                        className={`px-3 py-1 rounded-lg border ${page === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-blue-600 hover:bg-blue-50'}`}
+                                        onClick={() => page > 0 && setPage(page - 1)}
+                                        disabled={page === 0}
+                                    >
+                                        Trước
+                                    </button>
+                                    {Array.from({ length: totalPages }, (_, i) => (
+                                        <button
+                                            key={i}
+                                            className={`px-3 py-1 rounded-lg border ${page === i ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'}`}
+                                            onClick={() => setPage(i)}
+                                        >
+                                            {i + 1}
+                                        </button>
                                     ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    <button
+                                        className={`px-3 py-1 rounded-lg border ${page === totalPages - 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-blue-600 hover:bg-blue-50'}`}
+                                        onClick={() => page < totalPages - 1 && setPage(page + 1)}
+                                        disabled={page === totalPages - 1}
+                                    >
+                                        Sau
+                                    </button>
+                                </div>
+                            </>
                         )}
 
                         {/* Modal chi tiết xe */}
@@ -1054,145 +1081,6 @@ const VehicleListForStaff = () => {
                                                                     />
                                                                 ) : (
                                                                     <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
-                                                                        <FileText className="w-8 h-8 text-gray-500" />
-                                                                        <span className="text-xs text-gray-600 mt-2">PDF</span>
-                                                                    </div>
-                                                                )}
-                                                                {index === 3 && selectedDetail.registrationDocumentUrl.split(',').length > 4 && (
-                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
-                                                                        <span className="text-white font-semibold">
-                                                                            +{selectedDetail.registrationDocumentUrl.split(',').length - 4}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )).slice(0, 4)}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Cột 2: Thông tin chi tiết */}
-                                            <div className="space-y-4">
-                                                <DetailItem
-                                                    icon={<Building className="w-5 h-5 text-blue-600" />}
-                                                    label="Địa điểm"
-                                                    value={selectedDetail.location}
-                                                />
-                                                <DetailItem
-                                                    icon={<Car className="w-5 h-5 text-blue-600" />}
-                                                    label="Loại phương tiện"
-                                                    value={selectedDetail.vehicleTypeId === '1' ? 'Ô tô' : 'Xe máy'}
-                                                />
-                                                <DetailItem
-                                                    icon={<Car className="w-5 h-5 text-blue-600" />}
-                                                    label="Lý do từ chối "
-                                                    value={selectedDetail.reason || 'Không có lý do'}
-                                                />
-                                                <DetailItem
-                                                    icon={<Tag className="w-5 h-5 text-blue-600" />}
-                                                    label="Biển số"
-                                                    value={selectedDetail.liecensePlate}
-                                                />
-                                                <DetailItem
-                                                    icon={<Users className="w-5 h-5 text-blue-600" />}
-                                                    label="Số ghế"
-                                                    value={selectedDetail.seatCount}
-                                                />
-                                                <DetailItem
-                                                    icon={<Fuel className="w-5 h-5 text-blue-600" />}
-                                                    label="Nhiên liệu"
-                                                    value={selectedDetail.fuelType}
-                                                />
-                                                <DetailItem
-                                                    icon={<Tag className="w-5 h-5 text-blue-600" />}
-                                                    label="Mô tả"
-                                                    value={selectedDetail.description || 'Không có mô tả'}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Footer */}
-                                        <div className="mt-8 flex justify-end">
-                                            <button
-                                                onClick={() => setShowDetailModal(false)}
-                                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                                            >
-                                                Đóng
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Modal chi tiết xe */}
-                        {showDetailModal && selectedDetail && (
-                            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
-                                <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                                    <div className="p-6 sm:p-8">
-                                        {/* Header */}
-                                        <div className="flex justify-between items-center mb-6">
-                                            <h3 className="text-2xl font-semibold text-gray-800">Chi tiết xe</h3>
-                                            <button
-                                                onClick={() => setShowDetailModal(false)}
-                                                className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
-                                                aria-label="Đóng modal"
-                                            >
-                                                <X className="w-6 h-6" />
-                                            </button>
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {/* Cột 1: Ảnh xe và giấy đăng ký */}
-                                            <div className="space-y-6">
-                                                {/* Ảnh xe */}
-                                                <div>
-                                                    <h4 className="font-medium text-gray-700 text-lg mb-2">Ảnh xe</h4>
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        {selectedDetail.imageUrl?.split(',').map((img, index) => (
-                                                            <div
-                                                                key={index}
-                                                                className="relative cursor-pointer group"
-                                                                onClick={() => openImageGallery(index)}
-                                                            >
-                                                                <img
-                                                                    src={getFullImageUrl(img)}
-                                                                    alt={`Ảnh xe ${index + 1}`}
-                                                                    className="w-full h-32 object-cover rounded-lg border border-gray-200 transition-transform duration-200 group-hover:scale-105"
-                                                                    onError={(e) => (e.target.src = 'https://via.placeholder.com/150')}
-                                                                />
-                                                                {index === 3 && selectedDetail.imageUrl.split(',').length > 4 && (
-                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
-                                                                        <span className="text-white font-semibold">
-                                                                            +{selectedDetail.imageUrl.split(',').length - 4}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )).slice(0, 4)}
-                                                    </div>
-                                                </div>
-
-                                                {/* Giấy đăng ký xe */}
-                                                <div>
-                                                    <h4 className="font-medium text-gray-700 text-lg mb-2">Giấy đăng ký xe</h4>
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        {selectedDetail.registrationDocumentUrl?.split(',').map((doc, index) => (
-                                                            <div
-                                                                key={index}
-                                                                className="relative cursor-pointer group"
-                                                                onClick={() => isImageFile(doc) ? openRegDocGallery(index) : window.open(getFullImageUrl(doc), '_blank')}
-                                                            >
-                                                                {isImageFile(doc) ? (
-                                                                    <img
-                                                                        src={getFullImageUrl(doc)}
-                                                                        alt={`Giấy đăng ký xe ${index + 1}`}
-                                                                        className="w-full h-32 object-cover rounded-lg border border-gray-200 transition-transform duration-200 group-hover:scale-105"
-                                                                        onError={(e) => (e.target.src = 'https://via.placeholder.com/150')}
-                                                                    />
-                                                                ) : (
-                                                                    <div className="w-full h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center border border-gray-200">
                                                                         <FileText className="w-8 h-8 text-gray-500" />
                                                                         <span className="text-xs text-gray-600 mt-2">PDF</span>
                                                                     </div>
