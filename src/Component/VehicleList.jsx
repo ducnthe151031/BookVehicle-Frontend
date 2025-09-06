@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import CarForm from './CarForm.jsx';
 import {
@@ -162,7 +161,9 @@ const VehicleList = () => {
             const response = await getVehicles(pageNumber, pageSize, filterParams);
             const data = response.data;
             if (data.httpStatus === 200) {
-                setVehicles(data.data.content || []);
+                // Sort by createdAt descending
+                const sortedVehicles = (data.data.content || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                setVehicles(sortedVehicles);
                 setTotalPages(data.data.totalPages || 0);
             } else {
                 setError(data.message || 'Lỗi khi tải danh sách xe');
@@ -262,6 +263,8 @@ const VehicleList = () => {
             );
         }
 
+        // Sort filteredVehicles by createdAt descending
+        currentFiltered = currentFiltered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setFilteredVehicles(currentFiltered);
     }, [vehicles, filters.vehicleTypeId, filters.fuelType, filters.location, filters.fuelEfficient, filters.fourPlusDoors]);
 
@@ -1017,7 +1020,7 @@ const VehicleList = () => {
 
                                         {/* Content */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {/* Cột 1: Ảnh xe và giấy đăng ký */}
+                                            {/* Cột 1: ��nh xe và giấy đăng ký */}
                                             <div className="space-y-6">
                                                 {/* Ảnh xe */}
                                                 <div>
@@ -1118,146 +1121,7 @@ const VehicleList = () => {
                                                 <DetailItem
                                                     icon={<Tag className="w-5 h-5 text-blue-600" />}
                                                     label="Mô tả"
-                                                    value={selectedDetail.description || 'Không có mô tả'}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Footer */}
-                                        <div className="mt-8 flex justify-end">
-                                            <button
-                                                onClick={() => setShowDetailModal(false)}
-                                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                                            >
-                                                Đóng
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Modal chi tiết xe */}
-                        {showDetailModal && selectedDetail && (
-                            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
-                                <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                                    <div className="p-6 sm:p-8">
-                                        {/* Header */}
-                                        <div className="flex justify-between items-center mb-6">
-                                            <h3 className="text-2xl font-semibold text-gray-800">Chi tiết xe</h3>
-                                            <button
-                                                onClick={() => setShowDetailModal(false)}
-                                                className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
-                                                aria-label="Đóng modal"
-                                            >
-                                                <X className="w-6 h-6" />
-                                            </button>
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {/* Cột 1: Ảnh xe và giấy đăng ký */}
-                                            <div className="space-y-6">
-                                                {/* Ảnh xe */}
-                                                <div>
-                                                    <h4 className="font-medium text-gray-700 text-lg mb-2">Ảnh xe</h4>
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        {selectedDetail.imageUrl?.split(',').map((img, index) => (
-                                                            <div
-                                                                key={index}
-                                                                className="relative cursor-pointer group"
-                                                                onClick={() => openImageGallery(index)}
-                                                            >
-                                                                <img
-                                                                    src={getFullImageUrl(img)}
-                                                                    alt={`Ảnh xe ${index + 1}`}
-                                                                    className="w-full h-32 object-cover rounded-lg border border-gray-200 transition-transform duration-200 group-hover:scale-105"
-                                                                    onError={(e) => (e.target.src = 'https://via.placeholder.com/150')}
-                                                                />
-                                                                {index === 3 && selectedDetail.imageUrl.split(',').length > 4 && (
-                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
-                                                                        <span className="text-white font-semibold">
-                                                                            +{selectedDetail.imageUrl.split(',').length - 4}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )).slice(0, 4)}
-                                                    </div>
-                                                </div>
-
-                                                {/* Giấy đăng ký xe */}
-                                                <div>
-                                                    <h4 className="font-medium text-gray-700 text-lg mb-2">Giấy đăng ký xe</h4>
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        {selectedDetail.registrationDocumentUrl?.split(',').map((doc, index) => (
-                                                            <div
-                                                                key={index}
-                                                                className="relative cursor-pointer group"
-                                                                onClick={() => isImageFile(doc) ? openRegDocGallery(index) : window.open(getFullImageUrl(doc), '_blank')}
-                                                            >
-                                                                {isImageFile(doc) ? (
-                                                                    <img
-                                                                        src={getFullImageUrl(doc)}
-                                                                        alt={`Giấy đăng ký xe ${index + 1}`}
-                                                                        className="w-full h-32 object-cover rounded-lg border border-gray-200 transition-transform duration-200 group-hover:scale-105"
-                                                                        onError={(e) => (e.target.src = 'https://via.placeholder.com/150')}
-                                                                    />
-                                                                ) : (
-                                                                    <div className="w-full h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center border border-gray-200">
-                                                                        <FileText className="w-8 h-8 text-gray-500" />
-                                                                        <span className="text-xs text-gray-600 mt-2">PDF</span>
-                                                                    </div>
-                                                                )}
-                                                                {index === 3 && selectedDetail.registrationDocumentUrl.split(',').length > 4 && (
-                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
-                                                                        <span className="text-white font-semibold">
-                                                                            +{selectedDetail.registrationDocumentUrl.split(',').length - 4}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )).slice(0, 4)}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Cột 2: Thông tin chi tiết */}
-                                            <div className="space-y-4">
-                                                <DetailItem
-                                                    icon={<Building className="w-5 h-5 text-blue-600" />}
-                                                    label="Địa điểm"
-                                                    value={selectedDetail.location}
-                                                />
-                                                <DetailItem
-                                                    icon={<Car className="w-5 h-5 text-blue-600" />}
-                                                    label="Loại phương tiện"
-                                                    value={selectedDetail.vehicleTypeId === '1' ? 'Ô tô' : 'Xe máy'}
-                                                />
-                                                <DetailItem
-                                                    icon={<Car className="w-5 h-5 text-blue-600" />}
-                                                    label="Lý do từ chối"
-                                                    value={selectedDetail.reason || 'Không có lý do'}
-                                                />
-                                                <DetailItem
-                                                    icon={<Tag className="w-5 h-5 text-blue-600" />}
-                                                    label="Biển số"
-                                                    value={selectedDetail.liecensePlate}
-                                                />
-                                                <DetailItem
-                                                    icon={<Users className="w-5 h-5 text-blue-600" />}
-                                                    label="Số ghế"
-                                                    value={selectedDetail.seatCount}
-                                                />
-                                                <DetailItem
-                                                    icon={<Fuel className="w-5 h-5 text-blue-600" />}
-                                                    label="Nhiên liệu"
-                                                    value={selectedDetail.fuelType}
-                                                />
-                                                <DetailItem
-                                                    icon={<Tag className="w-5 h-5 text-blue-600" />}
-                                                    label="Mô tả"
-                                                    value={selectedDetail.description || 'Không có mô tả'}
+                                                    value={selectedDetail.description || 'Không có mô t���'}
                                                 />
                                             </div>
                                         </div>
