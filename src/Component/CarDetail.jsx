@@ -284,41 +284,29 @@ const CarDetail = () => {
             const endDateTime = new Date(`${returnDate}T${returnTime}`);
 
             if (startDateTime.toString() !== 'Invalid Date' && endDateTime.toString() !== 'Invalid Date' && endDateTime >= startDateTime) {
-                const diffTime = Math.abs(endDateTime - startDateTime);
-                const diffHours = diffTime / (1000 * 60 * 60);
-                if (diffHours <= 24) {
-                    return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
-                }
-                days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                hours = Math.ceil((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                // Calculate days difference, ignore hours
+                const diffTime = endDateTime - startDateTime;
+                days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                // Only charge by days, ignore extra hours
                 totalPrice = car.pricePerDay * days;
-                if (hours > 0) {
-                    totalPrice += car.pricePerHour * hours;
-                }
             }
         } else {
             if (!car.pricePerHour) return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
-
             const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
             const endDateTime = new Date(`${pickupDate}T${returnTime}`);
-
             if (startDateTime.toString() === 'Invalid Date' || endDateTime.toString() === 'Invalid Date') {
                 return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
             }
-
             const diffTime = endDateTime - startDateTime;
-
             if (diffTime <= 0) {
                 return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
             }
-
             hours = Math.ceil(diffTime / (1000 * 60 * 60));
             if (hours > 24) {
                 hours = 24;
                 const limitedEndTime = new Date(startDateTime.getTime() + 24 * 60 * 60 * 1000).toTimeString().slice(0, 5);
                 setReturnTime(limitedEndTime <= '17:00' ? limitedEndTime : '17:00');
             }
-
             totalPrice = car.pricePerHour * hours;
         }
 
