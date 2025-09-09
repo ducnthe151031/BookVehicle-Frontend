@@ -647,38 +647,38 @@ const VehicleListForStaff = () => {
                                 </div>
                             </div>
 
-                            {/* Cột 2 */}
-                            <div className="space-y-4">
-                                <div className="flex flex-col">
-                                    <label htmlFor="startDate" className="text-gray-600 text-sm mb-1">Ngày nhận xe</label>
-                                    <div className="relative">
-                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                        <input
-                                            type="datetime-local"
-                                            id="startDate"
-                                            value={filters.startDate?.slice(0, 16) || ''}
-                                            min={minDateTime}
-                                            onChange={(e) => handleFilterChange('startDate', e.target.value)}
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-700"
-                                        />
-                                    </div>
-                                </div>
+                            {/*/!* Cột 2 *!/*/}
+                            {/*<div className="space-y-4">*/}
+                            {/*    <div className="flex flex-col">*/}
+                            {/*        <label htmlFor="startDate" className="text-gray-600 text-sm mb-1">Ngày nhận xe</label>*/}
+                            {/*        <div className="relative">*/}
+                            {/*            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />*/}
+                            {/*            <input*/}
+                            {/*                type="datetime-local"*/}
+                            {/*                id="startDate"*/}
+                            {/*                value={filters.startDate?.slice(0, 16) || ''}*/}
+                            {/*                min={minDateTime}*/}
+                            {/*                onChange={(e) => handleFilterChange('startDate', e.target.value)}*/}
+                            {/*                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-700"*/}
+                            {/*            />*/}
+                            {/*        </div>*/}
+                            {/*    </div>*/}
 
-                                <div className="flex flex-col">
-                                    <label htmlFor="endDate" className="text-gray-600 text-sm mb-1">Ngày trả xe</label>
-                                    <div className="relative">
-                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                        <input
-                                            type="datetime-local"
-                                            id="endDate"
-                                            value={filters.endDate?.slice(0, 16) || ''}
-                                            min={filters.startDate?.slice(0, 16) || minDateTime}
-                                            onChange={(e) => handleFilterChange('endDate', e.target.value)}
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-700"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            {/*    <div className="flex flex-col">*/}
+                            {/*        <label htmlFor="endDate" className="text-gray-600 text-sm mb-1">Ngày trả xe</label>*/}
+                            {/*        <div className="relative">*/}
+                            {/*            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />*/}
+                            {/*            <input*/}
+                            {/*                type="datetime-local"*/}
+                            {/*                id="endDate"*/}
+                            {/*                value={filters.endDate?.slice(0, 16) || ''}*/}
+                            {/*                min={filters.startDate?.slice(0, 16) || minDateTime}*/}
+                            {/*                onChange={(e) => handleFilterChange('endDate', e.target.value)}*/}
+                            {/*                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-700"*/}
+                            {/*            />*/}
+                            {/*        </div>*/}
+                            {/*    </div>*/}
+                            {/*</div>*/}
 
                             {/* Cột 3 */}
                             <div className="space-y-4">
