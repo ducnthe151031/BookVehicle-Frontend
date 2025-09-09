@@ -227,12 +227,20 @@ const Home = () => {
     ]);
 
     // Helper to validate time (7:00–17:00)
-    const isValidTime = (dateTimeStr) => {
-        if (!dateTimeStr) return false;
-        const time = dateTimeStr.split('T')[1]?.slice(0,5);
-        if (!time) return false;
+    const isValidTime = (time) => {
         const [hours, minutes] = time.split(':').map(Number);
-        return hours >= 7 && hours <= 17 && minutes >= 0;
+
+        // Giờ phải >= 7 và <= 17
+        if (hours < 9 || hours > 17) {
+            return false;
+        }
+
+        // Nếu là 17h thì chỉ cho phép 17:00 đúng
+        if (hours === 17 && minutes > 0) {
+            return false;
+        }
+
+        return true;
     };
 
     const handleFilterChange = (key, value, isFrontendFilter = false) => {
@@ -291,7 +299,7 @@ const Home = () => {
             }
             // Validate time range for startDate
             if (key === 'startDate' && start && !isValidTime(start)) {
-                toast.error('Giờ nhận xe phải từ 7:00 sáng đến 5:00 chiều.', {
+                toast.error('Giờ nhận xe phải từ 9:00 sáng đến 5:00 chiều.', {
                     position: 'top-right',
                     autoClose: 3000,
                 });
@@ -515,32 +523,54 @@ const Home = () => {
                     </div>
 
                     <div className="flex flex-col">
-                        <label htmlFor="startDate" className="text-gray-600 text-sm font-medium mb-1">Ngày nhận xe</label>
+                        <label
+                            htmlFor="startDate"
+                            className="text-gray-600 text-sm font-medium mb-1"
+                        >
+                            Ngày nhận xe
+                        </label>
                         <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <Calendar
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 cursor-pointer"
+                                onClick={() => document.getElementById("startDate").showPicker()}
+                            />
                             <input
                                 type="datetime-local"
                                 id="startDate"
-                                value={filters.startDate?.slice(0, 16) || ''}
+                                value={filters.startDate?.slice(0, 16) || ""}
                                 min={minDateTime}
-                                onChange={(e) => handleFilterChange('startDate', e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 transition-all duration-200"
+                                onChange={(e) => handleFilterChange("startDate", e.target.value)}
+                                onKeyDown={(e) => e.preventDefault()} // chặn nhập tay
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg
+                 focus:outline-none focus:ring-2 focus:ring-blue-500
+                 text-gray-700 transition-all duration-200 cursor-pointer"
                                 aria-label="Ngày nhận xe"
                             />
                         </div>
                     </div>
 
                     <div className="flex flex-col">
-                        <label htmlFor="endDate" className="text-gray-600 text-sm font-medium mb-1">Ngày trả xe</label>
+                        <label
+                            htmlFor="endDate"
+                            className="text-gray-600 text-sm font-medium mb-1"
+                        >
+                            Ngày trả xe
+                        </label>
                         <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <Calendar
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 cursor-pointer"
+                                onClick={() => document.getElementById("endDate").showPicker()}
+                            />
                             <input
                                 type="datetime-local"
                                 id="endDate"
-                                value={filters.endDate?.slice(0, 16) || ''}
+                                value={filters.endDate?.slice(0, 16) || ""}
                                 min={filters.startDate?.slice(0, 16) || minDateTime}
-                                onChange={(e) => handleFilterChange('endDate', e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 transition-all duration-200"
+                                onChange={(e) => handleFilterChange("endDate", e.target.value)}
+                                onKeyDown={(e) => e.preventDefault()} // chặn nhập tay
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg
+                 focus:outline-none focus:ring-2 focus:ring-blue-500
+                 text-gray-700 transition-all duration-200 cursor-pointer"
                                 aria-label="Ngày trả xe"
                             />
                         </div>
