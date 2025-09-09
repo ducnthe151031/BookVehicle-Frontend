@@ -299,7 +299,7 @@ const Home = () => {
             }
             // Validate time range for endDate
             if (key === 'endDate' && end && !isValidTime(end)) {
-                toast.error('Giờ trả xe phải từ 7:00 sáng đến 5:00 chiều.', {
+                toast.error('Giờ trả xe phải từ 9:00 sáng đến 5:00 chiều.', {
                     position: 'top-right',
                     autoClose: 3000,
                 });
