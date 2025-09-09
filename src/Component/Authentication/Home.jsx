@@ -227,20 +227,12 @@ const Home = () => {
     ]);
 
     // Helper to validate time (7:00–17:00)
-    const isValidTime = (time) => {
+    const isValidTime = (dateTimeStr) => {
+        if (!dateTimeStr) return false;
+        const time = dateTimeStr.split('T')[1]?.slice(0,5);
+        if (!time) return false;
         const [hours, minutes] = time.split(':').map(Number);
-
-        // Giờ phải >= 7 và <= 17
-        if (hours < 9 || hours > 17) {
-            return false;
-        }
-
-        // Nếu là 17h thì chỉ cho phép 17:00 đúng
-        if (hours === 17 && minutes > 0) {
-            return false;
-        }
-
-        return true;
+        return hours >= 9 && hours <= 17 && minutes >= 0;
     };
 
     const handleFilterChange = (key, value, isFrontendFilter = false) => {
