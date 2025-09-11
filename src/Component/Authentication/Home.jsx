@@ -226,13 +226,23 @@ const Home = () => {
         filters.fourPlusDoors
     ]);
 
-    // Helper to validate time (7:00–17:00)
+    // Helper to validate time (9:00–17:00, chỉ cho phép đúng 17:00)
     const isValidTime = (dateTimeStr) => {
         if (!dateTimeStr) return false;
-        const time = dateTimeStr.split('T')[1]?.slice(0,5);
+        const time = dateTimeStr.split('T')[1]?.slice(0, 5);
         if (!time) return false;
         const [hours, minutes] = time.split(':').map(Number);
-        return hours >= 9 && hours <= 17 && minutes >= 0;
+
+        // Trước 9h sáng => không hợp lệ
+        if (hours < 9) return false;
+
+        // Sau 17h => không hợp lệ
+        if (hours > 17) return false;
+
+        // Nếu là 17h thì chỉ cho phép 17:00
+        if (hours === 17 && minutes > 0) return false;
+
+        return true;
     };
 
     const handleFilterChange = (key, value, isFrontendFilter = false) => {
@@ -291,7 +301,7 @@ const Home = () => {
             }
             // Validate time range for startDate
             if (key === 'startDate' && start && !isValidTime(start)) {
-                toast.error('Giờ nhận xe phải từ 9:00 sáng đến 5:00 chiều.', {
+                toast.error('Giờ nhận xe phải từ 9:00 sáng đến 5:00 chiều (tối đa 5:00 PM).', {
                     position: 'top-right',
                     autoClose: 3000,
                 });
@@ -299,7 +309,7 @@ const Home = () => {
             }
             // Validate time range for endDate
             if (key === 'endDate' && end && !isValidTime(end)) {
-                toast.error('Giờ trả xe phải từ 9:00 sáng đến 5:00 chiều.', {
+                toast.error('Giờ trả xe phải từ 9:00 sáng đến 5:00 chiều (tối đa 5:00 PM).', {
                     position: 'top-right',
                     autoClose: 3000,
                 });
