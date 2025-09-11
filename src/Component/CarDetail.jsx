@@ -523,7 +523,9 @@ const CarDetail = () => {
     const handleCheckRentalTime = () => {
         const startDateTime = new Date(`${pickupDate}T${pickupTime}:00`);
         const endDateTime = rentalType === 'day' ? new Date(`${returnDate}T${returnTime}:00`) : new Date(`${pickupDate}T${returnTime}:00`);
+        const currentDateTime = new Date();
 
+        // Kiểm tra ngày/giờ có hợp lệ không
         if (startDateTime.toString() === 'Invalid Date' || endDateTime.toString() === 'Invalid Date') {
             toast.error('Ngày hoặc giờ không hợp lệ.', {
                 position: 'top-right',
@@ -531,6 +533,8 @@ const CarDetail = () => {
             });
             return;
         }
+
+        // Kiểm tra thời gian có trong khoảng cho phép không (9:00 - 17:00)
         if (!isValidTime(pickupTime) || !isValidTime(returnTime)) {
             toast.error('Giờ nhận và trả xe phải từ 9:00 sáng đến 5:00 chiều.', {
                 position: 'top-right',
@@ -538,6 +542,30 @@ const CarDetail = () => {
             });
             return;
         }
+
+        // Kiểm tra ngày nhận xe không được trong quá khứ
+        const startDateOnly = new Date(pickupDate + 'T00:00:00');
+        const currentDateOnly = new Date();
+        currentDateOnly.setHours(0, 0, 0, 0);
+
+        if (startDateOnly < currentDateOnly) {
+            toast.error('Ngày nhận xe không thể là ngày trong quá khứ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        // Nếu chọn ngày hôm nay, kiểm tra thời gian pickup phải sau thời gian hiện tại
+        if (startDateOnly.getTime() === currentDateOnly.getTime() && startDateTime <= currentDateTime) {
+            toast.error('Thời gian nhận xe phải sau thời gian hiện tại.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        // Kiểm tra thời gian trả phải sau thời gian nhận
         if (endDateTime <= startDateTime) {
             toast.error('Thời gian trả phải sau thời gian thuê', {
                 position: 'top-right',
@@ -545,6 +573,8 @@ const CarDetail = () => {
             });
             return;
         }
+
+        // Kiểm tra thời gian thuê tối thiểu cho thuê trong ngày
         if (rentalType === 'day' && pickupDate === returnDate) {
             const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
             if (diffHours < 3) {
@@ -555,6 +585,8 @@ const CarDetail = () => {
                 return;
             }
         }
+
+        // Kiểm tra thời gian thuê theo giờ
         if (rentalType === 'hour') {
             const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
             if (diffHours < 3) {
@@ -572,6 +604,8 @@ const CarDetail = () => {
                 return;
             }
         }
+
+        // Kiểm tra giá có hợp lệ không
         if (totalPrice === 0) {
             toast.error('Vui lòng chọn thời gian thuê hợp lệ.', {
                 position: 'top-right',
@@ -579,6 +613,7 @@ const CarDetail = () => {
             });
             return;
         }
+
         toast.success('Thời gian thuê hợp lệ!', {
             position: 'top-right',
             autoClose: 2000,
@@ -1073,10 +1108,6 @@ const CarDetail = () => {
                                     </li>
                                     <li className="flex items-start gap-2">
                                         <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
-                                        <span>Nếu bên thuê xe vi phạm luật an toàn giao thông thì phải chịu mọi trách nghiệm pháp lý.</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
                                         <span>Bên thuê chịu trách nhiệm bồi thường thiệt hại nếu xe bị hư hỏng do lỗi sử dụng.</span>
                                     </li>
                                     <li className="flex items-start gap-2">
@@ -1087,7 +1118,6 @@ const CarDetail = () => {
                                         <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
                                         <span>Bên cho thuê có quyền thu hồi xe nếu phát hiện vi phạm hợp đồng.</span>
                                     </li>
-
                                 </ul>
                             </div>
 
