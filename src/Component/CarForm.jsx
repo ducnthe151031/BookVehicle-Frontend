@@ -460,22 +460,22 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                             {errors.dailyPrice && <p className="mt-1 text-sm text-red-600">{errors.dailyPrice}</p>}
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                <DollarSign className="w-4 h-4 inline mr-2" />
-                                Giá giờ (VNĐ)
-                            </label>
-                            <input
-                                type="text"
-                                name="hourlyPrice"
-                                value={formatNumberWithCommas(formData.hourlyPrice)}
-                                onChange={handleChange}
-                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
-                                    errors.hourlyPrice ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                                }`}
-                            />
-                            {errors.hourlyPrice && <p className="mt-1 text-sm text-red-600">{errors.hourlyPrice}</p>}
-                        </div>
+                        {/*<div>*/}
+                        {/*    <label className="block text-sm font-medium text-gray-700 mb-2">*/}
+                        {/*        <DollarSign className="w-4 h-4 inline mr-2" />*/}
+                        {/*        Giá giờ (VNĐ)*/}
+                        {/*    </label>*/}
+                        {/*    <input*/}
+                        {/*        type="text"*/}
+                        {/*        name="hourlyPrice"*/}
+                        {/*        value={formatNumberWithCommas(formData.hourlyPrice)}*/}
+                        {/*        onChange={handleChange}*/}
+                        {/*        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${*/}
+                        {/*            errors.hourlyPrice ? 'border-red-500 bg-red-50' : 'border-gray-300'*/}
+                        {/*        }`}*/}
+                        {/*    />*/}
+                        {/*    {errors.hourlyPrice && <p className="mt-1 text-sm text-red-600">{errors.hourlyPrice}</p>}*/}
+                        {/*</div>*/}
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -548,7 +548,7 @@ const CarForm = ({ onClose, onSuccess, initialData, isEditMode }) => {
                         <div>
                             <label htmlFor="registrationDocumentUrl" className="block text-sm font-medium text-gray-700 mb-2">
                                 <FileText className="w-4 h-4 inline mr-2" />
-                                Giấy đăng ký xe (Có thể chọn nhiều file)
+                                Giấy đăng ký xe (Có thể nhiều file)
                             </label>
                             <input
                                 type="file"

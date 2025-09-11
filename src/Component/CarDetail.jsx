@@ -84,7 +84,18 @@ const CarDetail = () => {
     // Validate time to ensure it's within 9:00 AM to 5:00 PM
     const isValidTime = (time) => {
         const [hours, minutes] = time.split(':').map(Number);
-        return hours >= 7 && hours <= 17 && minutes >= 0;
+
+        // Giờ phải >= 7 và <= 17
+        if (hours < 9 || hours > 17) {
+            return false;
+        }
+
+        // Nếu là 17h thì chỉ cho phép 17:00 đúng
+        if (hours === 17 && minutes > 0) {
+            return false;
+        }
+
+        return true;
     };
 
     // Helper: check if a date is within 3 months from now
@@ -99,167 +110,22 @@ const CarDetail = () => {
 
     // Update pickup time input
     const handlePickupTimeChange = (e) => {
-        const newPickupTime = e.target.value;
-        const currentDateTime = new Date();
-        const currentDate = currentDateTime.toISOString().split('T')[0];
-        const currentTime = currentDateTime.toTimeString().slice(0, 5);
-
-        // Check if time is within 9:00 AM to 5:00 PM
-        if (!isValidTime(newPickupTime)) {
-            toast.error('Giờ nhận xe phải từ 9:00 sáng đến 5:00 chiều.', {
-                position: 'top-right',
-                autoClose: 3000,
-            });
-            return;
-        }
-
-        // If pickup date is today, ensure time is not before current time
-        if (pickupDate === currentDate && newPickupTime < currentTime) {
-            toast.error('Giờ nhận xe phải từ thời điểm hiện tại trở đi.', {
-                position: 'top-right',
-                autoClose: 3000,
-            });
-            return;
-        }
-
-        setPickupTime(newPickupTime);
-        const startDateTime = new Date(`${pickupDate}T${newPickupTime}`);
-        const endDateTime = new Date(`${returnDate}T${returnTime}`);
-
-        if (rentalType === 'day') {
-            if (endDateTime <= startDateTime || (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
-                const nextDay = new Date(startDateTime);
-                nextDay.setDate(startDateTime.getDate() + 2);
-                setReturnDate(nextDay.toISOString().split('T')[0]);
-                setReturnTime(newPickupTime <= '17:00' ? newPickupTime : '17:00');
-            }
-        } else {
-            if (endDateTime <= startDateTime || !isValidTime(returnTime)) {
-                const nextHour = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5);
-                setReturnTime(nextHour <= '17:00' ? nextHour : '17:00');
-            }
-        }
+        setPickupTime(e.target.value);
     };
 
     // Update return time input
     const handleReturnTimeChange = (e) => {
-        const newReturnTime = e.target.value;
-        const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
-        const endDateTime = new Date(`${rentalType === 'day' ? returnDate : pickupDate}T${newReturnTime}`);
-
-        // Check if time is within 9:00 AM to 5:00 PM
-        if (!isValidTime(newReturnTime)) {
-            toast.error('Giờ trả xe phải từ 7:00 sáng đến 5:00 chiều.', {
-                position: 'top-right',
-                autoClose: 3000,
-            });
-            return;
-        }
-
-        if (endDateTime <= startDateTime) {
-            toast.error('Giờ trả phải sau giờ nhận.', {
-                position: 'top-right',
-                autoClose: 3000,
-            });
-            return;
-        }
-
-        if (rentalType === 'day' && (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
-            toast.error('Thời gian thuê theo ngày phải lớn hơn 24 giờ.', {
-                position: 'top-right',
-                autoClose: 3000,
-            });
-            return;
-        }
-
-        if (rentalType === 'hour') {
-            const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
-            if (diffHours < 3) {
-                toast.error('Thời gian thuê tối thiểu là 3 giờ.', {
-                    position: 'top-right',
-                    autoClose: 3000,
-                });
-                return;
-            }
-            if (diffHours > 24) {
-                toast.error('Thời gian thuê theo giờ không được vượt quá 24 giờ.', {
-                    position: 'top-right',
-                    autoClose: 3000,
-                });
-                return;
-            }
-        }
-
-        setReturnTime(newReturnTime);
+        setReturnTime(e.target.value);
     };
 
     // Update pickup date input
     const handlePickupDateChange = (e) => {
-        const newDate = e.target.value;
-        const currentDateTime = new Date();
-        const currentDate = currentDateTime.toISOString().split('T')[0];
-        const currentTime = currentDateTime.toTimeString().slice(0, 5);
-        const currentHours = currentDateTime.getHours();
-        const isWithinOperatingHours = currentHours >= 7 && currentHours < 17;
+        setPickupDate(e.target.value);
+    };
 
-        // Prevent selecting past dates
-        if (newDate < currentDate) {
-            toast.error('Ngày nhận xe phải từ hôm nay trở đi.', {
-                position: 'top-right',
-                autoClose: 3000,
-            });
-            return;
-        }
-        // Prevent booking more than 3 months in advance
-        if (!isWithin3Months(newDate)) {
-            toast.error('Ngày nhận xe chỉ được đặt trước tối đa 3 tháng.', {
-                position: 'top-right',
-                autoClose: 3000,
-            });
-            return;
-        }
-
-        // If selecting current date, check if within operating hours
-        if (newDate === currentDate && !isWithinOperatingHours) {
-            toast.error('Không thể chọn ngày hiện tại vì hiện tại ngoài giờ hoạt động (7:00 sáng - 5:00 chiều). Chọn ngày mai.', {
-                position: 'top-right',
-                autoClose: 3000,
-            });
-            const nextDay = new Date(currentDateTime);
-            nextDay.setDate(currentDateTime.getDate() + 1);
-            setPickupDate(nextDay.toISOString().split('T')[0]);
-            setPickupTime('07:00');
-            const defaultReturnDate = new Date(nextDay);
-            if (rentalType === 'day') {
-                defaultReturnDate.setDate(nextDay.getDate() + 2);
-            }
-            setReturnDate(defaultReturnDate.toISOString().split('T')[0]);
-            setReturnTime('17:00');
-            return;
-        }
-
-        setPickupDate(newDate);
-        const startDateTime = new Date(`${newDate}T${pickupTime}`);
-        const endDateTime = new Date(`${returnDate}T${returnTime}`);
-
-        if (rentalType === 'day') {
-            if (endDateTime <= startDateTime || (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
-                const nextDay = new Date(startDateTime);
-                nextDay.setDate(startDateTime.getDate() + 2);
-                setReturnDate(nextDay.toISOString().split('T')[0]);
-                setReturnTime(pickupTime <= '17:00' ? pickupTime : '17:00');
-            }
-        } else {
-            if (endDateTime <= startDateTime || !isValidTime(returnTime)) {
-                const nextHour = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5);
-                setReturnTime(nextHour <= '17:00' ? nextHour : '17:00');
-            }
-        }
-
-        // If selecting current date, adjust pickup time if before current time
-        if (newDate === currentDate && pickupTime < currentTime) {
-            setPickupTime(currentTime);
-        }
+    // Update return date input
+    const handleReturnDateChange = (e) => {
+        setReturnDate(e.target.value);
     };
 
     const getFullImageUrl = (filename) => {
@@ -279,46 +145,32 @@ const CarDetail = () => {
 
         if (rentalType === 'day') {
             if (!car.pricePerDay) return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
-
             const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
             const endDateTime = new Date(`${returnDate}T${returnTime}`);
-
             if (startDateTime.toString() !== 'Invalid Date' && endDateTime.toString() !== 'Invalid Date' && endDateTime >= startDateTime) {
-                const diffTime = Math.abs(endDateTime - startDateTime);
-                const diffHours = diffTime / (1000 * 60 * 60);
-                if (diffHours <= 24) {
-                    return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
-                }
-                days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                hours = Math.ceil((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                // Calculate days difference, ignore hours
+                const diffTime = endDateTime - startDateTime;
+                days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (days < 1) days = 1; // Always charge at least 1 day
                 totalPrice = car.pricePerDay * days;
-                if (hours > 0) {
-                    totalPrice += car.pricePerHour * hours;
-                }
             }
         } else {
             if (!car.pricePerHour) return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
-
             const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
             const endDateTime = new Date(`${pickupDate}T${returnTime}`);
-
             if (startDateTime.toString() === 'Invalid Date' || endDateTime.toString() === 'Invalid Date') {
                 return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
             }
-
             const diffTime = endDateTime - startDateTime;
-
             if (diffTime <= 0) {
                 return { days: 0, hours: 0, duration: 0, totalPrice: 0 };
             }
-
             hours = Math.ceil(diffTime / (1000 * 60 * 60));
             if (hours > 24) {
                 hours = 24;
                 const limitedEndTime = new Date(startDateTime.getTime() + 24 * 60 * 60 * 1000).toTimeString().slice(0, 5);
                 setReturnTime(limitedEndTime <= '17:00' ? limitedEndTime : '17:00');
             }
-
             totalPrice = car.pricePerHour * hours;
         }
 
@@ -425,6 +277,7 @@ const CarDetail = () => {
         const startDateTime = new Date(`${pickupDate}T${pickupTime}:00`);
         const endDateTime = rentalType === 'day' ? new Date(`${returnDate}T${returnTime}:00`) : new Date(`${pickupDate}T${returnTime}:00`);
 
+        // Centralized validation
         if (startDateTime.toString() === 'Invalid Date' || endDateTime.toString() === 'Invalid Date') {
             toast.error('Ngày hoặc giờ không hợp lệ.', {
                 position: 'top-right',
@@ -441,38 +294,56 @@ const CarDetail = () => {
             return;
         }
 
-        const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
-        if (diffHours <= 0) {
-            toast.error('Thời gian kết thúc phải sau thời gian bắt đầu.', {
+        if (endDateTime <= startDateTime) {
+            toast.error('Thời gian trả phải sau thời gian thuê', {
                 position: 'top-right',
                 autoClose: 3000,
             });
             return;
         }
 
-        if (rentalType === 'day' && diffHours <= 24) {
-            toast.error('Thời gian thuê theo ngày phải lớn hơn 24 giờ.', {
-                position: 'top-right',
-                autoClose: 3000,
-            });
-            return;
+        // Validate minimum 3 hours for same-day rentals
+        if (rentalType === 'day' && pickupDate === returnDate) {
+            const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
+            if (diffHours < 3) {
+                toast.error('Thời gian thuê trong ngày phải tối thiểu 3 tiếng.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
         }
 
-        if (diffHours < 3) {
-            toast.error('Thời gian thuê tối thiểu là 3 giờ.', {
-                position: 'top-right',
-                autoClose: 3000,
-            });
-            return;
+        // Validate minimum duration for hour rental
+        if (rentalType === 'hour') {
+            const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
+            if (diffHours < 3) {
+                toast.error('Thời gian thuê tối thiểu là 3 giờ.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+            if (diffHours > 24) {
+                toast.error('Thời gian thuê theo giờ không được vượt quá 24 giờ.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
         }
 
-        if (rentalType === 'hour' && diffHours > 24) {
-            toast.error('Thời gian thuê theo giờ không được vượt quá 24 giờ.', {
-                position: 'top-right',
-                autoClose: 3000,
-            });
-            return;
-        }
+        // Validate minimum duration for multi-day rental
+        // if (rentalType === 'day' && pickupDate !== returnDate) {
+        //     const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
+        //     if (diffHours <= 24) {
+        //         toast.error('Thời gian thuê theo ngày phải lớn hơn 24 giờ.', {
+        //             position: 'top-right',
+        //             autoClose: 3000,
+        //         });
+        //         return;
+        //     }
+        // }
 
         if (totalPrice === 0) {
             toast.error('Vui lòng chọn thời gian thuê hợp lệ.', {
@@ -628,6 +499,125 @@ const CarDetail = () => {
         setAppliedCoupon(null);
         setCouponCodeInput('');
         setCouponError('');
+    };
+
+    // Thêm hàm thuật toán ở ngoài render
+    function handleDayRentalLogic() {
+        setRentalType('day');
+        const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
+        const endDateTime = new Date(`${returnDate}T${returnTime}`);
+        if (endDateTime <= startDateTime || (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
+            const nextDay = new Date(startDateTime);
+            nextDay.setDate(startDateTime.getDate() + 2);
+            setReturnDate(nextDay.toISOString().split('T')[0]);
+            setReturnTime(pickupTime <= '17:00' ? pickupTime : '17:00');
+        }
+    }
+
+    // Prevent manual input for date/time fields
+    const preventManualInput = (e) => {
+        e.preventDefault();
+    };
+
+    // Validate rental time and show errors immediately
+    const handleCheckRentalTime = () => {
+        const startDateTime = new Date(`${pickupDate}T${pickupTime}:00`);
+        const endDateTime = rentalType === 'day' ? new Date(`${returnDate}T${returnTime}:00`) : new Date(`${pickupDate}T${returnTime}:00`);
+        const currentDateTime = new Date();
+
+        // Kiểm tra ngày/giờ có hợp lệ không
+        if (startDateTime.toString() === 'Invalid Date' || endDateTime.toString() === 'Invalid Date') {
+            toast.error('Ngày hoặc giờ không hợp lệ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        // Kiểm tra thời gian có trong khoảng cho phép không (9:00 - 17:00)
+        if (!isValidTime(pickupTime) || !isValidTime(returnTime)) {
+            toast.error('Giờ nhận và trả xe phải từ 9:00 sáng đến 5:00 chiều.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        // Kiểm tra ngày nhận xe không được trong quá khứ
+        const startDateOnly = new Date(pickupDate + 'T00:00:00');
+        const currentDateOnly = new Date();
+        currentDateOnly.setHours(0, 0, 0, 0);
+
+        if (startDateOnly < currentDateOnly) {
+            toast.error('Ngày nhận xe không thể là ngày trong quá khứ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        // Nếu chọn ngày hôm nay, kiểm tra thời gian pickup phải sau thời gian hiện tại
+        if (startDateOnly.getTime() === currentDateOnly.getTime() && startDateTime <= currentDateTime) {
+            toast.error('Thời gian nhận xe phải sau thời gian hiện tại.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        // Kiểm tra thời gian trả phải sau thời gian nhận
+        if (endDateTime <= startDateTime) {
+            toast.error('Thời gian trả phải sau thời gian thuê', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        // Kiểm tra thời gian thuê tối thiểu cho thuê trong ngày
+        if (rentalType === 'day' && pickupDate === returnDate) {
+            const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
+            if (diffHours < 3) {
+                toast.error('Thời gian thuê trong ngày phải tối thiểu 3 tiếng.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+        }
+
+        // Kiểm tra thời gian thuê theo giờ
+        if (rentalType === 'hour') {
+            const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
+            if (diffHours < 3) {
+                toast.error('Thời gian thuê tối thiểu là 3 giờ.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+            if (diffHours > 24) {
+                toast.error('Thời gian thuê theo giờ không được vượt quá 24 giờ.', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+        }
+
+        // Kiểm tra giá có hợp lệ không
+        if (totalPrice === 0) {
+            toast.error('Vui lòng chọn thời gian thuê hợp lệ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        toast.success('Thời gian thuê hợp lệ!', {
+            position: 'top-right',
+            autoClose: 2000,
+        });
     };
 
     if (loading) {
@@ -914,75 +904,11 @@ const CarDetail = () => {
                         <div className="bg-white rounded-lg shadow p-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">Thời gian thuê</h2>
                             <div className="space-y-4">
-                                <div className="flex items-center mb-2">
-                                    <input
-                                        type="radio"
-                                        id="rentByDay"
-                                        name="rentalType"
-                                        value="day"
-                                        checked={rentalType === 'day'}
-                                        onChange={() => {
-                                            setRentalType('day');
-                                            const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
-                                            const endDateTime = new Date(`${returnDate}T${returnTime}`);
-                                            if (endDateTime <= startDateTime || (endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
-                                                const nextDay = new Date(startDateTime);
-                                                nextDay.setDate(startDateTime.getDate() + 2);
-                                                setReturnDate(nextDay.toISOString().split('T')[0]);
-                                                setReturnTime(pickupTime <= '17:00' ? pickupTime : '17:00');
-                                            }
-                                        }}
-                                        className="mr-2 text-red-600 focus:ring-red-500"
-                                    />
-                                    <label htmlFor="rentByDay" className="font-medium text-gray-700">Theo ngày</label>
-                                </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label htmlFor="pickupDate" className="block text-xs text-gray-500 mb-1">Ngày nhận</label>
-                                        <input
-                                            type="date"
-                                            id="pickupDate"
-                                            value={pickupDate}
-                                            onChange={handlePickupDateChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
-                                            disabled={rentalType === 'hour'}
-                                            min={new Date().toISOString().split('T')[0]}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="returnDate" className="block text-xs text-gray-500 mb-1">Ngày trả</label>
-                                        <input
-                                            type="date"
-                                            id="returnDate"
-                                            value={returnDate}
-                                            onChange={(e) => {
-                                                const newReturnDate = e.target.value;
-                                                const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
-                                                const endDateTime = new Date(`${newReturnDate}T${returnTime}`);
-                                                // Prevent booking more than 3 months in advance
-                                                if (!isWithin3Months(newReturnDate)) {
-                                                    toast.error('Ngày trả xe chỉ được đặt trước tối đa 3 tháng.', {
-                                                        position: "top-right",
-                                                        autoClose: 3000,
-                                                    });
-                                                    return;
-                                                }
-                                                if ((endDateTime - startDateTime) / (1000 * 60 * 60) <= 24) {
-                                                    toast.error('Thời gian thuê theo ngày phải lớn hơn 24 giờ.', {
-                                                        position: "top-right",
-                                                        autoClose: 3000,
-                                                    });
-                                                    return;
-                                                }
-                                                setReturnDate(newReturnDate);
-                                            }}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
-                                            disabled={rentalType === 'hour'}
-                                            min={new Date(new Date(pickupDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="pickupTimeDay" className="block text-xs text-gray-500 mb-1">Giờ nhận</label>
+                                        <label htmlFor="pickupTimeDay" className="block text-xs text-gray-500 mb-1">
+                                            Giờ nhận
+                                        </label>
                                         <input
                                             type="time"
                                             id="pickupTimeDay"
@@ -992,10 +918,28 @@ const CarDetail = () => {
                                             disabled={rentalType === 'hour'}
                                             min={pickupDate === new Date().toISOString().split('T')[0] ? new Date().toTimeString().slice(0, 5) : '07:00'}
                                             max="17:00"
+                                            onKeyDown={preventManualInput}
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="returnTimeDay" className="block text-xs text-gray-500 mb-1">Giờ trả</label>
+                                        <label htmlFor="pickupDate" className="block text-xs text-gray-500 mb-1">
+                                            Ngày nhận
+                                        </label>
+                                        <input
+                                            type="date"
+                                            id="pickupDate"
+                                            value={pickupDate}
+                                            onChange={handlePickupDateChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
+                                            disabled={rentalType === 'hour'}
+                                            min={new Date().toISOString().split('T')[0]}
+                                            onKeyDown={preventManualInput}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="returnTimeDay" className="block text-xs text-gray-500 mb-1">
+                                            Giờ trả
+                                        </label>
                                         <input
                                             type="time"
                                             id="returnTimeDay"
@@ -1005,70 +949,36 @@ const CarDetail = () => {
                                             disabled={rentalType === 'hour'}
                                             min="09:00"
                                             max="17:00"
+                                            onKeyDown={preventManualInput}
                                         />
                                     </div>
-                                </div>
-
-                                <div className="flex items-center mt-4 mb-2">
-                                    <input
-                                        type="radio"
-                                        id="rentByHour"
-                                        name="rentalType"
-                                        value="hour"
-                                        checked={rentalType === 'hour'}
-                                        onChange={() => {
-                                            setRentalType('hour');
-                                            const startDateTime = new Date(`${pickupDate}T${pickupTime}`);
-                                            const endDateTime = new Date(`${pickupDate}T${returnTime}`);
-                                            if (endDateTime <= startDateTime || !isValidTime(returnTime)) {
-                                                const nextHour = new Date(startDateTime.getTime() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5);
-                                                setReturnTime(nextHour <= '17:00' ? nextHour : '17:00');
-                                            }
-                                        }}
-                                        className="mr-2 text-red-600 focus:ring-red-500"
-                                    />
-                                    <label htmlFor="rentByHour" className="font-medium text-gray-700">Theo giờ</label>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label htmlFor="pickupDateHour" className="block text-xs text-gray-500 mb-1">Ngày thuê</label>
+                                        <label htmlFor="returnDate" className="block text-xs text-gray-500 mb-1">
+                                            Ngày trả
+                                        </label>
                                         <input
                                             type="date"
-                                            id="pickupDateHour"
-                                            value={pickupDate}
-                                            onChange={handlePickupDateChange}
+                                            id="returnDate"
+                                            value={returnDate}
+                                            onChange={(e) => {
+                                                const newReturnDate = e.target.value;
+                                                setReturnDate(newReturnDate);
+                                            }}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
-                                            disabled={rentalType === 'day'}
-                                            min={new Date().toISOString().split('T')[0]}
+                                            disabled={rentalType === 'hour'}
+                                            min={pickupDate}
+                                            onKeyDown={preventManualInput}
                                         />
                                     </div>
-                                    <div></div>
-                                    <div>
-                                        <label htmlFor="pickupTimeHour" className="block text-xs text-gray-500 mb-1">Giờ bắt đầu</label>
-                                        <input
-                                            type="time"
-                                            id="pickupTimeHour"
-                                            value={pickupTime}
-                                            onChange={handlePickupTimeChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
-                                            disabled={rentalType === 'day'}
-                                            min={pickupDate === new Date().toISOString().split('T')[0] ? new Date().toTimeString().slice(0, 5) : '09:00'}
-                                            max="17:00"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="returnTimeHour" className="block text-xs text-gray-500 mb-1">Giờ kết thúc</label>
-                                        <input
-                                            type="time"
-                                            id="returnTimeHour"
-                                            value={returnTime}
-                                            onChange={handleReturnTimeChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm"
-                                            disabled={rentalType === 'day'}
-                                            min="09:00"
-                                            max="17:00"
-                                        />
-                                    </div>
+                                </div>
+                                <div className="flex justify-end mt-4">
+                                    <button
+                                        type="button"
+                                        onClick={handleCheckRentalTime}
+                                        className="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg shadow hover:bg-red-700 transition duration-200"
+                                    >
+                                        Kiểm tra
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1083,13 +993,9 @@ const CarDetail = () => {
                                         {rentalType === 'day' ? 'ngày' : 'giờ'}
                                     </span>
                                 </div>
-                                <div className="flex justify-between font-bold">
-                                    <span>Tổng cộng:</span>
-                                    <span>
-                                        {totalPrice.toLocaleString()}đ
-                                        {days > 0 && ` x ${days} ngày`}
-                                        {hours > 0 && ` ${days > 0 ? '+' : ''} ${hours} giờ`}
-                                    </span>
+                                <div className="flex justify-between">
+                                    <span>Số ngày thuê:</span>
+                                    <span>{days} ngày</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Phụ phí:</span>

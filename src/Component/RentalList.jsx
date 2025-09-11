@@ -210,19 +210,19 @@ const RentalList = () => {
                                     />
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Loại thuê</label>
-                                    <select
-                                        name="rentType"
-                                        value={filters.rentType}
-                                        onChange={handleFilterChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        <option value="">Tất cả</option>
-                                        <option value="Thuê theo ngày">Thuê theo ngày</option>
-                                        <option value="Thuê theo giờ">Thuê theo giờ</option>
-                                    </select>
-                                </div>
+                                {/*<div>*/}
+                                {/*    <label className="block text-sm font-medium text-gray-700 mb-1">Loại thuê</label>*/}
+                                {/*    <select*/}
+                                {/*        name="rentType"*/}
+                                {/*        value={filters.rentType}*/}
+                                {/*        onChange={handleFilterChange}*/}
+                                {/*        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"*/}
+                                {/*    >*/}
+                                {/*        <option value="">Tất cả</option>*/}
+                                {/*        <option value="Thuê theo ngày">Thuê theo ngày</option>*/}
+                                {/*        <option value="Thuê theo giờ">Thuê theo giờ</option>*/}
+                                {/*    </select>*/}
+                                {/*</div>*/}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Trễ hạn</label>
                                     <select
@@ -262,7 +262,7 @@ const RentalList = () => {
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày bắt đầu</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày kết thúc</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng giá</th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại thuê</th>
+                                        {/*<th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại thuê</th>*/}
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trễ hạn</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phí trả thêm</th>
@@ -308,9 +308,9 @@ const RentalList = () => {
                                                         {rental.totalPrice ? rental.totalPrice.toLocaleString('vi-VN') : 'N/A'} VNĐ
                                                     </div>
                                                 </td>
-                                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                                                    {rental.rentType}
-                                                </td>
+                                                {/*<td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">*/}
+                                                {/*    {rental.rentType}*/}
+                                                {/*</td>*/}
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     {rental.deliveryStatus === 'READY_TO_PICK' ? 'Chờ lấy xe'
                                                         : rental.deliveryStatus === 'TRANSIT' ? 'Đang giao xe'

@@ -284,19 +284,19 @@ const MyPayment = () => {
                                         <option value="RETURNED">Đã trả</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Loại thuê</label>
-                                    <select
-                                        name="rentType"
-                                        value={filters.rentType}
-                                        onChange={handleFilterChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        <option value="">Tất cả</option>
-                                        <option value="Thuê theo ngày">Thuê theo ngày</option>
-                                        <option value="Thuê theo giờ">Thuê theo giờ</option>
-                                    </select>
-                                </div>
+                                {/*<div>*/}
+                                {/*    <label className="block text-sm font-medium text-gray-700 mb-1">Loại thuê</label>*/}
+                                {/*    <select*/}
+                                {/*        name="rentType"*/}
+                                {/*        value={filters.rentType}*/}
+                                {/*        onChange={handleFilterChange}*/}
+                                {/*        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"*/}
+                                {/*    >*/}
+                                {/*        <option value="">Tất cả</option>*/}
+                                {/*        <option value="Thuê theo ngày">Thuê theo ngày</option>*/}
+                                {/*        <option value="Thuê theo giờ">Thuê theo giờ</option>*/}
+                                {/*    </select>*/}
+                                {/*</div>*/}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Trễ hạn</label>
                                     <select
