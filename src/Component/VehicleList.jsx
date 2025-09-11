@@ -936,9 +936,9 @@ const VehicleList = () => {
                                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                                                 {vehicle.pricePerDay?.toLocaleString('vi-VN')} VNĐ
                                             </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                                {vehicle.pricePerHour?.toLocaleString('vi-VN')} VNĐ
-                                            </td>
+                                            {/*<td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">*/}
+                                            {/*    {vehicle.pricePerHour?.toLocaleString('vi-VN')} VNĐ*/}
+                                            {/*</td>*/}
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                                         vehicle.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' :
