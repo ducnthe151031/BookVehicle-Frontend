@@ -1087,6 +1087,7 @@ const CarDetail = () => {
                                         <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
                                         <span>Bên cho thuê có quyền thu hồi xe nếu phát hiện vi phạm hợp đồng.</span>
                                     </li>
+
                                 </ul>
                             </div>
 
