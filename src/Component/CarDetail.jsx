@@ -1073,6 +1073,10 @@ const CarDetail = () => {
                                     </li>
                                     <li className="flex items-start gap-2">
                                         <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                                        <span>Nếu bên thuê xe vi phạm luật an toàn giao thông thì phải chịu mọi trách nghiệm pháp lý.</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
                                         <span>Bên thuê chịu trách nhiệm bồi thường thiệt hại nếu xe bị hư hỏng do lỗi sử dụng.</span>
                                     </li>
                                     <li className="flex items-start gap-2">
