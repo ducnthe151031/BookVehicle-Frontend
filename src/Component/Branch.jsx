@@ -126,11 +126,18 @@ const BrandList = () => {
             } else {
                 await createBrand({ name: brandName });
             }
-            handleCloseModal();
+            handleCloseModal(); // 👈 chỉ đóng khi thành công
             await fetchBrands(currentPage);
         } catch (err) {
-            setActionError(err.response?.data?.message || `Không thể ${modalMode === 'edit' ? 'cập nhật' : 'tạo'} hãng xe.`);
-        } finally {
+            console.error("Error response:", err.response?.data);
+            setActionError(
+                err.response?.data?.message
+                || err.response?.data?.error
+                || err.response?.data?.code
+                || JSON.stringify(err.response?.data)
+                || `Không thể ${modalMode === 'edit' ? 'cập nhật' : 'tạo'} hãng xe.`
+            );
+        }finally {
             setActionLoading(false);
         }
     };
