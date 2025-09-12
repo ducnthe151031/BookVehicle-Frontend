@@ -519,8 +519,52 @@ const CarDetail = () => {
         e.preventDefault();
     };
 
+    const checkVehicleAvailability = async () => {
+        const startDateTime = new Date(`${pickupDate}T${pickupTime}:00`);
+        const endDateTime = rentalType === 'day' ? new Date(`${returnDate}T${returnTime}:00`) : new Date(`${pickupDate}T${returnTime}:00`);
+
+        try {
+            const response = await axios.post('http://localhost:8080/v1/user/check-vehicle-availability', {
+                vehicleId: carId,
+                startDate: startDateTime.toISOString(),
+                endDate: endDateTime.toISOString()
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+            });
+
+            const result = response.data;
+
+            if (result.available) {
+                toast.success('Xe có sẵn trong khoảng thời gian này!', {
+                    position: 'top-right',
+                    autoClose: 2000,
+                });
+            } else {
+                toast.error(result.message, {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+
+                // Hiển thị thông tin chi tiết về các booking trung (optional)
+                if (result.conflictBookings && result.conflictBookings.length > 0) {
+                    console.log('Conflicting bookings:', result.conflictBookings);
+                    // Có thể hiển thị modal với thông tin chi tiết các booking trung
+                }
+            }
+        } catch (error) {
+            console.error('Error checking vehicle availability:', error);
+            toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi kiểm tra tình trạng xe', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+        }
+    };
+
     // Validate rental time and show errors immediately
-    const handleCheckRentalTime = () => {
+    const handleCheckRentalTime = async () => {
         const startDateTime = new Date(`${pickupDate}T${pickupTime}:00`);
         const endDateTime = rentalType === 'day' ? new Date(`${returnDate}T${returnTime}:00`) : new Date(`${pickupDate}T${returnTime}:00`);
         const currentDateTime = new Date();
@@ -613,11 +657,8 @@ const CarDetail = () => {
             });
             return;
         }
-
-        toast.success('Thời gian thuê hợp lệ!', {
-            position: 'top-right',
-            autoClose: 2000,
-        });
+        // Nếu tất cả hợp lệ, kiểm tra tình trạng xe
+        await checkVehicleAvailability();
     };
 
     if (loading) {
