@@ -156,7 +156,7 @@ const CouponList = () => {
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-2">
-                                                    <DollarSign className="w-4 h-4 text-green-600" />
+
                                                     <span className="text-gray-800">{coupon.discountAmount.toLocaleString('vi-VN')} VNĐ</span>
                                                 </div>
                                             </td>
