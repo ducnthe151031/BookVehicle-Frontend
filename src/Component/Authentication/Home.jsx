@@ -29,6 +29,7 @@ import { toast } from "react-toastify";
 import { FaCar, FaMotorcycle } from "react-icons/fa";
 import Test from "../Test.jsx";
 import Chatbot from "./Test/ChatBot.jsx";
+
 // FAQ data
 const Home = () => {
     const { customer, logOut } = useAuth();
@@ -44,6 +45,7 @@ const Home = () => {
     const [isSearching, setIsSearching] = useState(false);
     const [isLocating, setIsLocating] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
+
     // Filter states
     const [filters, setFilters] = useState({
         vehicleName: '',
@@ -82,6 +84,129 @@ const Home = () => {
     const getFullImageUrl = (filename) => {
         if (!filename || filename.trim() === '') return 'https://via.placeholder.com/150';
         return `http://localhost:8080/v1/user/images/${filename.trim()}`;
+    };
+
+    // Helper function to validate time (9:00–17:00)
+    const isValidTime = (dateTimeStr) => {
+        if (!dateTimeStr) return false;
+
+        // Parse ISO string về Date local
+        const date = new Date(dateTimeStr);
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+
+        // Trước 9h sáng => không hợp lệ
+        if (hours < 9) return false;
+
+        // Sau 17h => không hợp lệ
+        if (hours > 17) return false;
+
+        // Nếu là 17h thì chỉ cho phép 17:00
+        if (hours === 17 && minutes > 0) return false;
+
+        return true;
+    };
+
+    // Comprehensive date/time validation function
+    const validateDateTime = (startDateTime, endDateTime) => {
+        const currentDateTime = new Date();
+
+        // Kiểm tra ngày/giờ có hợp lệ không
+        if (startDateTime.toString() === 'Invalid Date' || endDateTime.toString() === 'Invalid Date') {
+            toast.error('Ngày hoặc giờ không hợp lệ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return false;
+        }
+
+        // Kiểm tra thời gian có trong khoảng cho phép không (9:00 - 17:00)
+        const startTime = startDateTime.toTimeString().slice(0, 5);
+        const endTime = endDateTime.toTimeString().slice(0, 5);
+
+        if (!isValidTime(startDateTime.toISOString()) || !isValidTime(endDateTime.toISOString())) {
+            toast.error('Giờ nhận và trả xe phải từ 9:00 sáng đến 5:00 chiều.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return false;
+        }
+
+        // Kiểm tra ngày nhận xe không được trong quá khứ
+        const startDateOnly = new Date(startDateTime);
+        startDateOnly.setHours(0, 0, 0, 0);
+        const currentDateOnly = new Date();
+        currentDateOnly.setHours(0, 0, 0, 0);
+
+        if (startDateOnly < currentDateOnly) {
+            toast.error('Ngày nhận xe không thể là ngày trong quá khứ.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return false;
+        }
+
+        // Nếu chọn ngày hôm nay, kiểm tra thời gian pickup phải sau thời gian hiện tại
+        if (startDateOnly.getTime() === currentDateOnly.getTime() && startDateTime <= currentDateTime) {
+            toast.error('Thời gian nhận xe phải sau thời gian hiện tại.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return false;
+        }
+
+        // Kiểm tra thời gian trả phải sau thời gian nhận
+        if (endDateTime <= startDateTime) {
+            toast.error('Thời gian trả xe phải sau thời gian nhận xe.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return false;
+        }
+
+        // Kiểm tra không được đặt trước quá 3 tháng
+        const maxAdvanceDate = new Date(currentDateTime);
+        maxAdvanceDate.setMonth(maxAdvanceDate.getMonth() + 3);
+
+        if (startDateTime > maxAdvanceDate) {
+            toast.error('Ngày nhận xe chỉ được đặt trước tối đa 3 tháng.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return false;
+        }
+
+        if (endDateTime > maxAdvanceDate) {
+            toast.error('Ngày trả xe chỉ được đặt trước tối đa 3 tháng.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return false;
+        }
+
+        // Kiểm tra thời gian thuê tối thiểu
+        const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
+        const diffDays = (endDateTime - startDateTime) / (1000 * 60 * 60 * 24);
+
+        // Nếu cùng ngày, yêu cầu tối thiểu 3 giờ
+        if (startDateTime.toDateString() === endDateTime.toDateString() && diffHours < 3) {
+            toast.error('Thời gian thuê trong ngày phải tối thiểu 3 tiếng.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return false;
+        }
+
+        // Nếu khác ngày, yêu cầu tối thiểu 1 ngày
+        if (startDateTime.toDateString() !== endDateTime.toDateString() && diffDays < 1) {
+            toast.error('Ngày trả xe phải lớn hơn ngày nhận xe ít nhất 1 ngày.', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+            return false;
+        }
+
+        return true;
     };
 
     // Fetch initial data (brands, categories) once
@@ -181,6 +306,7 @@ const Home = () => {
     useEffect(() => {
         let currentFiltered = [...vehicles];
         currentFiltered = currentFiltered.filter(vehicle => vehicle.status !== 'MAINTENANCE');
+
         // Frontend filter: Vehicle Type (Ô tô / Xe máy)
         if (filters.vehicleTypeId) {
             currentFiltered = currentFiltered.filter(vehicle =>
@@ -227,93 +353,97 @@ const Home = () => {
     ]);
 
     // Helper to validate time (9:00–17:00, chỉ cho phép đúng 17:00)
-    const isValidTime = (dateTimeStr) => {
-        if (!dateTimeStr) return false;
-        const time = dateTimeStr.split('T')[1]?.slice(0, 5);
-        if (!time) return false;
-        const [hours, minutes] = time.split(':').map(Number);
-
-        // Trước 9h sáng => không hợp lệ
-        if (hours < 9) return false;
-
-        // Sau 17h => không hợp lệ
-        if (hours > 17) return false;
-
-        // Nếu là 17h thì chỉ cho phép 17:00
-        if (hours === 17 && minutes > 0) return false;
-
-        return true;
-    };
+    // const isValidTime = (dateTimeStr) => {
+    //     if (!dateTimeStr) return false;
+    //     const time = dateTimeStr.split('T')[1]?.slice(0, 5);
+    //     if (!time) return false;
+    //     const [hours, minutes] = time.split(':').map(Number);
+    //
+    //     // Trước 9h sáng => không hợp lệ
+    //     if (hours < 9) return false;
+    //
+    //     // Sau 17h => không hợp lệ
+    //     if (hours > 17) return false;
+    //
+    //     // Nếu là 17h thì chỉ cho phép 17:00
+    //     if (hours === 17 && minutes > 0) return false;
+    //
+    //     return true;
+    // };
 
     const handleFilterChange = (key, value, isFrontendFilter = false) => {
         let newValue = value;
+
         // Only validate for startDate/endDate
         if ((key === 'startDate' || key === 'endDate') && value) {
             newValue = value + ':00';
+
             const start = key === 'startDate' ? newValue : filters.startDate;
             const end = key === 'endDate' ? newValue : filters.endDate;
-            const now = new Date();
-            const startDate = start ? new Date(start) : null;
-            const endDate = end ? new Date(end) : null;
-            // Prevent selecting past dates/times
-            if (startDate && startDate < now) {
-                toast.error('Ngày nhận xe phải từ thời điểm hiện tại trở đi.', {
-                    position: 'top-right',
-                    autoClose: 3000,
-                });
-                return;
-            }
-            // Prevent booking more than 3 months in advance
-            const maxAdvanceDate = new Date(now);
-            maxAdvanceDate.setMonth(maxAdvanceDate.getMonth() + 3);
-            if (startDate && startDate > maxAdvanceDate) {
-                toast.error('Ngày nhận xe chỉ được đặt trước tối đa 3 tháng.', {
-                    position: 'top-right',
-                    autoClose: 3000,
-                });
-                return;
-            }
-            if (endDate && endDate > maxAdvanceDate) {
-                toast.error('Ngày trả xe chỉ được đặt trước tối đa 3 tháng.', {
-                    position: 'top-right',
-                    autoClose: 3000,
-                });
-                return;
-            }
-            if (endDate && endDate < startDate) {
-                toast.error('Ngày trả xe phải sau từ thời điểm nhận xe.', {
-                    position: 'top-right',
-                    autoClose: 3000,
-                });
-                return;
-            }
-            // Validate: endDate must be at least 1 day after startDate
-            if (key === 'endDate' && startDate && endDate) {
-                const diffMs = endDate.getTime() - startDate.getTime();
-                const diffDays = diffMs / (1000 * 60 * 60 * 24);
-                if (diffDays < 1) {
-                    toast.error('Ngày trả xe phải lớn hơn ngày nhận xe ít nhất 1 ngày.', {
+
+            // If both dates are available, validate them
+            if (start && end) {
+                const startDateTime = new Date(start);
+                const endDateTime = new Date(end);
+
+                if (!validateDateTime(startDateTime, endDateTime)) {
+                    return; // Don't update if validation fails
+                }
+            } else if (key === 'startDate' && start) {
+                // Validate individual start date
+                const startDateTime = new Date(start);
+                const currentDateTime = new Date();
+
+                if (startDateTime.toString() === 'Invalid Date') {
+                    toast.error('Ngày giờ không hợp lệ.', {
                         position: 'top-right',
                         autoClose: 3000,
                     });
                     return;
                 }
-            }
-            // Validate time range for startDate
-            if (key === 'startDate' && start && !isValidTime(start)) {
-                toast.error('Giờ nhận xe phải từ 9:00 sáng đến 5:00 chiều (tối đa 5:00 PM).', {
-                    position: 'top-right',
-                    autoClose: 3000,
-                });
-                return;
-            }
-            // Validate time range for endDate
-            if (key === 'endDate' && end && !isValidTime(end)) {
-                toast.error('Giờ trả xe phải từ 9:00 sáng đến 5:00 chiều (tối đa 5:00 PM).', {
-                    position: 'top-right',
-                    autoClose: 3000,
-                });
-                return;
+
+                if (!isValidTime(start)) {
+                    toast.error('Giờ nhận xe phải từ 9:00 sáng đến 5:00 chiều.', {
+                        position: 'top-right',
+                        autoClose: 3000,
+                    });
+                    return;
+                }
+
+                // Check if start date is in the past
+                const startDateOnly = new Date(startDateTime);
+                startDateOnly.setHours(0, 0, 0, 0);
+                const currentDateOnly = new Date();
+                currentDateOnly.setHours(0, 0, 0, 0);
+
+                if (startDateOnly < currentDateOnly) {
+                    toast.error('Ngày nhận xe không thể là ngày trong quá khứ.', {
+                        position: 'top-right',
+                        autoClose: 3000,
+                    });
+                    return;
+                }
+
+                // If today, check time is not in the past
+                if (startDateOnly.getTime() === currentDateOnly.getTime() && startDateTime <= currentDateTime) {
+                    toast.error('Thời gian nhận xe phải sau thời gian hiện tại.', {
+                        position: 'top-right',
+                        autoClose: 3000,
+                    });
+                    return;
+                }
+
+                // Check max advance booking (3 months)
+                const maxAdvanceDate = new Date(currentDateTime);
+                maxAdvanceDate.setMonth(maxAdvanceDate.getMonth() + 3);
+
+                if (startDateTime > maxAdvanceDate) {
+                    toast.error('Ngày nhận xe chỉ được đặt trước tối đa 3 tháng.', {
+                        position: 'top-right',
+                        autoClose: 3000,
+                    });
+                    return;
+                }
             }
         }
 
@@ -322,6 +452,8 @@ const Home = () => {
         setError(null);
         closeAllDropdowns();
     };
+
+
 
     const clearFilters = () => {
         setFilters({
@@ -381,11 +513,19 @@ const Home = () => {
 
     const handleSearch = async () => {
         if (!filters.startDate || !filters.endDate) {
-            toast.error('Vui lòng chọn cả ngày nh���n và ngày trả.', {
+            toast.error('Vui lòng chọn cả ngày nhận và ngày trả.', {
                 position: "top-right",
                 autoClose: 3000,
             });
             return;
+        }
+
+        // Validate the selected date/time before searching
+        const startDateTime = new Date(filters.startDate);
+        const endDateTime = new Date(filters.endDate);
+
+        if (!validateDateTime(startDateTime, endDateTime)) {
+            return; // Don't proceed with search if validation fails
         }
 
         setIsSearching(true);
@@ -408,6 +548,10 @@ const Home = () => {
             if (response.data.httpStatus === 200) {
                 setVehicles(response.data.data.content || []);
                 setTotalPages(response.data.data.totalPages || 0);
+                toast.success('Tìm kiếm thành công!', {
+                    position: "top-right",
+                    autoClose: 2000,
+                });
             } else {
                 toast.error('Không thể tải danh sách xe.', {
                     position: "top-right",
@@ -542,7 +686,7 @@ const Home = () => {
                                 value={filters.startDate?.slice(0, 16) || ""}
                                 min={minDateTime}
                                 onChange={(e) => handleFilterChange("startDate", e.target.value)}
-                                onKeyDown={(e) => e.preventDefault()} // chặn nhập tay
+                                onKeyDown={(e) => e.preventDefault()}
                                 className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg
                  focus:outline-none focus:ring-2 focus:ring-blue-500
                  text-gray-700 transition-all duration-200 cursor-pointer"
@@ -569,7 +713,7 @@ const Home = () => {
                                 value={filters.endDate?.slice(0, 16) || ""}
                                 min={filters.startDate?.slice(0, 16) || minDateTime}
                                 onChange={(e) => handleFilterChange("endDate", e.target.value)}
-                                onKeyDown={(e) => e.preventDefault()} // chặn nhập tay
+                                onKeyDown={(e) => e.preventDefault()}
                                 className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg
                  focus:outline-none focus:ring-2 focus:ring-blue-500
                  text-gray-700 transition-all duration-200 cursor-pointer"
