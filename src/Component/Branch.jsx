@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import CRMLayout from './Crm.jsx';
 import { RefreshCw, Search, Plus, Edit, Trash2, X, Factory, ChevronLeft, ChevronRight } from 'lucide-react';
+import CRMLayout from './Crm.jsx';
 import { getBrands, createBrand, updateBrand, deleteBrand } from '../service/authentication.js';
 
 // Reusable Modal Component for Brands
@@ -52,14 +52,11 @@ const BrandModal = ({ mode, isOpen, onClose, onSubmit, loading, error, brandName
     );
 };
 
-
 const BrandList = () => {
     const [brands, setBrands] = useState([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-
-    // State for modal and actions
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('create');
     const [currentBrand, setCurrentBrand] = useState(null);
@@ -93,7 +90,6 @@ const BrandList = () => {
             setLoading(false);
         }
     };
-
 
     useEffect(() => {
         fetchBrands(currentPage);
@@ -158,6 +154,7 @@ const BrandList = () => {
             setBrandToDelete(null);
         }
     };
+
     const filteredBrands = brands.filter(brand =>
         brand.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -169,7 +166,6 @@ const BrandList = () => {
     };
 
     // ... (rest of the component remains unchanged)
-
 
     return (
         <CRMLayout>
@@ -192,7 +188,7 @@ const BrandList = () => {
                                 <div className="relative flex-grow">
                                     <input
                                         type="text"
-                                        placeholder="Tìm kiếm loại xe..."
+                                        placeholder="Tìm kiếm hãng xe..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 pl-10"
@@ -200,7 +196,6 @@ const BrandList = () => {
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                 </div>
                             </div>
-
 
                             {message && <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg text-center mb-4">{message}</div>}
 
