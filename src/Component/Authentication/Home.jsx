@@ -29,6 +29,7 @@ import { toast } from "react-toastify";
 import { FaCar, FaMotorcycle } from "react-icons/fa";
 import Test from "../Test.jsx";
 import Chatbot from "./Test/ChatBot.jsx";
+
 // FAQ data
 const Home = () => {
     const { customer, logOut } = useAuth();
@@ -44,6 +45,7 @@ const Home = () => {
     const [isSearching, setIsSearching] = useState(false);
     const [isLocating, setIsLocating] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
+
     // Filter states
     const [filters, setFilters] = useState({
         vehicleName: '',
