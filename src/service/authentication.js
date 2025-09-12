@@ -645,3 +645,14 @@ export const createTrackingLog = async (trackingData) => {
     }
 };
 
+export const getUserById = async (id) => {
+    try {
+        const response = await axios.get(
+            `localhost:8080/v1/user/${id}`,
+            getAuthConfig()
+        );
+        return response.data;
+    } catch (e) {
+        throw e;
+    }
+};

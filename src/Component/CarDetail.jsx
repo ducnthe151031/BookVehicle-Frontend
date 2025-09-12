@@ -51,7 +51,12 @@ const CarDetail = () => {
     const SURCHARGE_AMOUNT = 0;
     const OVERTIME_FEE_PER_HOUR = 50000;
     const COUPON_DISCOUNT = 200000;
+    const [pickupMethod, setPickupMethod] = useState('self-pickup');
+    const [pickupLocation, setPickupLocation] = useState('');
 
+
+    const today = new Date().toISOString().split('T')[0];
+    const currentTime = new Date().toTimeString().slice(0, 5);
     useEffect(() => {
         const currentDateTime = new Date();
         const currentHours = currentDateTime.getHours();
@@ -373,6 +378,7 @@ const CarDetail = () => {
             licenseFileName: licenseFile ? licenseFile.name : null,
             couponCode: appliedCoupon ? appliedCoupon.couponCode : null,
             discountCode: applyDiscount ? discountCode : null,
+            pickupAddress : pickupLocation || ''
         };
 
         try {
@@ -1023,6 +1029,67 @@ const CarDetail = () => {
                                 </div>
                             </div>
                         </div>
+
+                        <div className="bg-white rounded-xl shadow-lg p-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <MapPin className="w-5 h-5 text-blue-600" />
+                                Hình thức nhận xe
+                            </h2>
+                            <div className="space-y-6">
+                                {/* Pickup Method Selection */}
+                                <div className="flex gap-4">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="pickupMethod"
+                                            value="self-pickup"
+                                            checked={pickupMethod === 'self-pickup'}
+                                            onChange={() => setPickupMethod('self-pickup')}
+                                            className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                                        />
+                                        <span className="text-sm font-medium text-gray-700">Tự đến lấy xe</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="pickupMethod"
+                                            value="delivery"
+                                            checked={pickupMethod === 'delivery'}
+                                            onChange={() => setPickupMethod('delivery')}
+                                            className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                                        />
+                                        <span className="text-sm font-medium text-gray-700">Giao xe đến địa chỉ</span>
+                                    </label>
+                                </div>
+
+                                {/* Pickup Location Input (shown only for self-pickup) */}
+                                {pickupMethod === 'self-pickup' && (
+                                    <div className="flex flex-col">
+                                        <label htmlFor="pickupLocation" className="text-sm text-gray-600 mb-1">
+                                            Địa điểm nhận xe
+                                        </label>
+                                        <div className="relative">
+                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                            <input
+                                                type="text"
+                                                id="pickupLocation"
+                                                value={pickupLocation}
+                                                onChange={(e) => setPickupLocation(e.target.value)}
+                                                placeholder="Nhập địa chỉ nhận xe (ví dụ: 123 Nguyễn Huệ, Quận 1, TP.HCM)"
+                                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm text-gray-700"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                            </div>
+
+
+                        </div>
+
+
+
+
 
                         <div className="bg-white rounded-lg shadow p-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">Thanh toán đơn thuê xe</h2>
