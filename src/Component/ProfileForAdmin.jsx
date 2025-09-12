@@ -391,7 +391,15 @@ const Profile = () => {
                                                 type="text"
                                                 name="fullName"
                                                 value={formData.fullName}
-                                                onChange={handleChange}
+                                                maxLength={50} // Giới hạn tối đa 50 ký tự
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    // Chỉ cho phép ký tự A-Z, a-z và khoảng trắng
+                                                    const regex = /^[A-Za-z\s]*$/;
+                                                    if (regex.test(value)) {
+                                                        handleChange(e); // chỉ gọi khi hợp lệ
+                                                    }
+                                                }}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             />
                                         </div>
