@@ -1089,6 +1089,11 @@ const VehicleList = () => {
                                             {/* Cột 2: Thông tin chi tiết */}
                                             <div className="space-y-4">
                                                 <DetailItem
+                                                    icon={<Users className="w-5 h-5 text-blue-600" />}
+                                                    label="Chủ xe"
+                                                    value={selectedDetail.createdBy}
+                                                />
+                                                <DetailItem
                                                     icon={<Building className="w-5 h-5 text-blue-600" />}
                                                     label="Địa điểm"
                                                     value={selectedDetail.location}

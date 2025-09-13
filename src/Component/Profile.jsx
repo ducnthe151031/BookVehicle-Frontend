@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Calendar, Lock, Edit, MapPin, Check, Upload, FileText } from 'lucide-react';
+import { Banknote,User, Mail, Calendar, Lock, Edit, MapPin, Check, Upload, FileText } from 'lucide-react';
 import { getProfile, updateProfile } from '../service/authentication.js';
 import Header from './Header.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -15,6 +15,19 @@ const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [tempAvatarPreviewUrl, setTempAvatarPreviewUrl] = useState(null);
 
+    const vietnameseBanks = [
+        { value: '', label: 'Chọn ngân hàng' },
+        { value: 'Vietcombank', label: 'Ngân hàng Vietcombank' },
+        { value: 'Techcombank', label: 'Ngân hàng Techcombank' },
+        { value: 'BIDV', label: 'Ngân hàng BIDV' },
+        { value: 'VietinBank', label: 'Ngân hàng VietinBank' },
+        { value: 'MB Bank', label: 'Ngân hàng MB Bank' },
+        { value: 'Agribank', label: 'Ngân hàng Agribank' },
+        { value: 'VPBank', label: 'Ngân hàng VPBank' },
+        { value: 'Sacombank', label: 'Ngân hàng Sacombank' },
+        { value: 'ACB', label: 'Ngân hàng ACB' },
+        { value: 'TPBank', label: 'Ngân hàng TPBank' },
+    ];
     // State for form data, including Base64 strings for new files or existing filenames
     const [formData, setFormData] = useState({
         email: '',
@@ -24,6 +37,8 @@ const Profile = () => {
         citizenIdCardUrl: '', // Will hold Base64 for new file, or filename for existing
         driverLicenseUrl: '',
         avartarUrl: '',// Will hold Base64 for new file, or filename for existing
+        bankNumber: '', // Added
+        bankName: '', // Added
     });
 
     // State for temporary image preview URLs (for newly selected files)
@@ -69,6 +84,8 @@ const Profile = () => {
                         avartarUrl: data.data.avartarUrl || '', // Load avatar filename
                         citizenIdCardUrl: data.data.citizenIdCardUrl || '',
                         driverLicenseUrl: data.data.driverLicenseUrl || '',
+                        bankNumber: data.data.bankNumber || '', // Added
+                        bankName: data.data.bankName || '', // Added
                     });
                 } else {
                     setError('Không thể tải thông tin hồ sơ.');
@@ -96,6 +113,8 @@ const Profile = () => {
                 avartarUrl: profile.avartarUrl || '', // Load avatar filename
                 citizenIdCardUrl: profile.citizenIdCardUrl || '',
                 driverLicenseUrl: profile.driverLicenseUrl || '',
+                bankName: profile.bankName || '',
+                bankNumber: profile.bankNumber || ''
             });
         }
         // Clear any temporary preview URLs when entering edit mode, to show current saved files
@@ -371,57 +390,68 @@ const Profile = () => {
 
                     {/* Personal Info */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        {/* Personal Information */}
                         <div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Thông tin cá nhân</h3>
-                            <div className="space-y-2 text-sm text-gray-600">
+                            <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center gap-2">
+                                <User className="w-5 h-5 text-blue-600" />
+                                Thông tin cá nhân
+                            </h3>
+                            <div className="space-y-4 text-sm text-gray-600">
                                 {isEditing ? (
                                     <>
-                                        {/* Họ và tên */}
+                                        {/* Full Name */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700">Họ và tên</label>
                                             <input
                                                 type="text"
                                                 name="fullName"
                                                 value={formData.fullName}
-                                                maxLength={50} // Giới hạn tối đa 50 ký tự
+                                                maxLength={50}
                                                 onChange={(e) => {
                                                     const value = e.target.value;
-                                                    // Chỉ cho phép ký tự A-Z, a-z và khoảng trắng
                                                     const regex = /^[A-Za-z\s]*$/;
                                                     if (regex.test(value)) {
-                                                        handleChange(e); // chỉ gọi khi hợp lệ
+                                                        handleChange(e);
                                                     }
-                                                }
-                                                }
+                                                }}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                placeholder="Nhập họ và tên"
                                             />
                                         </div>
 
-                                        {/* Email - readonly */}
+                                        {/* Email */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700">Email</label>
                                             <input
                                                 type="email"
                                                 name="email"
                                                 value={formData.email}
-                                                readOnly // <-- Không cho chỉnh sửa
+                                                readOnly
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
                                             />
                                         </div>
 
-                                        {/* Số điện thoại */}
+                                        {/* Phone Number */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
                                             <input
                                                 type="text"
                                                 name="phoneNumber"
                                                 value={formData.phoneNumber}
-                                                onChange={handleChange}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    const regex = /^[0-9]*$/; // Only allow numbers
+                                                    if (regex.test(value)) {
+                                                        handleChange(e);
+                                                    }
+                                                }}
+                                                maxLength={15}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                placeholder="Nhập số điện thoại"
                                             />
                                         </div>
 
-                                        {/* Địa chỉ */}
+                                        {/* Address */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
                                             <input
@@ -430,31 +460,93 @@ const Profile = () => {
                                                 value={formData.address}
                                                 onChange={handleChange}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                placeholder="Nhập địa chỉ"
                                             />
+                                        </div>
+
+                                        {/* Bank Account Number */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Số tài khoản ngân hàng</label>
+                                            <input
+                                                type="text"
+                                                name="bankNumber"
+                                                value={formData.bankNumber}
+                                                onChange={handleChange}
+
+                                                maxLength={20}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                placeholder="Nhập số tài khoản ngân hàng"
+                                            />
+                                        </div>
+
+                                        {/* Bank Selection */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Ngân hàng</label>
+                                            <div className="relative">
+                                                <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                                <select
+                                                    name="bankName"
+                                                    value={formData.bankName || ''}
+                                                    onChange={handleChange}
+                                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-700"
+                                                >
+                                                    {vietnameseBanks.map((bank) => (
+                                                        <option key={bank.value} value={bank.value}>
+                                                            {bank.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         </div>
                                     </>
                                 ) : (
                                     <>
-                                        <p><Mail className="w-4 h-4 inline mr-2" />Email: {profile.email || 'Chưa cập nhật'}</p>
-                                        <p><Lock className="w-4 h-4 inline mr-2" />Số điện thoại: {profile.phoneNumber || 'Chưa cập nhật'}</p>
-                                        <p><MapPin className="w-4 h-4 inline mr-2" />Địa chỉ: {profile.address || 'Chưa cập nhật'}</p>
+                                        <p className="flex items-center gap-2">
+                                            <User className="w-4 h-4 text-blue-600" />
+                                            Họ và tên: <span className="font-medium">{profile.fullName || 'Chưa cập nhật'}</span>
+                                        </p>
+                                        <p className="flex items-center gap-2">
+                                            <Mail className="w-4 h-4 text-blue-600" />
+                                            Email: <span className="font-medium">{profile.email || 'Chưa cập nhật'}</span>
+                                        </p>
+                                        <p className="flex items-center gap-2">
+                                            <Lock className="w-4 h-4 text-blue-600" />
+                                            Số điện thoại: <span className="font-medium">{profile.phoneNumber || 'Chưa cập nhật'}</span>
+                                        </p>
+                                        <p className="flex items-center gap-2">
+                                            <MapPin className="w-4 h-4 text-blue-600" />
+                                            Địa chỉ: <span className="font-medium">{profile.address || 'Chưa cập nhật'}</span>
+                                        </p>
+                                        <p className="flex items-center gap-2">
+                                            <Banknote className="w-4 h-4 text-blue-600" />
+                                            Số tài khoản ngân hàng: <span className="font-medium">{profile.bankNumber || 'Chưa cập nhật'}</span>
+                                        </p>
+                                        <p className="flex items-center gap-2">
+                                            <Banknote className="w-4 h-4 text-blue-600" />
+                                            Ngân hàng: <span className="font-medium">{profile.bankName || 'Chưa cập nhật'}</span>
+                                        </p>
+                                        <p className="flex items-center gap-2">
+                                            <Calendar className="w-4 h-4 text-blue-600" />
+                                            Ngày tạo: <span className="font-medium">{new Date(profile.createdAt).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                        </p>
                                     </>
                                 )}
-                                <p><Calendar className="w-4 h-4 inline mr-2" />Ngày tạo: {new Date(profile.createdAt).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                                <p><User className="w-4 h-4 inline mr-2" />Họ và tên: {profile.fullName || 'Chưa cập nhật'}</p>
                             </div>
                         </div>
 
                         {/* Document Uploads */}
                         <div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Thông tin giấy tờ</h3>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center gap-2">
+                                <FileText className="w-5 h-5 text-blue-600" />
+                                Thông tin giấy tờ
+                            </h3>
                             <div className="space-y-4 text-sm text-gray-600">
                                 {isEditing ? (
                                     <>
                                         {/* CCCD Upload */}
                                         <div>
                                             <label htmlFor="cccdFile" className="block text-sm font-medium text-gray-700 mb-1">
-                                                Căn cước công dân:
+                                                Căn cước công dân
                                             </label>
                                             <input
                                                 type="file"
@@ -469,10 +561,8 @@ const Profile = () => {
                                                 className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             >
                                                 <Upload className="w-4 h-4 mr-2" />
-                                                {/* Display "Đã chọn tệp mới" if new file, else filename */}
                                                 {(formData.citizenIdCardUrl && formData.citizenIdCardUrl.length > 50) ? 'Đã chọn tệp mới' : getDisplayName(profile.citizenIdCardUrl)}
                                             </button>
-                                            {/* Image Preview for CCCD */}
                                             {(tempCccdPreviewUrl || (profile.citizenIdCardUrl && !formData.citizenIdCardUrl.includes('data:image'))) && (
                                                 <div className="mt-2 text-center">
                                                     <img
@@ -490,7 +580,7 @@ const Profile = () => {
                                         {/* Driver's License Upload */}
                                         <div>
                                             <label htmlFor="licenseFile" className="block text-sm font-medium text-gray-700 mb-1">
-                                                Giấy phép lái xe:
+                                                Giấy phép lái xe
                                             </label>
                                             <input
                                                 type="file"
@@ -505,10 +595,8 @@ const Profile = () => {
                                                 className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             >
                                                 <Upload className="w-4 h-4 mr-2" />
-                                                {/* Display "Đã chọn tệp mới" if new file, else filename */}
                                                 {(formData.driverLicenseUrl && formData.driverLicenseUrl.length > 50) ? 'Đã chọn tệp mới' : getDisplayName(profile.driverLicenseUrl)}
                                             </button>
-                                            {/* Image Preview for License */}
                                             {(tempLicensePreviewUrl || (profile.driverLicenseUrl && !formData.driverLicenseUrl.includes('data:image'))) && (
                                                 <div className="mt-2 text-center">
                                                     <img
@@ -526,7 +614,7 @@ const Profile = () => {
                                 ) : (
                                     <>
                                         <p className="flex items-center space-x-2">
-                                            <FileText className="w-4 h-4 flex-shrink-0" />
+                                            <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
                                             <span>Căn cước công dân:</span>
                                             {profile.citizenIdCardUrl ? (
                                                 <a href={getFullImageUrl(profile.citizenIdCardUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -541,7 +629,7 @@ const Profile = () => {
                                             )}
                                         </p>
                                         <p className="flex items-center space-x-2">
-                                            <FileText className="w-4 h-4 flex-shrink-0" />
+                                            <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
                                             <span>Giấy phép lái xe:</span>
                                             {profile.driverLicenseUrl ? (
                                                 <a href={getFullImageUrl(profile.driverLicenseUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -559,11 +647,7 @@ const Profile = () => {
                                 )}
                             </div>
                         </div>
-
-                        {/* Account Status */}
-
-                    </div>
-                </div>
+                    </div>                </div>
             </div>
         </div>
     );
