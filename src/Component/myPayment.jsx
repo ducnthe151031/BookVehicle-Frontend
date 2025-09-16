@@ -373,7 +373,6 @@ const MyPayment = () => {
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     <div className="flex items-center gap-1">
-                                                        <DollarSign className="w-3 h-3 text-gray-500"/>
                                                         {rental.totalPrice ? rental.totalPrice.toLocaleString('vi-VN') : 'N/A'} VNĐ
                                                     </div>
                                                 </td>
