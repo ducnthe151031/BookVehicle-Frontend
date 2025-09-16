@@ -7,7 +7,9 @@ import {
     getCarDetails,
     approveBooking,
     rejectBooking,
-    approveReturned
+    approveReturned,
+
+
 } from '../service/authentication.js';
 import { FaListAlt as ClipboardList } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -263,6 +265,7 @@ const RentalList = () => {
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày kết thúc</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng giá</th>
                                         {/*<th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại thuê</th>*/}
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Địa điểm nhận xe</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trễ hạn</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phí trả thêm</th>
@@ -306,6 +309,12 @@ const RentalList = () => {
                                                     <div className="flex items-center gap-1">
 
                                                         {rental.totalPrice ? rental.totalPrice.toLocaleString('vi-VN') : 'N/A'} VNĐ
+                                                    </div>
+                                                </td>
+                                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                                                    <div className="flex items-center gap-1">
+                                                        <Car className="w-3 h-3 text-gray-500" />
+                                                        {rental.pickupAddress}
                                                     </div>
                                                 </td>
                                                 {/*<td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">*/}
