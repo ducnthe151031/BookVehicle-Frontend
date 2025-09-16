@@ -324,7 +324,7 @@ const Home = () => {
         // Frontend filter: Location
         if (filters.location) {
             currentFiltered = currentFiltered.filter(vehicle =>
-                vehicle.location === filters.location
+                vehicle.location?.toLowerCase().includes(filters.location.toLowerCase())
             );
         }
 
