@@ -108,6 +108,7 @@ export const getVehiclesIsApproved = async (page, size, filters = {}) => {
         return await axios.get(
             `${import.meta.env.VITE_API_BASE_URL}/v1/admin/list/approved`,
             {
+                ...getAuthConfig(),
                 params: params,
             }
         );

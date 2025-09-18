@@ -179,7 +179,9 @@ const MyPayment = () => {
             READY_TO_PICK: { text: 'Chờ lấy xe', color: 'bg-yellow-100 text-yellow-800' },
             TRANSIT: { text: 'Đang giao', color: 'bg-green-100 text-green-800' },
             DELIVERED: { text: 'Đã giao', color: 'bg-red-100 text-red-800' },
-            RETURNED: { text: 'Đã trả', color: 'bg-gray-100 text-gray-800' },
+            RETURNED: { text: 'Đang chờ duyệt trả xe', color: 'bg-gray-100 text-gray-800' },
+            CONFIRM_RETURNED: { text: 'Đã trả xe', color: 'bg-blue-100 text-blue-800' },
+
         };
         return statusMap[status] || { text: status, color: 'bg-gray-100 text-gray-800' };
     };
@@ -332,15 +334,25 @@ const MyPayment = () => {
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Xe</th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày bắt đầu</th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày kết thúc</th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng giá</th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái duyệt</th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại thuê</th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trễ hạn</th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phí trả thêm</th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+                                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Xe</th>
+                                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Ngày bắt đầu</th>
+                                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Ngày kết thúc</th>
+                                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Tổng giá</th>
+                                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Trạng thái duyệt</th>
+                                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Loại thuê</th>
+                                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Trễ hạn</th>
+                                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Phí trả thêm</th>
+                                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Địa điểm nhận</th>
+
                                     </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
@@ -396,12 +408,16 @@ const MyPayment = () => {
                                                     )}
                                                 </td>
 
+
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                                                     {rental?.late && rental?.lateFee ? (
                                                         <>{rental.lateFee.toLocaleString('vi-VN')} VNĐ</>
                                                     ) : (
                                                         "-"
                                                     )}
+                                                </td>
+                                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                                                    {rental.pickupAddress}
                                                 </td>
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                     {rental.deliveryStatus === 'DELIVERED' ? (
