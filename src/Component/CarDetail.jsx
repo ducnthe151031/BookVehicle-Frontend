@@ -47,7 +47,7 @@ const CarDetail = () => {
     const [ratingLoading, setRatingLoading] = useState(true);
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [termsAgreed, setTermsAgreed] = useState(false);
-
+    const [pickupError, setPickupError] = useState("");
     const SURCHARGE_AMOUNT = 0;
     const OVERTIME_FEE_PER_HOUR = 50000;
     const COUPON_DISCOUNT = 200000;
@@ -265,7 +265,27 @@ const CarDetail = () => {
         if (initialReturnTime) setReturnTime(initialReturnTime);
     }, []);
 
+    // Check if booking button should be enabled
+    const isBookingEnabled = () => {
+        // Must have validated time first
+        if (!isValidTime()) {
+            return false;
+        }
+
+        // If pickup method is self-pickup (giao xe đến địa chỉ), must have pickup location
+        if (pickupMethod === 'self-pickup' && !pickupLocation.trim()) {
+            return false;
+        }
+
+        return true;
+    };
+
     const handleBookNow = () => {
+        if (pickupMethod === "self-pickup" && !pickupLocation.trim()) {
+            setPickupError("Vui lòng nhập địa chỉ nhận xe.");
+            return; // ❌ dừng, không cho qua
+        }
+        setPickupError("");
         // Show terms modal instead of immediate booking
         setShowTermsModal(true);
     };
@@ -818,6 +838,13 @@ const CarDetail = () => {
                                                 <p className="font-medium text-gray-800">{car.liecensePlate || 'N/A'}</p>
                                             </div>
                                         </div>
+                                        {/*<div className="flex items-start gap-3">*/}
+                                        {/*    <MapPin className="w-5 h-5 text-blue-600 mt-1" />*/}
+                                        {/*    <div>*/}
+                                        {/*        <p className="text-sm text-gray-500">Chủ xe</p>*/}
+                                        {/*        <p className="font-medium text-gray-800">{car.ownerId || 'N/A'}</p>*/}
+                                        {/*    </div>*/}
+                                        {/*</div>*/}
                                     </div>
                                 </div>
                             </div>
@@ -1047,7 +1074,7 @@ const CarDetail = () => {
                                             onChange={() => setPickupMethod('self-pickup')}
                                             className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
                                         />
-                                        <span className="text-sm font-medium text-gray-700">Tự đến lấy xe</span>
+                                        <span className="text-sm font-medium text-gray-700">Giao xe đến địa chỉ</span>
                                     </label>
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input
@@ -1057,8 +1084,8 @@ const CarDetail = () => {
                                             checked={pickupMethod === 'delivery'}
                                             onChange={() => setPickupMethod('delivery')}
                                             className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
-                                        />
-                                        <span className="text-sm font-medium text-gray-700">Giao xe đến địa chỉ</span>
+                                         />
+                                        <span className="text-sm font-medium text-gray-700"> Tự đến lấy xe</span>
                                     </label>
                                 </div>
 
@@ -1076,9 +1103,11 @@ const CarDetail = () => {
                                                 value={pickupLocation}
                                                 onChange={(e) => setPickupLocation(e.target.value)}
                                                 placeholder="Nhập địa chỉ nhận xe (ví dụ: 123 Nguyễn Huệ, Quận 1, TP.HCM)"
-                                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-sm text-gray-700"
+                                                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-1 text-sm text-gray-700 
+          ${pickupError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-red-500"}`}
                                             />
                                         </div>
+                                        {pickupError && <p className="text-red-500 text-xs mt-1">{pickupError}</p>}  {/* ✅ hiển thị lỗi */}
                                     </div>
                                 )}
 
@@ -1128,6 +1157,7 @@ const CarDetail = () => {
                                         onChange={(e) => setCouponCodeInput(e.target.value)}
                                         className="flex-grow px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-red-500 focus:outline-none"
                                         disabled={!!appliedCoupon || couponLoading}
+
                                     />
                                     {!appliedCoupon ? (
                                         <button
@@ -1160,6 +1190,7 @@ const CarDetail = () => {
 
                         <button
                             onClick={handleBookNow}
+
                             className="w-full bg-red-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-red-700 transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
                             Chọn đặt xe
@@ -1182,7 +1213,7 @@ const CarDetail = () => {
                             <div className="space-y-2">
                                 <h3 className="text-lg font-semibold text-gray-800">Thông tin hợp đồng</h3>
                                 <p className="text-sm text-gray-600">
-                                    Hợp đồng này được lập giữa <span className="font-medium">Công ty Cho thuê xe ABC</span> (Bên cho thuê) và
+                                    Hợp đồng này được lập giữa <span className="font-medium">Công ty Cho thuê xe PVRS</span> (Bên cho thuê) và
                                     <span className="font-medium"> {customer?.username || 'Khách hàng'}</span> (Bên thuê) cho việc thuê xe dưới đây:
                                 </p>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -1213,6 +1244,10 @@ const CarDetail = () => {
                                     <li className="flex items-start gap-2">
                                         <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
                                         <span>Bên thuê cam kết sử dụng xe đúng mục đích và tuân thủ mọi quy định giao thông.</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                                        <span>Bên thuê cam kết chịu mọi trách nhiệm pháp lý nếu vi phạm luật an toàn giao thông.</span>
                                     </li>
                                     <li className="flex items-start gap-2">
                                         <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />

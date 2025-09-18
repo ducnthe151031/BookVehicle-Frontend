@@ -197,6 +197,14 @@ const Profile = () => {
 
     // Update the handleSubmit function in Profile.jsx
     const handleSubmit = async (e) => {
+        // Kiểm tra cặp Ngân hàng + Số tài khoản
+        if ((formData.bankNumber && !formData.bankName) || (!formData.bankNumber && formData.bankName)) {
+            toast.error("Vui lòng cập nhật đầy đủ số tài khoản và ngân hàng!", {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
         e.preventDefault();
         // Validate số điện thoại trước khi gửi
         if (!/^0\d{8,9}$/.test(formData.phoneNumber)) {
@@ -409,7 +417,8 @@ const Profile = () => {
                                                 maxLength={50}
                                                 onChange={(e) => {
                                                     const value = e.target.value;
-                                                    const regex = /^[A-Za-z\s]*$/;
+                                                    // Cho phép chữ cái (kể cả có dấu) và khoảng trắng
+                                                    const regex = /^[\p{L}\s]*$/u;
                                                     if (regex.test(value)) {
                                                         handleChange(e);
                                                     }
@@ -471,8 +480,17 @@ const Profile = () => {
                                                 type="text"
                                                 name="bankNumber"
                                                 value={formData.bankNumber}
-                                                onChange={handleChange}
-
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    if (/^\d*$/.test(value)) { // chỉ cho số
+                                                        handleChange(e);
+                                                    }
+                                                }}
+                                                onBlur={() => {
+                                                    if (formData.bankNumber && !formData.bankName) {
+                                                        toast.error("Vui lòng chọn ngân hàng!");
+                                                    }
+                                                }}
                                                 maxLength={20}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 placeholder="Nhập số tài khoản ngân hàng"
@@ -488,6 +506,11 @@ const Profile = () => {
                                                     name="bankName"
                                                     value={formData.bankName || ''}
                                                     onChange={handleChange}
+                                                    onBlur={() => {
+                                                        if (formData.bankName && !formData.bankNumber) {
+                                                            toast.error("Vui lòng nhập số tài khoản ngân hàng!");
+                                                        }
+                                                    }}
                                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-700"
                                                 >
                                                     {vietnameseBanks.map((bank) => (
@@ -497,6 +520,9 @@ const Profile = () => {
                                                     ))}
                                                 </select>
                                             </div>
+                                            <p className="mt-2 text-sm text-amber-600">
+                                               ! Quý khách vui lòng nhập đúng và đầy đủ thông tin. Khi hoàn tiền, chúng tôi sẽ chuyển trả chính xác vào số tài khoản này.
+                                            </p>
                                         </div>
                                     </>
                                 ) : (
