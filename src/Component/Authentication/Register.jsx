@@ -10,10 +10,9 @@ const RegisterForm = () => {
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'USER' // Changed default role to USER
+        role: 'USER'
     });
     const [loading, setLoading] = useState(false);
-
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [message, setMessage] = useState('');
@@ -26,42 +25,50 @@ const RegisterForm = () => {
         });
     };
 
+    const validateForm = () => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(formData.email)) {
+            toast.error('Email không hợp lệ!', { position: "top-right", autoClose: 3000 });
+            return false;
+        }
+
+        if (formData.username.length > 50) {
+            toast.error('Tên người dùng không được vượt quá 50 ký tự!', { position: "top-right", autoClose: 3000 });
+            return false;
+        }
+
+        if (formData.password.length > 50) {
+            toast.error('Mật khẩu không được vượt quá 50 ký tự!', { position: "top-right", autoClose: 3000 });
+            return false;
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+            toast.error('Mật khẩu và Nhập lại mật khẩu không khớp!', { position: "top-right", autoClose: 3000 });
+            return false;
+        }
+
+        return true;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage('');
 
-        if (formData.password !== formData.confirmPassword) {
-            toast.error('Mật khẩu và Nhập lại mật khẩu không khớp!', {
-                position: "top-right",
-                autoClose: 3000,
-            });
-            return;
-        }
+        if (!validateForm()) return;
 
         try {
             setLoading(true);
-
             await register(formData);
-            toast.success('Vui lòng check email để kích hoạt tài khoản!', {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-            });
+            toast.success('Vui lòng check email để kích hoạt tài khoản!', { position: "top-right", autoClose: 3000 });
             setTimeout(() => {
                 navigate('/login');
             }, 1000);
         } catch (error) {
             const apiMessage = error.response?.data?.message || 'Lỗi đăng ký!';
-            toast.error(apiMessage, {
-                position: "top-right",
-                autoClose: 3000,
-            });
-        }finally {
+            toast.error(apiMessage, { position: "top-right", autoClose: 3000 });
+        } finally {
             setLoading(false);
-
         }
     };
 
@@ -106,6 +113,7 @@ const RegisterForm = () => {
                                 placeholder="Nhập tên của bạn"
                                 value={formData.username}
                                 onChange={handleChange}
+                                maxLength={50}
                                 required
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                             />
@@ -120,6 +128,7 @@ const RegisterForm = () => {
                                     placeholder="Nhập mật khẩu"
                                     value={formData.password}
                                     onChange={handleChange}
+                                    maxLength={50}
                                     required
                                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                 />
@@ -142,6 +151,7 @@ const RegisterForm = () => {
                                     placeholder="Nhập lại mật khẩu"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
+                                    maxLength={50}
                                     required
                                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                                 />
