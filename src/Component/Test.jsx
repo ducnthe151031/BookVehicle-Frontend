@@ -17,11 +17,11 @@ const Test = () => {
         scrollToBottom();
     }, [messages]);
 
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!input.trim() || isLoading) return;
 
-        // Add user message
         const userMessage = { text: input, sender: 'user' };
         setMessages(prev => [...prev, userMessage]);
         setInput('');
@@ -31,7 +31,7 @@ const Test = () => {
             // Get AI response
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
-                contents: "Cơ sở dữ liệu BookingCar\n"+"-- MySQL dump 10.13  Distrib 8.0.42, for Win64 (x86_64)\n" +
+                contents: "Cơ sở dữ liệu vehicle_rental_system\n"+"-- MySQL dump 10.13  Distrib 8.0.42, for Win64 (x86_64)\n" +
                     "--\n" +
                     "-- Host: localhost    Database: vehicle_rental_system\n" +
                     "-- ------------------------------------------------------\n" +
