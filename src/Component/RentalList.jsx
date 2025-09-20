@@ -269,7 +269,7 @@ const RentalList = () => {
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trễ hạn</th>
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phí trả thêm</th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Địa điểm giao</th>
+
 
                                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Vị trí hiện tại
@@ -342,9 +342,7 @@ const RentalList = () => {
                                                         "-"
                                                     )}
                                                 </td>
-                                                <td className="px-2 py-1 text-sm text-gray-900 whitespace-normal">
-                                                    {rental.pickupAddress}
-                                                </td>
+
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                     {rental.deliveryStatus === 'DELIVERED' ? (
                                                         loadingLocationId === rental.id ? (
