@@ -118,6 +118,32 @@ export const getVehiclesIsApproved = async (page, size, filters = {}) => {
 };
 
 
+export const getVehiclesIsApprovedLanding = async (page, size, filters = {}) => {
+    try {
+        const params = {
+            page,
+            size,
+            brands: filters.brands || undefined,
+            categories: filters.categories || undefined,
+            vehicleName: filters.vehicleName || undefined,
+            startDate: filters.startDate || undefined,
+            endDate: filters.endDate || undefined,
+            status: filters.status || undefined,
+            fuelType: filters.fuelType || undefined,
+
+        };
+        return await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/v1/admin/list/approved/landing`,
+            {
+                params: params,
+            }
+        );
+    } catch (e) {
+        throw e;
+    }
+};
+
+
 export const getBrands = async () => {
     try {
         const response = await axios.get(

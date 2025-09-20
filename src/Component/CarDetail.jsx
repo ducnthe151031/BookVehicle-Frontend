@@ -53,7 +53,7 @@ const CarDetail = () => {
     const COUPON_DISCOUNT = 200000;
     const [pickupMethod, setPickupMethod] = useState('self-pickup');
     const [pickupLocation, setPickupLocation] = useState('');
-
+    const [bookingLoading, setBookingLoading] = useState(false);
 
     const today = new Date().toISOString().split('T')[0];
     const currentTime = new Date().toTimeString().slice(0, 5);
@@ -400,7 +400,7 @@ const CarDetail = () => {
             discountCode: applyDiscount ? discountCode : null,
             pickupAddress : pickupLocation || ''
         };
-
+        setBookingLoading(true);
         try {
             const response = await axios.post('http://localhost:8080/v1/user/bookings', bookingDetails, {
                 headers: {
@@ -426,6 +426,7 @@ const CarDetail = () => {
                 autoClose: 3000,
             });
         } finally {
+            setBookingLoading(false);
             setShowTermsModal(false);
             setTermsAgreed(false);
         }
@@ -1296,10 +1297,17 @@ const CarDetail = () => {
                             </button>
                             <button
                                 onClick={handleConfirmBooking}
-                                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                disabled={!termsAgreed}
+                                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
+                                disabled={!termsAgreed || bookingLoading}
                             >
-                                Xác nhận đặt xe
+                                {bookingLoading ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                        Đang xử lý...
+                                    </>
+                                ) : (
+                                    'Xác nhận đặt xe'
+                                )}
                             </button>
                         </div>
                     </div>
