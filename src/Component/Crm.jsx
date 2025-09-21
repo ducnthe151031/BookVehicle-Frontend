@@ -56,6 +56,7 @@ const CRMLayout = ({ children }) => {
         { name: 'Danh sách xe', icon: Car, path: '/vehicle', roles: ['ROLE_OWNER','ROLE_OPERATOR'] },
         { name: 'Danh sách thuê xe', icon: ClipboardList, path: '/rentals', roles: ['ROLE_OPERATOR'] },
         { name: 'Mã coupon', icon: TicketPercent, path: '/coupon', roles: ['ROLE_OPERATOR'] },
+        { name: 'Người dùng', icon: User, path: '/user', roles: ['ROLE_OPERATOR'] },
         { name: 'Hồ sơ cá nhân', icon: UserCircle, path: '/prfAdmin', roles: ['ROLE_ADMIN','ROLE_OPERATOR'] },
         { name: 'Đổi mật khẩu', icon: KeyRound, path: '/passwordAdmin', roles: ['ROLE_ADMIN','ROLE_OPERATOR'] }
     ];
