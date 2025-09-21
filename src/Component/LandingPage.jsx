@@ -11,7 +11,12 @@ import {
     Crosshair,
     CarFront
 } from 'lucide-react';
-import { getBrands, getCategories, getVehiclesIsApproved } from '../service/authentication.js';
+import {
+    getBrands,
+    getCategories,
+    getVehiclesIsApproved,
+    getVehiclesIsApprovedLanding
+} from '../service/authentication.js';
 import { toast } from "react-toastify";
 import { FaCar, FaMotorcycle } from "react-icons/fa";
 
@@ -123,7 +128,7 @@ const LandingPage = () => {
                     fuelType: filters.fuelType
                 };
 
-                const response = await getVehiclesIsApproved(currentPage, 12, serverFilters);
+                const response = await getVehiclesIsApprovedLanding(currentPage, 12, serverFilters);
                 if (response.data.httpStatus === 200) {
                     setVehicles(response.data.data.content || []);
                     setTotalPages(response.data.data.totalPages || 0);
@@ -258,7 +263,7 @@ const LandingPage = () => {
                 endDate: filters.endDate,
                 fuelType: filters.fuelType
             };
-            const response = await getVehiclesIsApproved(0, 12, serverFilters);
+            const response = await getVehiclesIsApprovedLanding(0, 12, serverFilters);
             if (response.data.httpStatus === 200) {
                 setVehicles(response.data.data.content || []);
                 setTotalPages(response.data.data.totalPages || 0);
