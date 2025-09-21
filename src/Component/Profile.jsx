@@ -157,7 +157,12 @@ const Profile = () => {
                     setFormData(prev => ({ ...prev, [name]: value }));
                 }
             }
+        } else if (name === "fullName") {
+            // Cho phép nhập tự do nhưng loại bỏ ký tự không hợp lệ
+            const cleanedValue = value.replace(/[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g, '');
+            setFormData(prev => ({ ...prev, [name]: cleanedValue }));
         } else {
+            // Các trường khác không cần validation đặc biệt
             setFormData(prev => ({ ...prev, [name]: value }));
         }
     };
@@ -415,14 +420,7 @@ const Profile = () => {
                                                 name="fullName"
                                                 value={formData.fullName}
                                                 maxLength={50}
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    // Cho phép chữ cái (kể cả có dấu) và khoảng trắng
-                                                    const regex = /^[\p{L}\s]*$/u;
-                                                    if (regex.test(value)) {
-                                                        handleChange(e);
-                                                    }
-                                                }}
+                                                onChange={handleChange}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 placeholder="Nhập họ và tên"
                                             />
