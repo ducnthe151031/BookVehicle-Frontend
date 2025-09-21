@@ -197,14 +197,14 @@ const Home = () => {
             return false;
         }
 
-        // Nếu khác ngày, yêu cầu tối thiểu 1 ngày
-        if (startDateTime.toDateString() !== endDateTime.toDateString() && diffDays < 1) {
-            toast.error('Ngày trả xe phải lớn hơn ngày nhận xe ít nhất 1 ngày.', {
-                position: 'top-right',
-                autoClose: 3000,
-            });
-            return false;
-        }
+        // // Nếu khác ngày, yêu cầu tối thiểu 1 ngày
+        // if (startDateTime.toDateString() !== endDateTime.toDateString() && diffDays < 1) {
+        //     toast.error('Ngày trả xe phải lớn hơn ngày nhận xe ít nhất 1 ngày.', {
+        //         position: 'top-right',
+        //         autoClose: 3000,
+        //     });
+        //     return false;
+        // }
 
         return true;
     };
@@ -269,7 +269,7 @@ const Home = () => {
                     fuelType: filters.fuelType
                 };
 
-                const response = await getVehiclesIsApproved(currentPage, 20, serverFilters);
+                const response = await getVehiclesIsApproved(currentPage, 12, serverFilters);
                 if (response.data.httpStatus === 200) {
                     setVehicles(response.data.data.content || []);
                     setTotalPages(response.data.data.totalPages || 0);
@@ -544,7 +544,7 @@ const Home = () => {
                 endDate: filters.endDate,
                 fuelTypes: filters.fuelType
             };
-            const response = await getVehicles(0, 20, serverFilters);
+            const response = await getVehicles(0, 12, serverFilters);
             if (response.data.httpStatus === 200) {
                 setVehicles(response.data.data.content || []);
                 setTotalPages(response.data.data.totalPages || 0);
@@ -619,6 +619,17 @@ const Home = () => {
                 setIsLocating(false);
             }
         );
+    };
+
+    const effectiveTotalPages = filteredVehicles.length > 0 ? totalPages : (currentPage > 0 ? Math.max(1, currentPage) : 0);
+
+    // Check if we should show pagination
+    const shouldShowPagination = () => {
+        // Show pagination if:
+        // 1. We have filtered vehicles OR
+        // 2. We're not on the first page (to allow going back) OR
+        // 3. We have more than 1 total page from server
+        return filteredVehicles.length > 0 || currentPage > 0 || totalPages > 1;
     };
 
     if (loading && vehicles.length === 0 && brands.length === 0 && categories.length === 0) {
@@ -999,7 +1010,7 @@ const Home = () => {
                 </div>
 
                 {/* Pagination */}
-                {totalPages > 1 && (
+                {shouldShowPagination() && (
                     <div className="flex justify-center items-center gap-2 mt-10">
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
@@ -1009,9 +1020,9 @@ const Home = () => {
                         >
                             Trước
                         </button>
-                        {[...Array(Math.min(5, totalPages))].map((_, index) => {
+                        {[...Array(Math.min(5, Math.max(1, effectiveTotalPages)))].map((_, index) => {
                             const pageIndex = Math.floor(currentPage / 5) * 5 + index;
-                            if (pageIndex >= totalPages) return null;
+                            if (pageIndex >= effectiveTotalPages) return null;
                             return (
                                 <button
                                     key={pageIndex}
@@ -1024,8 +1035,8 @@ const Home = () => {
                             );
                         })}
                         <button
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-                            disabled={currentPage === totalPages - 1}
+                            onClick={() => setCurrentPage(prev => Math.min(Math.max(0, effectiveTotalPages - 1), prev + 1))}
+                            disabled={currentPage >= effectiveTotalPages - 1 || effectiveTotalPages <= 1}
                             className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                             aria-label="Trang sau"
                         >
