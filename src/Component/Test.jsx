@@ -46,9 +46,10 @@ const Test = () => {
         // This uses multiple patterns and a small cleanup step for the extracted location.
         const cleanInput = input.trim();
         const patterns = [
-            /tìm(?: kiếm)?\s*(?:xe)?\s*(?:ở|tại)\s*(.+)/i, // tìm [kiếm] xe ở/tại <location>
+            /tìm(?: kiếm)?\s*(?:xe)?\s*(?:ở|tại|khu vực|nơi)\s*(.+)/i, // tìm [kiếm] xe ở/tại <location>
+            /thuê(?: kiếm)?\s*(?:xe)?\s*(?:ở|tại|khu vực|nơi)\s*(.+)/i,
             /tìm(?: kiếm)?\s*(?:xe)?\s+(.+)/i, // tìm [kiếm] xe <location>
-            /xe\s*(?:ở|tại)\s*(.+)/i // xe ở/tại <location>
+            /xe\s*(?:ở|tại|khu vực|nơi)\s*(.+)/i // xe ở/tại <location>
         ];
 
         let locationQuery = null;

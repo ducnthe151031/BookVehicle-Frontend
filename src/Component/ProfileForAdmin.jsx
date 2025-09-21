@@ -110,17 +110,21 @@ const Profile = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
         if (name === "phoneNumber") {
-            // Only allow digits, max 10 chars
+            // Chỉ cho phép số, giới hạn 10 ký tự
             if (/^\d*$/.test(value) && value.length <= 10) {
-                // Validate starts with 0 and 9 or 10 digits
+                // Validate bắt đầu bằng 0 và có 9 hoặc 10 số
                 if (value === "" || /^0\d{0,9}$/.test(value)) {
                     setFormData(prev => ({ ...prev, [name]: value }));
                 }
             }
-        } else if (name === "email") {
-            setFormData(prev => ({ ...prev, [name]: value }));
+        } else if (name === "fullName") {
+            // Cho phép nhập tự do nhưng loại bỏ ký tự không hợp lệ
+            const cleanedValue = value.replace(/[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g, '');
+            setFormData(prev => ({ ...prev, [name]: cleanedValue }));
         } else {
+            // Các trường khác không cần validation đặc biệt
             setFormData(prev => ({ ...prev, [name]: value }));
         }
     };
@@ -391,17 +395,10 @@ const Profile = () => {
                                                 type="text"
                                                 name="fullName"
                                                 value={formData.fullName}
-                                                maxLength={50} // Giới hạn tối đa 50 ký tự
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    // Chỉ cho phép ký tự A-Z, a-z và khoảng trắng
-                                                    const regex = /^[A-Za-z\s]*$/;
-                                                    if (regex.test(value)) {
-                                                        handleChange(e); // chỉ gọi khi hợp lệ
-                                                    }
-                                                }
-                                                }
+                                                maxLength={50}
+                                                onChange={handleChange}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                placeholder="Nhập họ và tên"
                                             />
                                         </div>
                                         <div>

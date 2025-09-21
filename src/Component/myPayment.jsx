@@ -345,14 +345,11 @@ const MyPayment = () => {
                                         <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Trạng thái duyệt</th>
                                         <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Loại thuê</th>
+                                            Địa điểm nhận</th>
                                         <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Trễ hạn</th>
                                         <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Phí trả thêm</th>
-                                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Địa điểm nhận</th>
-
                                     </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
@@ -395,10 +392,12 @@ const MyPayment = () => {
                                                         </span>
                                                 </td>
 
+                                                {/*<td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">*/}
+                                                {/*    {rental.rentType}*/}
+                                                {/*</td>*/}
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                                                    {rental.rentType}
+                                                    {rental.pickupAddress}
                                                 </td>
-
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                     {rental?.late  ? (
                                                         <span className="text-red-600 font-semibold">Có</span>
@@ -415,9 +414,7 @@ const MyPayment = () => {
                                                         "-"
                                                     )}
                                                 </td>
-                                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                                                    {rental.pickupAddress}
-                                                </td>
+
                                                 <td className="px-2 py-1 whitespace-nowrap text-sm">
                                                     {rental.deliveryStatus === 'DELIVERED' ? (
                                                         loadingLocationId === rental.id ? (
