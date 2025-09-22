@@ -28,7 +28,7 @@ import Header from "../Header.jsx";
 import { toast } from "react-toastify";
 import { FaCar, FaMotorcycle } from "react-icons/fa";
 import Test from "../Test.jsx";
-import Chatbot from "./Test/ChatBot.jsx";
+// import Chatbot from "./Test/ChatBot.jsx";
 
 // FAQ data
 const Home = () => {
@@ -646,7 +646,7 @@ const Home = () => {
     return (
         <div className="min-h-screen bg-gray-50 font-sans relative">
             <Header logOut={logOut} handleChangePassword={handleChangePassword} customer={customer} />
-            <Chatbot/>
+
             <div className="max-w-7xl mx-auto px-4 pt-24 pb-12">
                 {/* Search and Filter Section */}
                 <div className="bg-white rounded-xl shadow-lg p-6 mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -1046,21 +1046,21 @@ const Home = () => {
                 )}
             </div>
 
-            {/* Chat Toggle Button */}
-            <button
-                onClick={() => setIsChatOpen(!isChatOpen)}
-                className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-200 z-50"
-                aria-label={isChatOpen ? "Đóng chat" : "Mở chat"}
-            >
-                <MessageCircle className="w-6 h-6" />
-            </button>
+            {/*/!* Chat Toggle Button *!/*/}
+            {/*<button*/}
+            {/*    onClick={() => setIsChatOpen(!isChatOpen)}*/}
+            {/*    className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-200 z-50"*/}
+            {/*    aria-label={isChatOpen ? "Đóng chat" : "Mở chat"}*/}
+            {/*>*/}
+            {/*    <MessageCircle className="w-6 h-6" />*/}
+            {/*</button>*/}
 
-            {/* Chat Box */}
-            {isChatOpen && (
-                <div className="fixed bottom-20 right-6 w-full max-w-sm bg-white rounded-xl shadow-xl border border-gray-200 z-50">
-                    <Test />
-                </div>
-            )}
+            {/*/!* Chat Box *!/*/}
+            {/*{isChatOpen && (*/}
+            {/*    <div className="fixed bottom-20 right-6 w-full max-w-sm bg-white rounded-xl shadow-xl border border-gray-200 z-50">*/}
+            {/*        <Test />*/}
+            {/*    </div>*/}
+            {/*)}*/}
         </div>
     )
 };

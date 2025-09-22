@@ -66,12 +66,12 @@ const Chatbot = () => {
     return (
         <>
             {/* Floating button */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all"
-            >
-                {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
-            </button>
+            {/*<button*/}
+            {/*    onClick={() => setIsOpen(!isOpen)}*/}
+            {/*    className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all"*/}
+            {/*>*/}
+            {/*    {isOpen ? <X size={24} /> : <MessageCircle size={24} />}*/}
+            {/*</button>*/}
 
             {/* Chat window */}
             {isOpen && (
@@ -125,12 +125,12 @@ const Chatbot = () => {
                             placeholder="Nhập tin nhắn..."
                             className="flex-1 p-2 text-sm border rounded-l-md focus:outline-none"
                         />
-                        <button
-                            onClick={handleSend}
-                            className="bg-blue-600 text-white px-3 py-2 rounded-r-md hover:bg-blue-700"
-                        >
-                            <Send size={16} />
-                        </button>
+                        {/*<button*/}
+                        {/*    onClick={handleSend}*/}
+                        {/*    className="bg-blue-600 text-white px-3 py-2 rounded-r-md hover:bg-blue-700"*/}
+                        {/*>*/}
+                        {/*    <Send size={16} />*/}
+                        {/*</button>*/}
                     </div>
                 </div>
             )}
