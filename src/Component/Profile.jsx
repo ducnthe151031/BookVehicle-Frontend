@@ -149,6 +149,13 @@ const Profile = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
+        if (name === "address") {
+            // ❌ Bỏ khoảng trắng đầu & ❌ loại ký tự đặc biệt
+            e.target.value = value
+                .replace(/^\s+/, "")
+                .replace(/[^\p{L}0-9\s,.\-\/]/gu, "");
+        }
+
         if (name === "phoneNumber") {
             // Chỉ cho phép số, giới hạn 10 ký tự
             if (/^\d*$/.test(value) && value.length <= 10) {
@@ -171,24 +178,46 @@ const Profile = () => {
     const handleFileInputChange = (e, fieldName) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            const reader = new FileReader();
 
+            // ❌ Validate dung lượng
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error("Tệp không được vượt quá 5MB!", {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+                e.target.value = ""; // reset input
+                return;
+            }
+
+            // ❌ Validate định dạng (chỉ ảnh và PDF)
+            const validTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
+            if (!validTypes.includes(file.type)) {
+                toast.error("Chỉ chấp nhận JPG, PNG hoặc PDF!", {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+                e.target.value = ""; // reset input
+                return;
+            }
+
+            const reader = new FileReader();
             reader.onloadend = () => {
-                const base64String = reader.result.split(',')[1]; // Get only the Base64 part
+                const base64String = reader.result.split(',')[1]; // chỉ lấy phần Base64
                 setFormData(prev => ({ ...prev, [fieldName]: base64String }));
             };
-            reader.readAsDataURL(file); // Read the file as a Data URL (Base64)
+            reader.readAsDataURL(file);
 
-            // Create a temporary URL for image preview
+            // ✅ Preview ảnh (PDF thì không preview)
             if (fieldName === 'citizenIdCardUrl') {
-                if (tempCccdPreviewUrl) URL.revokeObjectURL(tempCccdPreviewUrl); // Clean up old preview URL
-                setTempCccdPreviewUrl(URL.createObjectURL(file));
+                if (tempCccdPreviewUrl) URL.revokeObjectURL(tempCccdPreviewUrl);
+                setTempCccdPreviewUrl(file.type.startsWith("image/") ? URL.createObjectURL(file) : null);
             } else if (fieldName === 'driverLicenseUrl') {
-                if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl); // Clean up old preview URL
-                setTempLicensePreviewUrl(URL.createObjectURL(file));
+                if (tempLicensePreviewUrl) URL.revokeObjectURL(tempLicensePreviewUrl);
+                setTempLicensePreviewUrl(file.type.startsWith("image/") ? URL.createObjectURL(file) : null);
             }
+
         } else {
-            // If file input is cleared
+            // Nếu clear input
             setFormData(prev => ({ ...prev, [fieldName]: '' }));
             if (fieldName === 'citizenIdCardUrl' && tempCccdPreviewUrl) {
                 URL.revokeObjectURL(tempCccdPreviewUrl);
@@ -202,6 +231,8 @@ const Profile = () => {
 
     // Update the handleSubmit function in Profile.jsx
     const handleSubmit = async (e) => {
+        e.preventDefault();
+
         // Kiểm tra cặp Ngân hàng + Số tài khoản
         if ((formData.bankNumber && !formData.bankName) || (!formData.bankNumber && formData.bankName)) {
             toast.error("Vui lòng cập nhật đầy đủ số tài khoản và ngân hàng!", {
@@ -210,7 +241,7 @@ const Profile = () => {
             });
             return;
         }
-        e.preventDefault();
+
         // Validate số điện thoại trước khi gửi
         if (!/^0\d{8,9}$/.test(formData.phoneNumber)) {
             toast.error("Số điện thoại phải bắt đầu bằng 0 và có 9 hoặc 10 số!", {
@@ -219,6 +250,25 @@ const Profile = () => {
             });
             return;
         }
+
+        // ✅ Validate địa chỉ
+        const addressRegex = /^[\p{L}0-9\s,.\-\/]+$/u;
+        const trimmedAddress = formData.address.trim();
+        if (!trimmedAddress) {
+            toast.error("Chưa cập nhật địa chỉ!", {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
+        if (!addressRegex.test(trimmedAddress)) {
+            toast.error("Địa chỉ không được chứa ký tự đặc biệt!", {
+                position: "top-right",
+                autoClose: 3000,
+            });
+            return;
+        }
+
         setLoading(true);
         setError(null);
         try {
@@ -640,29 +690,77 @@ const Profile = () => {
                                         <p className="flex items-center space-x-2">
                                             <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
                                             <span>Căn cước công dân:</span>
-                                            {profile.citizenIdCardUrl ? (
-                                                <a href={getFullImageUrl(profile.citizenIdCardUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                                    <img
-                                                        src={getFullImageUrl(profile.citizenIdCardUrl)}
-                                                        alt="CCCD"
-                                                        className="w-24 h-auto object-contain inline-block ml-2 border rounded"
-                                                    />
-                                                </a>
+                                            {isEditing ? (
+                                                <input
+                                                    type="file"
+                                                    accept="image/*,.pdf"
+                                                    onChange={(e) => handleFileInputChange(e, 'citizenIdCardUrl')}
+                                                    className="ml-2"
+                                                />
+                                            ) : profile.citizenIdCardUrl ? (
+                                                profile.citizenIdCardUrl.endsWith(".pdf") ? (
+                                                    <a
+                                                        href={getFullImageUrl(profile.citizenIdCardUrl)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="ml-2 text-blue-600 hover:underline"
+                                                    >
+                                                        Xem file PDF
+                                                    </a>
+                                                ) : (
+                                                    <a
+                                                        href={getFullImageUrl(profile.citizenIdCardUrl)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-600 hover:underline"
+                                                    >
+                                                        <img
+                                                            src={getFullImageUrl(profile.citizenIdCardUrl)}
+                                                            alt="CCCD"
+                                                            className="w-24 h-auto object-contain inline-block ml-2 border rounded"
+                                                        />
+                                                    </a>
+                                                )
                                             ) : (
                                                 <span className="ml-1 text-gray-500">Chưa cập nhật</span>
                                             )}
                                         </p>
+
+                                        {/* GPLX */}
                                         <p className="flex items-center space-x-2">
                                             <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
                                             <span>Giấy phép lái xe:</span>
-                                            {profile.driverLicenseUrl ? (
-                                                <a href={getFullImageUrl(profile.driverLicenseUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                                    <img
-                                                        src={getFullImageUrl(profile.driverLicenseUrl)}
-                                                        alt="License"
-                                                        className="w-24 h-auto object-contain inline-block ml-2 border rounded"
-                                                    />
-                                                </a>
+                                            {isEditing ? (
+                                                <input
+                                                    type="file"
+                                                    accept="image/*,.pdf"
+                                                    onChange={(e) => handleFileInputChange(e, 'driverLicenseUrl')}
+                                                    className="ml-2"
+                                                />
+                                            ) : profile.driverLicenseUrl ? (
+                                                profile.driverLicenseUrl.endsWith(".pdf") ? (
+                                                    <a
+                                                        href={getFullImageUrl(profile.driverLicenseUrl)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="ml-2 text-blue-600 hover:underline"
+                                                    >
+                                                        Xem file PDF
+                                                    </a>
+                                                ) : (
+                                                    <a
+                                                        href={getFullImageUrl(profile.driverLicenseUrl)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-600 hover:underline"
+                                                    >
+                                                        <img
+                                                            src={getFullImageUrl(profile.driverLicenseUrl)}
+                                                            alt="License"
+                                                            className="w-24 h-auto object-contain inline-block ml-2 border rounded"
+                                                        />
+                                                    </a>
+                                                )
                                             ) : (
                                                 <span className="ml-1 text-gray-500">Chưa cập nhật</span>
                                             )}
