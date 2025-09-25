@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import {
     Car, Users, Fuel, ArrowLeft, MapPin, Star, CheckCircle, Info,
-    Settings, Upload, Clock, Calendar, User, XCircle, Tag, FileText
+    Settings, Upload, Clock, Calendar, User, XCircle, Tag, FileText, ChevronDown
 } from 'lucide-react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -37,6 +37,10 @@ const CarDetail = () => {
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [couponLoading, setCouponLoading] = useState(false);
     const [couponError, setCouponError] = useState('');
+    const [availableCoupons, setAvailableCoupons] = useState([]);
+    const [couponsLoading, setCouponsLoading] = useState(false);
+    const [selectedCouponId, setSelectedCouponId] = useState('');
+    const [showCouponDropdown, setShowCouponDropdown] = useState(false);
     const [reviews, setReviews] = useState([]);
     const [reviewsLoading, setReviewsLoading] = useState(true);
     const [newRating, setNewRating] = useState(0);
@@ -189,28 +193,61 @@ const CarDetail = () => {
     const { days, hours, totalPrice } = calculateDurationAndTotal();
     const calculatedSubtotal = totalPrice + SURCHARGE_AMOUNT;
 
-    const handleApplyCoupon = async () => {
-        if (!couponCodeInput.trim()) {
-            setCouponError('Vui lòng nhập mã coupon.');
+    const handleApplyCoupon = async (couponId) => {
+        if (!couponId) {
+            setCouponError('Vui lòng chọn mã coupon.');
             return;
         }
+
+        const selectedCoupon = availableCoupons.find(coupon => coupon.id === couponId);
+        if (!selectedCoupon) {
+            setCouponError('Mã coupon không hợp lệ.');
+            return;
+        }
+
         setCouponLoading(true);
         setCouponError('');
         try {
-            const response = await validateCoupon(couponCodeInput);
+            const response = await validateCoupon(selectedCoupon.couponCode);
             const data = response.data;
             if (data.httpStatus === 200) {
                 setAppliedCoupon(data.data);
+                setSelectedCouponId(couponId);
+                setShowCouponDropdown(false);
                 toast.success(`Áp dụng mã giảm giá ${data.data.discountAmount.toLocaleString('vi-VN')} VNĐ thành công!`);
             } else {
                 setCouponError(response.message || 'Mã giảm giá không hợp lệ.');
                 setAppliedCoupon(null);
+                setSelectedCouponId('');
             }
         } catch (err) {
             setCouponError(err.response?.data?.message || 'Mã không hợp lệ hoặc đã hết hạn.');
             setAppliedCoupon(null);
+            setSelectedCouponId('');
         } finally {
             setCouponLoading(false);
+        }
+    };
+
+    const fetchAvailableCoupons = async () => {
+        setCouponsLoading(true);
+        try {
+            const response = await axios.get('http://localhost:8080/v1/user/coupons', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+            });
+
+            if (response.data.httpStatus === 200) {
+                setAvailableCoupons(response.data.data || []);
+            } else {
+                console.error('Error fetching coupons:', response.data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching coupons:', error);
+            toast.error('Không thể tải danh sách mã giảm giá.');
+        } finally {
+            setCouponsLoading(false);
         }
     };
 
@@ -235,6 +272,10 @@ const CarDetail = () => {
         };
         fetchCarDetails();
     }, [carId]);
+
+    useEffect(() => {
+        fetchAvailableCoupons();
+    }, []);
 
     // Read initial date/time/rentalType from location.state if available
     useEffect(() => {
@@ -524,8 +565,10 @@ const CarDetail = () => {
 
     const handleRemoveCoupon = () => {
         setAppliedCoupon(null);
+        setSelectedCouponId('');
         setCouponCodeInput('');
         setCouponError('');
+        setShowCouponDropdown(false);
     };
 
     // Thêm hàm thuật toán ở ngoài render
@@ -1148,37 +1191,102 @@ const CarDetail = () => {
                             </div>
 
                             <div className="border-t border-gray-200 pt-4 mt-4">
-                                <label htmlFor="couponCodeInput" className="block text-sm font-medium text-gray-700 mb-2">Mã giảm giá</label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        id="couponCodeInput"
-                                        placeholder="Nhập mã của bạn"
-                                        value={couponCodeInput}
-                                        onChange={(e) => setCouponCodeInput(e.target.value)}
-                                        className="flex-grow px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-red-500 focus:outline-none"
-                                        disabled={!!appliedCoupon || couponLoading}
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Mã giảm giá
+                                </label>
 
-                                    />
-                                    {!appliedCoupon ? (
+                                {!appliedCoupon ? (
+                                    <div className="relative">
                                         <button
-                                            onClick={handleApplyCoupon}
-                                            disabled={couponLoading}
-                                            className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+                                            type="button"
+                                            onClick={() => setShowCouponDropdown(!showCouponDropdown)}
+                                            disabled={couponsLoading}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-red-500 focus:outline-none flex items-center justify-between bg-white hover:bg-gray-50 disabled:bg-gray-100"
                                         >
-                                            {couponLoading ? '...' : 'Áp dụng'}
+                                <span className={selectedCouponId ? "text-gray-900" : "text-gray-500"}>
+                                    {couponsLoading
+                                        ? "Đang tải..."
+                                        : selectedCouponId
+                                            ? availableCoupons.find(c => c.id === selectedCouponId)?.couponCode
+                                            : "Chọn mã giảm giá"
+                                    }
+                                </span>
+                                            <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${showCouponDropdown ? 'rotate-180' : ''}`} />
                                         </button>
-                                    ) : (
+
+                                        {showCouponDropdown && !couponsLoading && (
+                                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                                {availableCoupons.length === 0 ? (
+                                                    <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                                                        Không có mã giảm giá nào
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setSelectedCouponId('');
+                                                                setShowCouponDropdown(false);
+                                                            }}
+                                                            className="w-full px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-50 border-b"
+                                                        >
+                                                            Không sử dụng mã giảm giá
+                                                        </button>
+                                                        {availableCoupons.map((coupon) => (
+                                                            <button
+                                                                key={coupon.id}
+                                                                type="button"
+                                                                onClick={() => handleApplyCoupon(coupon.id)}
+                                                                className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b last:border-b-0 focus:bg-red-50"
+                                                            >
+                                                                <div className="flex justify-between items-center">
+                                                        <span className="text-sm font-medium text-gray-900">
+                                                            {coupon.couponCode}
+                                                        </span>
+                                                                    <span className="text-sm text-green-600 font-semibold">
+                                                            -{coupon.discountAmount?.toLocaleString('vi-VN')}đ
+                                                        </span>
+                                                                </div>
+                                                            </button>
+                                                        ))}
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-between px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+                                        <div className="flex items-center gap-2">
+                                            <CheckCircle className="w-5 h-5 text-green-600" />
+                                            <div>
+                                    <span className="text-sm font-medium text-green-800">
+                                        {appliedCoupon.couponCode}
+                                    </span>
+                                                <p className="text-xs text-green-600">
+                                                    Giảm {appliedCoupon.discountAmount?.toLocaleString('vi-VN')}đ
+                                                </p>
+                                            </div>
+                                        </div>
                                         <button
                                             onClick={handleRemoveCoupon}
-                                            className="p-2 text-gray-500 hover:text-red-600"
+                                            className="p-1 text-green-600 hover:text-red-600 transition-colors"
                                             title="Xóa mã giảm giá"
                                         >
                                             <XCircle className="w-5 h-5" />
                                         </button>
-                                    )}
-                                </div>
-                                {couponError && <p className="text-red-500 text-xs mt-1">{couponError}</p>}
+                                    </div>
+                                )}
+
+                                {couponLoading && (
+                                    <div className="flex items-center justify-center py-2">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                                        <span className="ml-2 text-sm text-gray-600">Đang áp dụng mã...</span>
+                                    </div>
+                                )}
+
+                                {couponError && (
+                                    <p className="text-red-500 text-xs mt-1">{couponError}</p>
+                                )}
                             </div>
 
                             <div className="border-t border-gray-300 pt-4 mt-4">
